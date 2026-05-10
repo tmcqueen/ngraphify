@@ -42,6 +42,12 @@ public abstract class GenericTreeSitterExtractor : ILanguageExtractor
     protected abstract string? ExtractCallTarget(TreeSitter.Node node);
 
     /// <summary>
+    /// Creates the TreeSitter Language instance for parsing.
+    /// Override to use a different library or function name.
+    /// </summary>
+    protected virtual Language CreateLanguage() => new Language(TreeSitterLanguage);
+
+    /// <summary>
     /// Build the node ID prefix from the file path (e.g. "module::").
     /// </summary>
     protected virtual string BuildIdPrefix(string filePath)
@@ -57,7 +63,7 @@ public abstract class GenericTreeSitterExtractor : ILanguageExtractor
         var extraction = new Models.Extraction { SourceFile = filePath };
         var prefix = BuildIdPrefix(filePath);
 
-        using var language = new Language(TreeSitterLanguage);
+        using var language = CreateLanguage();
         using var parser = new Parser(language);
         using var tree = parser.Parse(sourceCode);
 

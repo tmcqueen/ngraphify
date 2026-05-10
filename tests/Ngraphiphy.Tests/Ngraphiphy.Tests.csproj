@@ -16,5 +16,6 @@
 
   <ItemGroup>
     <None Include="Fixtures\**\*" CopyToOutputDirectory="PreserveNewest" LinkBase="Fixtures" />
+    <Compile Remove="Fixtures\**\*" />
   </ItemGroup>
 </Project>
