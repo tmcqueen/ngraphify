@@ -10,7 +10,7 @@ public static class ExtractionValidator
     private static readonly HashSet<string> ValidConfidences =
         ["EXTRACTED", "INFERRED", "AMBIGUOUS"];
 
-    public static List<string> Validate(global::Ngraphiphy.Models.Extraction extraction)
+    public static List<string> Validate(Models.Extraction extraction)
     {
         var errors = new List<string>();
         var nodeIds = new HashSet<string>();
@@ -63,7 +63,7 @@ public static class ExtractionValidator
         return errors;
     }
 
-    public static void AssertValid(global::Ngraphiphy.Models.Extraction extraction)
+    public static void AssertValid(Models.Extraction extraction)
     {
         var errors = Validate(extraction);
         if (errors.Count > 0)
