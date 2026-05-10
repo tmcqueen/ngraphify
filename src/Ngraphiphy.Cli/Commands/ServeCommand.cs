@@ -31,6 +31,11 @@ public sealed class ServeCommand : AsyncCommand<ServeSettings>
                 onProgress: msg => Console.Error.WriteLine($"[ngraphiphy] {msg}"),
                 ct: cancellationToken);
         }
+        catch (OperationCanceledException)
+        {
+            Console.Error.WriteLine("[ngraphiphy] Cancelled.");
+            return 0;
+        }
         catch (Exception ex)
         {
             Console.Error.WriteLine($"[ngraphiphy] Analysis failed: {ex.Message}");

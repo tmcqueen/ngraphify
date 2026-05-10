@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
 using Ngraphiphy.Pipeline;
 
@@ -15,6 +16,8 @@ public static class GraphMcpServer
     {
         var tools = new GraphTools(analysis);
         var builder = Host.CreateApplicationBuilder();
+        // Suppress default stdout logging — stdout is the MCP JSON-RPC channel
+        builder.Logging.ClearProviders();
         builder.Services.AddSingleton(tools);
         builder.Services.AddMcpServer()
             .WithStdioServerTransport()
