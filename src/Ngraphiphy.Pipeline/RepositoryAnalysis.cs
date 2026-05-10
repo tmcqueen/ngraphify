@@ -78,9 +78,9 @@ public sealed class RepositoryAnalysis
                     nodeList[i].Community = communities.Membership[i];
             }
         }
-        catch (DllNotFoundException)
+        catch (Exception ex) when (ex is DllNotFoundException or EntryPointNotFoundException or InvalidOperationException)
         {
-            onProgress?.Invoke("Warning: native Leiden library not found — skipping clustering.");
+            onProgress?.Invoke($"Warning: clustering skipped — {ex.GetType().Name}: {ex.Message}");
         }
 
         onProgress?.Invoke("Generating report...");
