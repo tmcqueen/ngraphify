@@ -7,8 +7,13 @@ namespace Ngraphiphy.Llm;
 public sealed class MafGraphAgent : IGraphAgent
 {
     private readonly AIAgent _agent;
+    private readonly IDisposable? _resource;
 
-    internal MafGraphAgent(AIAgent agent) => _agent = agent;
+    internal MafGraphAgent(AIAgent agent, IDisposable? resource = null)
+    {
+        _agent = agent;
+        _resource = resource;
+    }
 
     public async Task<GraphSession> CreateSessionAsync(CancellationToken ct = default)
     {
@@ -39,5 +44,9 @@ public sealed class MafGraphAgent : IGraphAgent
         }
     }
 
-    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    public ValueTask DisposeAsync()
+    {
+        _resource?.Dispose();
+        return ValueTask.CompletedTask;
+    }
 }

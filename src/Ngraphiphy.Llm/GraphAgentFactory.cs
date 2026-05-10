@@ -35,18 +35,32 @@ public static class GraphAgentFactory
             AIFunctionFactory.Create(plugin.SearchNodes),
         };
 
-        AIAgent agent = config switch
-        {
-            OpenAiConfig c    => CreateOpenAi(c, tools),
-            AnthropicConfig c => CreateAnthropic(c, tools),
-            OllamaConfig c    => CreateOllama(c, tools),
-            CopilotConfig c   => await CreateCopilotAsync(c, tools, ct),
-            A2AConfig c       => await CreateA2AAsync(c, ct),
-            _                 => throw new NotSupportedException(
-                                     $"Config type {config.GetType().Name} is not supported"),
-        };
+        AIAgent agent;
+        IDisposable? resource = null;
 
-        return new MafGraphAgent(agent);
+        switch (config)
+        {
+            case OpenAiConfig c:
+                agent = CreateOpenAi(c, tools);
+                break;
+            case AnthropicConfig c:
+                agent = CreateAnthropic(c, tools);
+                break;
+            case OllamaConfig c:
+                agent = CreateOllama(c, tools);
+                break;
+            case CopilotConfig c:
+                agent = await CreateCopilotAsync(c, tools, ct);
+                break;
+            case A2AConfig c:
+                (agent, resource) = await CreateA2AAsync(c, ct);
+                break;
+            default:
+                throw new NotSupportedException(
+                    $"Config type {config.GetType().Name} is not supported");
+        }
+
+        return new MafGraphAgent(agent, resource);
     }
 
     private static ChatClientAgent CreateOpenAi(OpenAiConfig config, IList<AITool> tools)
@@ -85,7 +99,8 @@ public static class GraphAgentFactory
             tools: tools);
     }
 
-    private static async Task<AIAgent> CreateA2AAsync(A2AConfig config, CancellationToken ct)
+    private static async Task<(AIAgent agent, HttpClient? resource)> CreateA2AAsync(
+        A2AConfig config, CancellationToken ct)
     {
         HttpClient? httpClient = config.ApiKey is not null
             ? new HttpClient
@@ -99,6 +114,7 @@ public static class GraphAgentFactory
             : null;
 
         var resolver = new A2ACardResolver(new Uri(config.AgentUrl), httpClient);
-        return await resolver.GetAIAgentAsync(httpClient: httpClient, cancellationToken: ct);
+        var agent = await resolver.GetAIAgentAsync(httpClient: httpClient, cancellationToken: ct);
+        return (agent, httpClient);
     }
 }
