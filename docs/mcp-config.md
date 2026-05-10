@@ -21,7 +21,8 @@ Add to `claude_desktop_config.json`:
 }
 ```
 
-- Linux/macOS: `~/.config/claude/claude_desktop_config.json`
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Linux: `~/.config/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ## Available Tools
