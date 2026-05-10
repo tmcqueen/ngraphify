@@ -17,6 +17,7 @@ public sealed class ReportSettings : CommandSettings
     public string? OutputFile { get; init; }
 
     [CommandOption("--cache <dir>")]
+    [Description("Cache directory. Default: <path>/.ngraphiphy-cache")]
     public string? CacheDir { get; init; }
 }
 
@@ -26,13 +27,21 @@ public sealed class ReportCommand : AsyncCommand<ReportSettings>
         CommandContext context, ReportSettings settings, CancellationToken cancellationToken)
     {
         RepositoryAnalysis? result = null;
-        await AnsiConsole.Status().Spinner(Spinner.Known.Dots)
-            .StartAsync("Analyzing...", async ctx =>
-            {
-                result = await RepositoryAnalysis.RunAsync(
-                    settings.Path, cacheDir: settings.CacheDir,
-                    onProgress: msg => ctx.Status(msg), ct: cancellationToken);
-            });
+        try
+        {
+            await AnsiConsole.Status().Spinner(Spinner.Known.Dots)
+                .StartAsync("Analyzing...", async ctx =>
+                {
+                    result = await RepositoryAnalysis.RunAsync(
+                        settings.Path, cacheDir: settings.CacheDir,
+                        onProgress: msg => ctx.Status(msg), ct: cancellationToken);
+                });
+        }
+        catch (Exception ex)
+        {
+            AnsiConsole.MarkupLine($"[red]Error: {ex.Message}[/]");
+            return 1;
+        }
 
         if (result is null) return 1;
 

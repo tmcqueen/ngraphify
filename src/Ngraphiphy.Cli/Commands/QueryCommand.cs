@@ -34,6 +34,7 @@ public sealed class QuerySettings : CommandSettings
     public string? AgentUrl { get; init; }
 
     [CommandOption("--cache <dir>")]
+    [Description("Cache directory. Default: <path>/.ngraphiphy-cache")]
     public string? CacheDir { get; init; }
 }
 
@@ -58,13 +59,21 @@ public sealed class QueryCommand : AsyncCommand<QuerySettings>
         };
 
         RepositoryAnalysis? repo = null;
-        await AnsiConsole.Status().Spinner(Spinner.Known.Dots)
-            .StartAsync("Analyzing repository...", async ctx =>
-            {
-                repo = await RepositoryAnalysis.RunAsync(
-                    settings.Path, cacheDir: settings.CacheDir,
-                    onProgress: msg => ctx.Status(msg), ct: cancellationToken);
-            });
+        try
+        {
+            await AnsiConsole.Status().Spinner(Spinner.Known.Dots)
+                .StartAsync("Analyzing repository...", async ctx =>
+                {
+                    repo = await RepositoryAnalysis.RunAsync(
+                        settings.Path, cacheDir: settings.CacheDir,
+                        onProgress: msg => ctx.Status(msg), ct: cancellationToken);
+                });
+        }
+        catch (Exception ex)
+        {
+            AnsiConsole.MarkupLine($"[red]Error: {ex.Message}[/]");
+            return 1;
+        }
 
         if (repo is null) return 1;
 
@@ -72,7 +81,16 @@ public sealed class QueryCommand : AsyncCommand<QuerySettings>
         await using var session = await agent.CreateSessionAsync(cancellationToken);
 
         AnsiConsole.MarkupLine("[bold]Querying LLM...[/]");
-        var answer = await agent.AnswerAsync(settings.Question, session, cancellationToken);
+        string answer;
+        try
+        {
+            answer = await agent.AnswerAsync(settings.Question, session, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            AnsiConsole.MarkupLine($"[red]LLM error: {ex.Message}[/]");
+            return 1;
+        }
 
         AnsiConsole.WriteLine();
         AnsiConsole.Write(new Panel(answer).Header("Answer").Expand());
