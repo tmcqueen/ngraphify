@@ -19,4 +19,4 @@
 ## Instructions
 
 - **Do not trust training data over official documentation.** APIs change; read the source or docs first.
-- **Do not speculate to the user.** If you don't know, read the code, run a command, or say you don't know. The user trusts answers backed by facts.
+- **Do not speculate to the user.** If you don't know, read the code, run a command, or say you don't know. The user trusts you to give answers backed by facts.
