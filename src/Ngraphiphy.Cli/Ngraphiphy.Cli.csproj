@@ -12,6 +12,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Ngraphiphy\Ngraphiphy.csproj" />
     <ProjectReference Include="..\Ngraphiphy.Llm\Ngraphiphy.Llm.csproj" />
+    <ProjectReference Include="..\Ngraphiphy.Pipeline\Ngraphiphy.Pipeline.csproj" />
   </ItemGroup>
 
   <ItemGroup>
