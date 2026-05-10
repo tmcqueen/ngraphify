@@ -1,5 +1,6 @@
 using Ngraphiphy.Models;
 using Ngraphiphy.Validation;
+using ExtractionModel = Ngraphiphy.Models.Extraction;
 
 namespace Ngraphiphy.Tests.Validation;
 
@@ -8,7 +9,7 @@ public class ExtractionValidatorTests
     [Test]
     public async Task ValidExtraction_ReturnsNoErrors()
     {
-        var extraction = new Extraction
+        var extraction = new ExtractionModel
         {
             Nodes =
             [
@@ -28,7 +29,7 @@ public class ExtractionValidatorTests
     [Test]
     public async Task MissingNodeId_ReturnsError()
     {
-        var extraction = new Extraction
+        var extraction = new ExtractionModel
         {
             Nodes =
             [
@@ -46,7 +47,7 @@ public class ExtractionValidatorTests
     [Test]
     public async Task MissingNodeLabel_ReturnsError()
     {
-        var extraction = new Extraction
+        var extraction = new ExtractionModel
         {
             Nodes =
             [
@@ -64,7 +65,7 @@ public class ExtractionValidatorTests
     [Test]
     public async Task InvalidFileType_ReturnsError()
     {
-        var extraction = new Extraction
+        var extraction = new ExtractionModel
         {
             Nodes =
             [
@@ -82,7 +83,7 @@ public class ExtractionValidatorTests
     [Test]
     public async Task InvalidConfidence_ReturnsError()
     {
-        var extraction = new Extraction
+        var extraction = new ExtractionModel
         {
             Nodes =
             [
@@ -103,7 +104,7 @@ public class ExtractionValidatorTests
     [Test]
     public async Task DanglingEdge_ReturnsError()
     {
-        var extraction = new Extraction
+        var extraction = new ExtractionModel
         {
             Nodes =
             [
@@ -124,7 +125,7 @@ public class ExtractionValidatorTests
     [Test]
     public async Task MissingEdgeSourceFile_ReturnsError()
     {
-        var extraction = new Extraction
+        var extraction = new ExtractionModel
         {
             Nodes =
             [
