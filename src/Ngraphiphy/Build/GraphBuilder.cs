@@ -5,7 +5,7 @@ namespace Ngraphiphy.Build;
 
 public static class GraphBuilder
 {
-    public static BidirectionalGraph<Node, TaggedEdge<Node, Edge>> Build(IEnumerable<Extraction> extractions)
+    public static BidirectionalGraph<Node, TaggedEdge<Node, Edge>> Build(IEnumerable<Models.Extraction> extractions)
     {
         var graph = new BidirectionalGraph<Node, TaggedEdge<Node, Edge>>();
         var nodeIndex = new Dictionary<string, Node>();
@@ -57,7 +57,7 @@ public static class GraphBuilder
 
     public static BidirectionalGraph<Node, TaggedEdge<Node, Edge>> FromGraphData(GraphData data)
     {
-        var extractions = new[] { new Extraction { Nodes = data.Nodes, Edges = data.Edges } };
+        var extractions = new[] { new Models.Extraction { Nodes = data.Nodes, Edges = data.Edges } };
         return Build(extractions);
     }
 }
