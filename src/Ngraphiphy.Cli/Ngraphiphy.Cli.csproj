@@ -4,7 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputType>Exe</OutputType>
-    <AssemblyName>ngraphiphy</AssemblyName>
+    <AssemblyName>ngraphiphy-cli</AssemblyName>
     <PackageId>Ngraphiphy.Cli</PackageId>
     <RootNamespace>Ngraphiphy.Cli</RootNamespace>
   </PropertyGroup>
