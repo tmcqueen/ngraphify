@@ -8,8 +8,7 @@ public class ExtractionValidatorTests
     [Test]
     public async Task ValidExtraction_ReturnsNoErrors()
     {
-
-        var extraction = new Models.Extraction
+var extraction = new Models.Extraction
         var extraction = new Models.Extraction
         {
             Nodes =
@@ -30,8 +29,7 @@ public class ExtractionValidatorTests
     [Test]
     public async Task MissingNodeId_ReturnsError()
     {
-
-        var extraction = new Models.Extraction
+var extraction = new Models.Extraction
         var extraction = new Models.Extraction
         {
             Nodes =
@@ -50,8 +48,7 @@ public class ExtractionValidatorTests
     [Test]
     public async Task MissingNodeLabel_ReturnsError()
     {
-
-        var extraction = new Models.Extraction
+var extraction = new Models.Extraction
         var extraction = new Models.Extraction
         {
             Nodes =
@@ -70,8 +67,7 @@ public class ExtractionValidatorTests
     [Test]
     public async Task InvalidFileType_ReturnsError()
     {
-
-        var extraction = new Models.Extraction
+var extraction = new Models.Extraction
         var extraction = new Models.Extraction
         {
             Nodes =
@@ -90,8 +86,7 @@ public class ExtractionValidatorTests
     [Test]
     public async Task InvalidConfidence_ReturnsError()
     {
-
-        var extraction = new Models.Extraction
+var extraction = new Models.Extraction
         var extraction = new Models.Extraction
         {
             Nodes =
@@ -113,8 +108,7 @@ public class ExtractionValidatorTests
     [Test]
     public async Task DanglingEdge_ReturnsError()
     {
-
-        var extraction = new Models.Extraction
+var extraction = new Models.Extraction
         var extraction = new Models.Extraction
         {
             Nodes =
@@ -136,8 +130,7 @@ public class ExtractionValidatorTests
     [Test]
     public async Task MissingEdgeSourceFile_ReturnsError()
     {
-
-        var extraction = new Models.Extraction
+var extraction = new Models.Extraction
         var extraction = new Models.Extraction
         {
             Nodes =

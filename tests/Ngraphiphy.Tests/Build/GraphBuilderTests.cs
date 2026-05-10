@@ -1,5 +1,6 @@
 using Ngraphiphy.Build;
 using Ngraphiphy.Models;
+using ExtractionModel = Ngraphiphy.Models.Extraction;
 
 namespace Ngraphiphy.Tests.Build;
 
@@ -8,7 +9,7 @@ public class GraphBuilderTests
     [Test]
     public async Task BuildFromExtraction_CreatesNodesAndEdges()
     {
-        var extraction = new Extraction
+        var extraction = new ExtractionModel
         {
             Nodes =
             [
@@ -30,12 +31,12 @@ public class GraphBuilderTests
     [Test]
     public async Task Build_MergesMultipleExtractions()
     {
-        var ext1 = new Extraction
+        var ext1 = new ExtractionModel
         {
             Nodes = [new Node { Id = "a::Foo", Label = "Foo", FileTypeString = "code", SourceFile = "a.py" }],
             Edges = []
         };
-        var ext2 = new Extraction
+        var ext2 = new ExtractionModel
         {
             Nodes = [new Node { Id = "b::Bar", Label = "Bar", FileTypeString = "code", SourceFile = "b.py" }],
             Edges = [new Edge { Source = "a::Foo", Target = "b::Bar", Relation = "imports", ConfidenceString = "EXTRACTED", SourceFile = "b.py" }]
@@ -50,12 +51,12 @@ public class GraphBuilderTests
     [Test]
     public async Task Build_DeduplicatesNodes()
     {
-        var ext1 = new Extraction
+        var ext1 = new ExtractionModel
         {
             Nodes = [new Node { Id = "a::Foo", Label = "Foo", FileTypeString = "code", SourceFile = "a.py" }],
             Edges = []
         };
-        var ext2 = new Extraction
+        var ext2 = new ExtractionModel
         {
             Nodes = [new Node { Id = "a::Foo", Label = "Foo", FileTypeString = "code", SourceFile = "a.py" }],
             Edges = []
@@ -69,7 +70,7 @@ public class GraphBuilderTests
     [Test]
     public async Task Build_NormalizesBackslashPaths()
     {
-        var extraction = new Extraction
+        var extraction = new ExtractionModel
         {
             Nodes = [new Node { Id = "a::Foo", Label = "Foo", FileTypeString = "code", SourceFile = @"src\foo\a.py" }],
             Edges = []
@@ -84,7 +85,7 @@ public class GraphBuilderTests
     [Test]
     public async Task Build_DefaultsNullFileTypeToConcept()
     {
-        var extraction = new Extraction
+        var extraction = new ExtractionModel
         {
             Nodes = [new Node { Id = "a::X", Label = "X", FileTypeString = null!, SourceFile = "a.py" }],
             Edges = []
@@ -99,7 +100,7 @@ public class GraphBuilderTests
     [Test]
     public async Task Build_DropsDanglingEdgesSilently()
     {
-        var extraction = new Extraction
+        var extraction = new ExtractionModel
         {
             Nodes = [new Node { Id = "a::Foo", Label = "Foo", FileTypeString = "code", SourceFile = "a.py" }],
             Edges = [new Edge { Source = "a::Foo", Target = "external::Bar", Relation = "imports", ConfidenceString = "INFERRED", SourceFile = "a.py" }]
@@ -114,7 +115,7 @@ public class GraphBuilderTests
     [Test]
     public async Task ToGraphData_RoundTrips()
     {
-        var extraction = new Extraction
+        var extraction = new ExtractionModel
         {
             Nodes =
             [
