@@ -23,7 +23,15 @@ public sealed class LanguageRegistry
     public static LanguageRegistry CreateDefault()
     {
         var registry = new LanguageRegistry();
-        // Extractors will be registered here as they are implemented
+        registry.Register(new Extractors.PythonExtractor());
+        registry.Register(new Extractors.JavaScriptExtractor());
+        registry.Register(new Extractors.TypeScriptExtractor());
+        registry.Register(new Extractors.CExtractor());
+        registry.Register(new Extractors.CppExtractor());
+        registry.Register(new Extractors.CSharpExtractor());
+        registry.Register(new Extractors.JavaExtractor());
+        registry.Register(new Extractors.GoExtractor());
+        registry.Register(new Extractors.RustExtractor());
         return registry;
     }
 }
