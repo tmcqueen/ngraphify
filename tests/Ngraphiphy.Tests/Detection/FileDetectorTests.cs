@@ -19,17 +19,35 @@ public class FileDetectorTests
     }
 
     [Test]
-    public async Task Detect_RespectsGraphifyIgnore()
+    public async Task Detect_RespectsGitignore()
     {
         var dir = CreateTempDir();
         File.WriteAllText(Path.Combine(dir, "main.py"), "x = 1");
         File.WriteAllText(Path.Combine(dir, "generated.py"), "x = 2");
-        File.WriteAllText(Path.Combine(dir, ".graphifyignore"), "generated.py");
+        File.WriteAllText(Path.Combine(dir, ".gitignore"), "generated.py");
 
         var results = FileDetector.Detect(dir);
 
         await Assert.That(results).DoesNotContain(r => r.RelativePath == "generated.py");
         await Assert.That(results).Contains(r => r.RelativePath == "main.py");
+    }
+
+    [Test]
+    public async Task Detect_RespectsNestedGitignore()
+    {
+        var dir = CreateTempDir();
+        Directory.CreateDirectory(Path.Combine(dir, "src"));
+        File.WriteAllText(Path.Combine(dir, "src", "main.py"), "x = 1");
+        File.WriteAllText(Path.Combine(dir, "src", "generated.py"), "x = 2");
+        File.WriteAllText(Path.Combine(dir, "top.py"), "x = 3");
+        // Only ignores files under src/
+        File.WriteAllText(Path.Combine(dir, "src", ".gitignore"), "generated.py");
+
+        var results = FileDetector.Detect(dir);
+
+        await Assert.That(results).DoesNotContain(r => r.RelativePath == "src/generated.py");
+        await Assert.That(results).Contains(r => r.RelativePath == "src/main.py");
+        await Assert.That(results).Contains(r => r.RelativePath == "top.py");
     }
 
     [Test]
@@ -73,13 +91,13 @@ public class FileDetectorTests
     }
 
     [Test]
-    public async Task Detect_WildcardIgnorePattern()
+    public async Task Detect_WildcardGitignorePattern()
     {
         var dir = CreateTempDir();
         File.WriteAllText(Path.Combine(dir, "foo.gen.py"), "x");
         File.WriteAllText(Path.Combine(dir, "bar.gen.py"), "x");
         File.WriteAllText(Path.Combine(dir, "main.py"), "x");
-        File.WriteAllText(Path.Combine(dir, ".graphifyignore"), "*.gen.py");
+        File.WriteAllText(Path.Combine(dir, ".gitignore"), "*.gen.py");
 
         var results = FileDetector.Detect(dir);
 

@@ -4,7 +4,10 @@ namespace Ngraphiphy.Detection;
 
 public sealed class IgnorePatterns
 {
-    private readonly List<Regex> _patterns = [];
+    private record IgnoreScope(string BaseDir, Ignore.Ignore Matcher);
+
+    private readonly List<IgnoreScope> _scopes = [];
+    private readonly List<Regex> _sensitive = [];
 
     private static readonly string[] DefaultIgnoreDirs =
     [
@@ -20,51 +23,72 @@ public sealed class IgnorePatterns
         "credentials.json", "service-account*.json", "*.key",
     ];
 
+    /// <summary>
+    /// Load ignore rules from all .gitignore files found under rootDir,
+    /// plus built-in sensitive file patterns.
+    /// Each .gitignore file's patterns are scoped to its own directory.
+    /// </summary>
     public static IgnorePatterns Load(string rootDir)
     {
-        var patterns = new IgnorePatterns();
+        var ip = new IgnorePatterns();
 
-        // Add sensitive file patterns
+        // Sensitive patterns always apply, regardless of gitignore
         foreach (var p in SensitivePatterns)
-            patterns.Add(p);
+            ip._sensitive.Add(GlobToRegex(p));
 
-        // Load .graphifyignore if present
-        var ignoreFile = Path.Combine(rootDir, ".graphifyignore");
-        if (File.Exists(ignoreFile))
+        // Load every .gitignore file in the tree
+        foreach (var gitignorePath in Directory.EnumerateFiles(rootDir, ".gitignore", SearchOption.AllDirectories))
         {
-            foreach (var line in File.ReadAllLines(ignoreFile))
+            var gitignoreDir = Path.GetDirectoryName(gitignorePath)!;
+            var baseDir = Path.GetRelativePath(rootDir, gitignoreDir).Replace('\\', '/');
+            if (baseDir == ".") baseDir = "";
+
+            var matcher = new Ignore.Ignore();
+            foreach (var line in File.ReadAllLines(gitignorePath))
             {
                 var trimmed = line.Trim();
                 if (trimmed.Length > 0 && !trimmed.StartsWith('#'))
-                    patterns.Add(trimmed);
+                    matcher.Add(trimmed);
             }
+            ip._scopes.Add(new IgnoreScope(baseDir, matcher));
         }
 
-        return patterns;
-    }
-
-    public void Add(string globPattern)
-    {
-        _patterns.Add(GlobToRegex(globPattern));
+        return ip;
     }
 
     public bool IsIgnored(string relativePath)
     {
-        // Check default ignored directories
-        var parts = relativePath.Split('/', '\\');
+        // Block default noise directories (these may not be in .gitignore)
+        var parts = relativePath.Split('/');
         foreach (var part in parts)
-        {
-            if (part.StartsWith('.') && part.Length > 1)
+            if (DefaultIgnoreDirs.Contains(part, StringComparer.OrdinalIgnoreCase))
                 return true;
-            if (DefaultIgnoreDirs.Contains(part))
-                return true;
-        }
 
-        // Check custom patterns
+        // Block sensitive files (secrets that may not be in .gitignore)
         var fileName = Path.GetFileName(relativePath);
-        foreach (var pattern in _patterns)
-        {
+        foreach (var pattern in _sensitive)
             if (pattern.IsMatch(fileName) || pattern.IsMatch(relativePath))
+                return true;
+
+        // Check each .gitignore scope
+        foreach (var scope in _scopes)
+        {
+            string pathToCheck;
+            if (scope.BaseDir == "")
+            {
+                pathToCheck = relativePath;
+            }
+            else if (relativePath.StartsWith(scope.BaseDir + "/", StringComparison.Ordinal))
+            {
+                // Strip the scope prefix so patterns are relative to the .gitignore's directory
+                pathToCheck = relativePath[(scope.BaseDir.Length + 1)..];
+            }
+            else
+            {
+                continue;
+            }
+
+            if (scope.Matcher.IsIgnored(pathToCheck))
                 return true;
         }
 

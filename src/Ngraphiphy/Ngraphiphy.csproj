@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Ignore" Version="0.2.1" />
     <PackageReference Include="QuikGraph" Version="2.5.0" />
     <PackageReference Include="TreeSitter.DotNet" Version="1.3.0" />
     <PackageReference Include="F23.StringSimilarity" Version="7.0.1" />
