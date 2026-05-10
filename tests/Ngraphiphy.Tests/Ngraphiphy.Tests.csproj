@@ -17,4 +17,11 @@
   <ItemGroup>
     <None Include="Fixtures\**\*" CopyToOutputDirectory="PreserveNewest" LinkBase="Fixtures" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\..\native\build\lib\libleiden_interop.so"
+          Condition="Exists('$(MSBuildThisFileDirectory)..\..\native\build\lib\libleiden_interop.so')"
+          CopyToOutputDirectory="PreserveNewest"
+          Link="libleiden_interop.so" />
+  </ItemGroup>
 </Project>
