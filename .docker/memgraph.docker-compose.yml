@@ -1,0 +1,37 @@
+services:
+  memgraph:
+    image: memgraph/memgraph:latest
+    container_name: ngraphiphy-memgraph
+    ports:
+      - "7688:7687"   # Bolt (mapped to 7688 to avoid conflict with Neo4j)
+      - "7444:7444"   # Monitoring
+    environment:
+      MEMGRAPH_USER: ""
+      MEMGRAPH_PASSWORD: ""
+    volumes:
+      - memgraph-data:/var/lib/memgraph
+      - memgraph-logs:/var/log/memgraph
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mg_client", "--output-format=csv", "-e", "RETURN 1;"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  memgraph-lab:
+    image: memgraph/lab:latest
+    container_name: ngraphiphy-memgraph-lab
+    ports:
+      - "3000:3000"   # Web UI
+    environment:
+      QUICK_CONNECT_MG_HOST: memgraph
+      QUICK_CONNECT_MG_PORT: 7687
+    depends_on:
+      memgraph:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  memgraph-data:
+  memgraph-logs:
