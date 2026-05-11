@@ -88,9 +88,9 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
         CommandContext context, PushSettings settings, CancellationToken cancellationToken)
     {
         // 1. Resolve snapshot ID
-        Console.Error.WriteLine("[ngraphiphy] Resolving snapshot ID...");
+        AnsiConsole.MarkupLine("[dim][ngraphiphy] Resolving snapshot ID...[/]");
         var snapshotId = SnapshotId.Resolve(settings.Path);
-        Console.Error.WriteLine($"[ngraphiphy] Snapshot: {snapshotId.Id}");
+        AnsiConsole.MarkupLineInterpolated($"[dim][ngraphiphy] Snapshot: {snapshotId.Id}[/]");
 
         // 2. Create graph store config
         var backend = (settings.Backend ?? _dbOpts.Backend).ToLowerInvariant();
@@ -124,13 +124,21 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
 
         // 5. Run analysis
         RepositoryAnalysis? analysis = null;
-        await AnsiConsole.Status().Spinner(Spinner.Known.Dots)
-            .StartAsync("Analyzing repository...", async ctx =>
-            {
-                analysis = await RepositoryAnalysis.RunAsync(
-                    settings.Path, cacheDir: settings.CacheDir,
-                    onProgress: msg => ctx.Status(msg), ct: cancellationToken);
-            });
+        try
+        {
+            await AnsiConsole.Status().Spinner(Spinner.Known.Dots)
+                .StartAsync("Analyzing repository...", async ctx =>
+                {
+                    analysis = await RepositoryAnalysis.RunAsync(
+                        settings.Path, cacheDir: settings.CacheDir,
+                        onProgress: msg => ctx.Status(msg), ct: cancellationToken);
+                });
+        }
+        catch (Exception ex)
+        {
+            AnsiConsole.MarkupLineInterpolated($"[red]Error: {ex.Message}[/]");
+            return 1;
+        }
 
         if (analysis is null) return 1;
 
