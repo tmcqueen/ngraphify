@@ -52,4 +52,18 @@ public class AgentConfigTests
         ];
         await Assert.That(configs.Length).IsEqualTo(5);
     }
+
+    [Test]
+    public async Task OpenAiConfig_WithEndpoint_StoresEndpoint()
+    {
+        var config = new OpenAiConfig("sk-test", "gpt-4o", Endpoint: "https://my.proxy/v1");
+        await Assert.That(config.Endpoint).IsEqualTo("https://my.proxy/v1");
+    }
+
+    [Test]
+    public async Task AnthropicConfig_WithEndpoint_StoresEndpoint()
+    {
+        var config = new AnthropicConfig("sk-ant-test", "claude-sonnet-4-6", Endpoint: "https://my.proxy");
+        await Assert.That(config.Endpoint).IsEqualTo("https://my.proxy");
+    }
 }

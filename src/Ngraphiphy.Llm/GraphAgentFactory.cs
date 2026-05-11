@@ -65,13 +65,21 @@ public static class GraphAgentFactory
 
     private static ChatClientAgent CreateOpenAi(OpenAiConfig config, IList<AITool> tools)
     {
-        var chatClient = new OpenAIClient(config.ApiKey).GetChatClient(config.Model);
+        OpenAIClient client = config.Endpoint is not null
+            ? new OpenAIClient(
+                new System.ClientModel.ApiKeyCredential(config.ApiKey),
+                new OpenAIClientOptions { Endpoint = new Uri(config.Endpoint) })
+            : new OpenAIClient(config.ApiKey);
+        var chatClient = client.GetChatClient(config.Model);
         return chatClient.AsAIAgent(Instructions, name: "GraphAnalyst", tools: tools);
     }
 
     private static ChatClientAgent CreateAnthropic(AnthropicConfig config, IList<AITool> tools)
     {
-        var client = new AnthropicClient(new ClientOptions { ApiKey = config.ApiKey });
+        var options = new ClientOptions { ApiKey = config.ApiKey };
+        if (config.Endpoint is not null)
+            options.BaseUrl = config.Endpoint;
+        var client = new AnthropicClient(options);
         return client.AsAIAgent(
             model: config.Model,
             instructions: Instructions,
