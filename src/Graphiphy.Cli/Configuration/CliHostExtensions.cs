@@ -20,6 +20,8 @@ public static class CliHostExtensions
             ".graphiphy");
 
         builder.Configuration
+            .AddJsonFile(Path.Combine(binaryDir, "graphiphy.json"),
+                optional: true, reloadOnChange: false)
             .AddJsonFile(Path.Combine(binaryDir, "appsettings.json"),
                 optional: true, reloadOnChange: false)
             .AddJsonFile(Path.Combine(userConfigDir, "appsettings.json"),
@@ -50,8 +52,9 @@ public static class CliHostExtensions
         builder.Services.AddSingleton<AgentProviderResolver>();
         builder.Services.AddSingleton<EmbeddingProviderResolver>();
 
-        // 5. Bind graph database options (unchanged)
+        // 5. Bind options
         builder.Services.Configure<GraphDatabaseOptions>(builder.Configuration.GetSection("GraphDatabase"));
+        builder.Services.Configure<AnalysisOptions>(builder.Configuration.GetSection("Analysis"));
 
         return builder;
     }

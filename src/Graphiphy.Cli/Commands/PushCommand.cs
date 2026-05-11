@@ -71,15 +71,18 @@ public sealed class PushSettings : CommandSettings
 public sealed class PushCommand : AsyncCommand<PushSettings>
 {
     private readonly GraphDatabaseOptions _dbOpts;
+    private readonly AnalysisOptions _analysisOpts;
     private readonly AgentProviderResolver _agentResolver;
     private readonly EmbeddingProviderResolver _embedResolver;
 
     public PushCommand(
         IOptions<GraphDatabaseOptions> dbOptions,
+        IOptions<AnalysisOptions> analysisOptions,
         AgentProviderResolver agentResolver,
         EmbeddingProviderResolver embedResolver)
     {
         _dbOpts = dbOptions.Value;
+        _analysisOpts = analysisOptions.Value;
         _agentResolver = agentResolver;
         _embedResolver = embedResolver;
     }
@@ -131,7 +134,9 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
                 {
                     analysis = await RepositoryAnalysis.RunAsync(
                         settings.Path, cacheDir: settings.CacheDir,
-                        onProgress: msg => ctx.Status(msg), ct: cancellationToken);
+                        onProgress: msg => ctx.Status(msg),
+                        malformedEdgeBehavior: _analysisOpts.MalformedEdgeBehavior,
+                        ct: cancellationToken);
                 });
         }
         catch (Exception ex)

@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using Graphiphy.Analysis;
+using Graphiphy.Cli.Configuration.Options;
 using Graphiphy.Pipeline;
+using Microsoft.Extensions.Options;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -23,6 +25,13 @@ public sealed class AnalyzeSettings : CommandSettings
 
 public sealed class AnalyzeCommand : AsyncCommand<AnalyzeSettings>
 {
+    private readonly AnalysisOptions _analysisOpts;
+
+    public AnalyzeCommand(IOptions<AnalysisOptions> analysisOptions)
+    {
+        _analysisOpts = analysisOptions.Value;
+    }
+
     protected override async Task<int> ExecuteAsync(
         CommandContext context, AnalyzeSettings settings, CancellationToken cancellationToken)
     {
@@ -32,7 +41,9 @@ public sealed class AnalyzeCommand : AsyncCommand<AnalyzeSettings>
             {
                 result = await RepositoryAnalysis.RunAsync(
                     settings.Path, cacheDir: settings.CacheDir,
-                    onProgress: msg => ctx.Status(msg), ct: cancellationToken);
+                    onProgress: msg => ctx.Status(msg),
+                    malformedEdgeBehavior: _analysisOpts.MalformedEdgeBehavior,
+                    ct: cancellationToken);
             });
 
         if (result is null) return 1;

@@ -29,6 +29,7 @@ public sealed class RepositoryAnalysis
         string rootPath,
         string? cacheDir = null,
         Action<string>? onProgress = null,
+        MalformedEdgeBehavior malformedEdgeBehavior = MalformedEdgeBehavior.Throw,
         CancellationToken ct = default)
     {
         cacheDir ??= Path.Combine(rootPath, ".graphiphy-cache");
@@ -60,10 +61,34 @@ public sealed class RepositoryAnalysis
             var validation = ExtractionValidator.Validate(extraction);
             foreach (var warning in validation.Warnings)
                 lock (progressLock) onProgress?.Invoke($"Warning [{file.AbsolutePath}]: {warning}");
+
             if (validation.Errors.Count > 0)
-                throw new InvalidOperationException(
-                    $"Invalid extraction for {file.AbsolutePath} ({validation.Errors.Count} errors):\n"
-                    + string.Join("\n", validation.Errors));
+            {
+                var errorSummary = $"{file.AbsolutePath} ({validation.Errors.Count} errors): {validation.Errors[0]}";
+                switch (malformedEdgeBehavior)
+                {
+                    case MalformedEdgeBehavior.Throw:
+                        throw new InvalidOperationException(
+                            $"Invalid extraction for {errorSummary}\n"
+                            + string.Join("\n", validation.Errors.Skip(1)));
+
+                    case MalformedEdgeBehavior.SkipFile:
+                        lock (progressLock) onProgress?.Invoke($"Warning: skipping {errorSummary}");
+                        return;
+
+                    case MalformedEdgeBehavior.DropEdges:
+                        var validNodeIds = extraction.Nodes.Select(n => n.Id).ToHashSet();
+                        var dropped = extraction.Edges.RemoveAll(
+                            e => !validNodeIds.Contains(e.Source) || !validNodeIds.Contains(e.Target));
+                        lock (progressLock) onProgress?.Invoke(
+                            $"Warning: dropped {dropped} dangling edge(s) from {file.AbsolutePath}");
+                        break;
+
+                    case MalformedEdgeBehavior.Warn:
+                        lock (progressLock) onProgress?.Invoke($"Warning: malformed extraction for {errorSummary}");
+                        break;
+                }
+            }
 
             cache.Save(hash, extraction);
             extractionBag.Add(extraction);
