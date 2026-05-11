@@ -14,19 +14,24 @@ public static class CliHostExtensions
     public static HostApplicationBuilder AddCliConfiguration(this HostApplicationBuilder builder)
     {
         // 1. JSON sources (both optional)
+        var currentDir = Directory.GetCurrentDirectory();
         var binaryDir = AppContext.BaseDirectory;
         var userConfigDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
             ".graphiphy");
 
+        // Load order: lowest priority first, highest last.
+        // Each source overrides the previous for any key it defines.
         builder.Configuration
-            .AddJsonFile(Path.Combine(binaryDir, "graphiphy.json"),
+            .AddJsonFile(Path.Combine(binaryDir, "appsettings.json"),    // shipped defaults
                 optional: true, reloadOnChange: false)
-            .AddJsonFile(Path.Combine(binaryDir, "appsettings.json"),
+            .AddJsonFile(Path.Combine(binaryDir, "graphiphy.json"),       // binary-local overrides
                 optional: true, reloadOnChange: false)
-            .AddJsonFile(Path.Combine(userConfigDir, "appsettings.json"),
+            .AddJsonFile(Path.Combine(userConfigDir, "appsettings.json"), // user-wide overrides
                 optional: true, reloadOnChange: false)
-            .AddEnvironmentVariables(prefix: "GRAPHIPHY_");
+            .AddJsonFile(Path.Combine(currentDir, "graphiphy.json"),      // project-specific overrides
+                optional: true, reloadOnChange: false)
+            .AddEnvironmentVariables(prefix: "GRAPHIPHY_");               // highest priority
 
         // 2. Secret overlay
         var passProvider = new PassSecretProvider();
