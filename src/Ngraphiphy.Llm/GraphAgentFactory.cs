@@ -71,7 +71,17 @@ public static class GraphAgentFactory
                 new OpenAIClientOptions { Endpoint = new Uri(config.Endpoint) })
             : new OpenAIClient(config.ApiKey);
         var chatClient = client.GetChatClient(config.Model);
-        return chatClient.AsAIAgent(Instructions, name: "GraphAnalyst", tools: tools);
+        var options = new Microsoft.Agents.AI.ChatClientAgentOptions
+        {
+            Name = "GraphAnalyst",
+            ChatOptions = new Microsoft.Extensions.AI.ChatOptions
+            {
+                Instructions = Instructions,
+                Tools = tools,
+                MaxOutputTokens = config.MaxTokens,
+            },
+        };
+        return chatClient.AsAIAgent(options);
     }
 
     private static ChatClientAgent CreateAnthropic(AnthropicConfig config, IList<AITool> tools)

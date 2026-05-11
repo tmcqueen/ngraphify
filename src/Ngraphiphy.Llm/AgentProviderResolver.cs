@@ -65,7 +65,7 @@ public sealed class AgentProviderResolver
             "a2a" => new A2AConfig(
                 AgentUrl: section["Endpoint"]
                     ?? throw new InvalidOperationException($"Provider '{name}': Endpoint is required for A2A."),
-                ApiKey: section["ApiKey"]),
+                ApiKey: string.IsNullOrEmpty(section["ApiKey"]) ? null : section["ApiKey"]),
 
             _ => throw new InvalidOperationException(
                 $"Unknown ApiType '{apiType}' for provider '{name}'. Valid values: anthropic, openai, ollama, copilot, a2a.")
