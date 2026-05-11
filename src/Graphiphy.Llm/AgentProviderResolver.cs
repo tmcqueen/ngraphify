@@ -11,11 +11,21 @@ namespace Graphiphy.Llm;
 public sealed class AgentProviderResolver
 {
     private readonly IConfiguration _configuration;
+    private readonly Func<string?, string?>? _resolveSecret;
 
-    public AgentProviderResolver(IConfiguration configuration)
+    /// <param name="resolveSecret">
+    /// Optional delegate that resolves pass:// and env:// references to their plain-text values.
+    /// When provided, string values read from config are passed through this delegate before use.
+    /// When null, values are used as-is (suitable if the startup overlay has already resolved them).
+    /// </param>
+    public AgentProviderResolver(IConfiguration configuration, Func<string?, string?>? resolveSecret = null)
     {
         _configuration = configuration;
+        _resolveSecret = resolveSecret;
     }
+
+    // Resolves a config string value through the secret delegate if one is registered.
+    private string? R(string? value) => _resolveSecret is null ? value : _resolveSecret(value);
 
     /// <summary>
     /// Resolves the named provider to an <see cref="IAgentConfig"/>.
@@ -43,17 +53,17 @@ public sealed class AgentProviderResolver
         return apiType switch
         {
             "anthropic" => new AnthropicConfig(
-                ApiKey: section["ApiKey"]
+                ApiKey: R(section["ApiKey"])
                     ?? throw new InvalidOperationException($"Provider '{name}': ApiKey is required."),
                 Model: section["Model"] ?? "claude-sonnet-4-6",
                 MaxTokens: int.TryParse(section["MaxTokens"], out var antMaxTokens) ? antMaxTokens : 4096,
-                Endpoint: section["Endpoint"]),
+                Endpoint: R(section["Endpoint"])),
 
             "openai" => new OpenAiConfig(
-                ApiKey: section["ApiKey"]
+                ApiKey: R(section["ApiKey"])
                     ?? throw new InvalidOperationException($"Provider '{name}': ApiKey is required."),
                 Model: section["Model"] ?? "gpt-4o",
-                Endpoint: section["Endpoint"],
+                Endpoint: R(section["Endpoint"]),
                 MaxTokens: int.TryParse(section["MaxTokens"], out var oaiMaxTokens) ? oaiMaxTokens : null),
 
             "ollama" => new OllamaConfig(
@@ -63,9 +73,9 @@ public sealed class AgentProviderResolver
             "copilot" => new CopilotConfig(),
 
             "a2a" => new A2AConfig(
-                AgentUrl: section["Endpoint"]
+                AgentUrl: R(section["Endpoint"])
                     ?? throw new InvalidOperationException($"Provider '{name}': Endpoint is required for A2A."),
-                ApiKey: string.IsNullOrEmpty(section["ApiKey"]) ? null : section["ApiKey"]),
+                ApiKey: string.IsNullOrEmpty(R(section["ApiKey"])) ? null : R(section["ApiKey"])),
 
             _ => throw new InvalidOperationException(
                 $"Unknown ApiType '{apiType}' for provider '{name}'. Valid values: anthropic, openai, ollama, copilot, a2a.")

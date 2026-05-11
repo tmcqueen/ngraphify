@@ -38,9 +38,12 @@ public static class CliHostExtensions
         };
 
         var snapshot = ((IConfigurationBuilder)builder.Configuration).Build();
+        // Scope startup resolution to sections bound via IOptions<T>.
+        // Providers:* secrets are resolved lazily by the resolver classes when actually needed.
         SecretResolver.ResolveAndOverlayAsync(
             builder.Configuration, snapshot, providers,
-            warn: msg => AnsiConsole.MarkupLineInterpolated($"[yellow]Warning: {msg}[/]"))
+            warn: msg => AnsiConsole.MarkupLineInterpolated($"[yellow]Warning: {msg}[/]"),
+            sectionPrefixes: ["GraphDatabase"])
             .GetAwaiter().GetResult();
 
         // 3. Register secret providers (keyed + default)
@@ -48,9 +51,15 @@ public static class CliHostExtensions
         builder.Services.AddKeyedSingleton<ISecretProvider>("env", envProvider);
         builder.Services.AddSingleton<ISecretProvider>(passProvider);
 
-        // 4. Register provider resolvers — both take IConfiguration directly
-        builder.Services.AddSingleton<AgentProviderResolver>();
-        builder.Services.AddSingleton<EmbeddingProviderResolver>();
+        // 4. Register provider resolvers with a lazy secret-resolution delegate.
+        //    Secrets are resolved on demand when a provider is actually used, not at startup.
+        Func<string?, string?> resolveSecret =
+            value => SecretResolver.ResolveValue(value, providers);
+
+        builder.Services.AddSingleton(sp =>
+            new AgentProviderResolver(sp.GetRequiredService<IConfiguration>(), resolveSecret));
+        builder.Services.AddSingleton(sp =>
+            new EmbeddingProviderResolver(sp.GetRequiredService<IConfiguration>(), resolveSecret));
 
         // 5. Bind options
         builder.Services.Configure<GraphDatabaseOptions>(builder.Configuration.GetSection("GraphDatabase"));
