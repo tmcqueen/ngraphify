@@ -78,4 +78,28 @@ public class SecretResolverTests
         var final = configBuilder.Build();
         await Assert.That(final["A2A:AgentUrl"]).IsEqualTo("resolved-env");
     }
+
+    [Test]
+    public async Task ResolveAndOverlay_ProviderThrowsWin32Exception_DoesNotPropagate()
+    {
+        var throwingProvider = new Win32ThrowingProvider();
+        var providers = new Dictionary<string, ISecretProvider>(StringComparer.Ordinal)
+        {
+            ["pass"] = throwingProvider,
+        };
+        var snapshot = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["Llm:ApiKey"] = "pass://x" })
+            .Build();
+        var target = new ConfigurationBuilder();
+
+        var act = () => SecretResolver.ResolveAndOverlay(target, snapshot, providers);
+
+        await Assert.That(act).ThrowsNothing();
+    }
+
+    private sealed class Win32ThrowingProvider : ISecretProvider
+    {
+        public string Resolve(string path)
+            => throw new System.ComponentModel.Win32Exception(2, "No such file or directory");
+    }
 }

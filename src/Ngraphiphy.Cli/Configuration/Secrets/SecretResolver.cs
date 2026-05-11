@@ -36,11 +36,14 @@ public static class SecretResolver
                 if (resolved is not null)
                     overlay[key] = resolved;
             }
-            catch (InvalidOperationException ex)
+            catch (Exception ex) when (
+                ex is InvalidOperationException
+                || ex is System.ComponentModel.Win32Exception
+                || ex is IOException)
             {
                 // Secret couldn't be resolved, but don't fail the entire CLI startup.
                 // The command that actually needs this secret will fail with a clear error.
-                AnsiConsole.MarkupLine($"[yellow]Warning: Could not resolve secret reference '{key}': {ex.Message}[/]");
+                AnsiConsole.MarkupLineInterpolated($"[yellow]Warning: Could not resolve secret reference '{key}': {ex.Message}[/]");
                 // Don't add to overlay — the config value (pass://...) remains
             }
         }
