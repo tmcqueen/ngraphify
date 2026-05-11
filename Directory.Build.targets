@@ -1,0 +1,17 @@
+<Project>
+  <!--
+    Ngraphiphy self-analysis: runs before each build, but only when source files change.
+    Set <NgraphiphyEnabled>false</NgraphiphyEnabled> in a project to opt out.
+  -->
+  <Target Name="NgraphiphyAnalyze"
+          BeforeTargets="Build"
+          Condition="'$(NgraphiphyEnabled)' != 'false'"
+          Inputs="@(Compile)"
+          Outputs="$(MSBuildThisFileDirectory).ngraphiphy-cache/.msbuild-stamp">
+    <Message Text="[ngraphiphy] Analyzing $(MSBuildProjectName)..." Importance="normal" />
+    <Exec Command="dotnet run --project &quot;$(MSBuildThisFileDirectory)src/Ngraphiphy.Cli/&quot; -- analyze &quot;$(MSBuildProjectDirectory)&quot; --cache &quot;$(MSBuildThisFileDirectory).ngraphiphy-cache&quot;"
+          ContinueOnError="true"
+          WorkingDirectory="$(MSBuildThisFileDirectory)" />
+    <Touch Files="$(MSBuildThisFileDirectory).ngraphiphy-cache/.msbuild-stamp" AlwaysCreate="true" />
+  </Target>
+</Project>

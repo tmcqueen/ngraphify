@@ -1,0 +1,30 @@
+<Project>
+  <!--
+    Ngraphiphy.MSBuild — runs codebase analysis before build.
+
+    Prerequisites:
+      dotnet tool install -g Ngraphiphy.Cli
+      (or add to dotnet-tools.json for local tool restore)
+
+    Opt out per-project:
+      <NgraphiphyEnabled>false</NgraphiphyEnabled>
+
+    Override cache directory:
+      <NgraphiphyCacheDir>$(MSBuildProjectDirectory)/.ngraphiphy-cache</NgraphiphyCacheDir>
+  -->
+
+  <PropertyGroup>
+    <NgraphiphyCacheDir Condition="'$(NgraphiphyCacheDir)' == ''">$(MSBuildProjectDirectory)/.ngraphiphy-cache</NgraphiphyCacheDir>
+  </PropertyGroup>
+
+  <Target Name="NgraphiphyAnalyze"
+          BeforeTargets="Build"
+          Condition="'$(NgraphiphyEnabled)' != 'false'"
+          Inputs="@(Compile)"
+          Outputs="$(NgraphiphyCacheDir)/.msbuild-stamp">
+    <Message Text="[ngraphiphy] Analyzing $(MSBuildProjectName)..." Importance="normal" />
+    <Exec Command="dotnet tool run ngraphiphy-cli -- analyze &quot;$(MSBuildProjectDirectory)&quot; --cache &quot;$(NgraphiphyCacheDir)&quot;"
+          ContinueOnError="true" />
+    <Touch Files="$(NgraphiphyCacheDir)/.msbuild-stamp" AlwaysCreate="true" />
+  </Target>
+</Project>
