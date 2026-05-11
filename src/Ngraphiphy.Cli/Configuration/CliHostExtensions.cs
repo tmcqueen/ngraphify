@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Ngraphiphy.Cli.Configuration.Options;
 using Ngraphiphy.Cli.Configuration.Secrets;
+using Ngraphiphy.Llm;
+using Ngraphiphy.Storage.Embedding;
 using Spectre.Console;
 
 namespace Ngraphiphy.Cli.Configuration;
@@ -22,12 +24,9 @@ public static class CliHostExtensions
                 optional: true, reloadOnChange: false)
             .AddJsonFile(Path.Combine(userConfigDir, "appsettings.json"),
                 optional: true, reloadOnChange: false)
-            // NGRAPHIPHY_Llm__Anthropic__ApiKey=sk-ant-... (double-underscore = section separator)
             .AddEnvironmentVariables(prefix: "NGRAPHIPHY_");
 
-        // 2. Secret overlay — synchronous, before any binding.
-        //    builder.Configuration implements both IConfiguration and IConfigurationBuilder
-        //    in .NET 8+ (ConfigurationManager). Calling .Build() gives a snapshot to walk.
+        // 2. Secret overlay
         var passProvider = new PassSecretProvider();
         var envProvider = new EnvSecretProvider();
         var providers = new Dictionary<string, ISecretProvider>(StringComparer.Ordinal)
@@ -38,20 +37,21 @@ public static class CliHostExtensions
 
         var snapshot = ((IConfigurationBuilder)builder.Configuration).Build();
         SecretResolver.ResolveAndOverlayAsync(
-                builder.Configuration, snapshot, providers,
-                warn: msg => AnsiConsole.MarkupLineInterpolated($"[yellow]{msg}[/]"))
+            builder.Configuration, snapshot, providers,
+            warn: msg => AnsiConsole.MarkupLineInterpolated($"[yellow]Warning: {msg}[/]"))
             .GetAwaiter().GetResult();
 
-        // 3. Register singleton providers for any code that needs late resolution
+        // 3. Register secret providers (keyed + default)
         builder.Services.AddKeyedSingleton<ISecretProvider>("pass", passProvider);
         builder.Services.AddKeyedSingleton<ISecretProvider>("env", envProvider);
-        // Default (unkeyed) for backward compat — resolves to pass provider
         builder.Services.AddSingleton<ISecretProvider>(passProvider);
 
-        // 4. Bind options — executed after the overlay, so secrets are plain strings
-        builder.Services.Configure<LlmOptions>(builder.Configuration.GetSection("Llm"));
+        // 4. Register provider resolvers — both take IConfiguration directly
+        builder.Services.AddSingleton<AgentProviderResolver>();
+        builder.Services.AddSingleton<EmbeddingProviderResolver>();
+
+        // 5. Bind graph database options (unchanged)
         builder.Services.Configure<GraphDatabaseOptions>(builder.Configuration.GetSection("GraphDatabase"));
-        builder.Services.Configure<EmbeddingOptions>(builder.Configuration.GetSection("Embedding"));
 
         return builder;
     }

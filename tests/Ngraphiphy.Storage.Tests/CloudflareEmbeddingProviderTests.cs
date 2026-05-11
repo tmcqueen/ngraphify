@@ -2,49 +2,48 @@ using Ngraphiphy.Storage.Embedding;
 
 namespace Ngraphiphy.Storage.Tests;
 
-public class CloudflareEmbeddingProviderTests
+public class OpenAiEmbeddingProviderTests
 {
     [Test]
-    public async Task GetDimensions_ReturnsCorrectDim_ForEachModel()
+    public async Task Constructor_SetsCorrectDimensions_WhenProvided()
     {
-        var models = new[]
-        {
-            ("@cf/baai/bge-small-en-v1.5", 384),
-            ("@cf/baai/bge-base-en-v1.5", 768),
-            ("@cf/baai/bge-large-en-v1.5", 1024),
-        };
+        var provider = new OpenAiEmbeddingProvider(
+            endpoint: "https://api.openai.com/v1",
+            apiKey: "test-key",
+            model: "text-embedding-3-small",
+            dimensionSize: 1536);
 
-        foreach (var (model, expectedDims) in models)
-        {
-            var config = new CloudflareEmbeddingConfig("test-account", "test-token", model);
-            await Assert.That(config.GetDimensions()).IsEqualTo(expectedDims);
-        }
+        await Assert.That(provider.DimensionSize).IsEqualTo(1536);
     }
 
     [Test]
-    public async Task Constructor_SetsCorrectDimensions()
+    public async Task Constructor_UsesDefaultDimensions_WhenNotProvided()
     {
-        var config = new CloudflareEmbeddingConfig("test", "test", "@cf/baai/bge-base-en-v1.5");
-        var provider = new CloudflareEmbeddingProvider(config);
+        var provider = new OpenAiEmbeddingProvider(
+            endpoint: "https://api.openai.com/v1",
+            apiKey: "test-key",
+            model: "text-embedding-3-small");
 
         await Assert.That(provider.DimensionSize).IsEqualTo(768);
     }
 
     [Test]
-    [Skip("Requires live Cloudflare API token")]
-    public async Task EmbedAsync_CallsCloudflareAndReturnsVector()
+    [Skip("Requires live OpenAI API key")]
+    public async Task EmbedAsync_ReturnsVector_WithCorrectDimensions()
     {
-        var token = Environment.GetEnvironmentVariable("CF_API_TOKEN") ?? "";
-        if (string.IsNullOrEmpty(token))
+        var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY") ?? "";
+        if (string.IsNullOrEmpty(apiKey))
             return;
 
-        var accountId = Environment.GetEnvironmentVariable("CF_ACCOUNT_ID") ?? "";
-        var config = new CloudflareEmbeddingConfig(accountId, token);
-        var provider = new CloudflareEmbeddingProvider(config);
+        var provider = new OpenAiEmbeddingProvider(
+            endpoint: "https://api.openai.com/v1",
+            apiKey: apiKey,
+            model: "text-embedding-3-small",
+            dimensionSize: 1536);
 
         var result = await provider.EmbedAsync("test query", CancellationToken.None);
 
-        await Assert.That(result.Length).IsEqualTo(768);
-        await Assert.That(result[0]).IsNotEqualTo(0f); // At least one non-zero value
+        await Assert.That(result.Length).IsEqualTo(1536);
+        await Assert.That(result[0]).IsNotEqualTo(0f);
     }
 }

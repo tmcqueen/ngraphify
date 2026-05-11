@@ -1,7 +1,4 @@
-// src/Ngraphiphy.Cli/Commands/QueryCommand.cs
 using System.ComponentModel;
-using Microsoft.Extensions.Options;
-using Ngraphiphy.Cli.Configuration.Options;
 using Ngraphiphy.Llm;
 using Ngraphiphy.Pipeline;
 using Spectre.Console;
@@ -20,20 +17,8 @@ public sealed class QuerySettings : CommandSettings
     public required string Question { get; init; }
 
     [CommandOption("--provider <name>")]
-    [Description("LLM provider: anthropic (default), openai, ollama, copilot, a2a.")]
-    public string Provider { get; init; } = "anthropic";
-
-    [CommandOption("--key <apiKey>")]
-    [Description("API key. Falls back to ANTHROPIC_API_KEY or OPENAI_API_KEY env vars.")]
-    public string? ApiKey { get; init; }
-
-    [CommandOption("--model <name>")]
-    [Description("Model name. Defaults: claude-sonnet-4-6 / gpt-4o / llama3.2")]
-    public string? Model { get; init; }
-
-    [CommandOption("--agent-url <url>")]
-    [Description("Remote agent URL (A2A provider only).")]
-    public string? AgentUrl { get; init; }
+    [Description("Named LLM provider from the Providers config section. Defaults to Llm:Provider.")]
+    public string? Provider { get; init; }
 
     [CommandOption("--cache <dir>")]
     [Description("Cache directory. Default: <path>/.ngraphiphy-cache")]
@@ -42,44 +27,16 @@ public sealed class QuerySettings : CommandSettings
 
 public sealed class QueryCommand : AsyncCommand<QuerySettings>
 {
-    private readonly LlmOptions _llmOpts;
+    private readonly AgentProviderResolver _agentResolver;
 
-    public QueryCommand(IOptions<LlmOptions> llmOptions)
+    public QueryCommand(AgentProviderResolver agentResolver)
     {
-        _llmOpts = llmOptions.Value;
+        _agentResolver = agentResolver;
     }
 
     protected override async Task<int> ExecuteAsync(
         CommandContext context, QuerySettings settings, CancellationToken cancellationToken)
     {
-        IAgentConfig config = settings.Provider.ToLowerInvariant() switch
-        {
-            "openai" => new OpenAiConfig(
-                ApiKey: settings.ApiKey
-                    ?? _llmOpts.OpenAi.ApiKey
-                    ?? Error("--key, Llm:OpenAi:ApiKey in appsettings.json required"),
-                Model: settings.Model ?? _llmOpts.OpenAi.Model),
-
-            "ollama" => new OllamaConfig(
-                Model: settings.Model ?? _llmOpts.Ollama.Model,
-                Endpoint: _llmOpts.Ollama.Endpoint),
-
-            "copilot" => new CopilotConfig(),
-
-            "a2a" => new A2AConfig(
-                AgentUrl: settings.AgentUrl
-                    ?? _llmOpts.A2A.AgentUrl
-                    ?? Error("--agent-url, Llm:A2A:AgentUrl in appsettings.json required"),
-                ApiKey: settings.ApiKey ?? _llmOpts.A2A.ApiKey),
-
-            _ => new AnthropicConfig(
-                ApiKey: settings.ApiKey
-                    ?? _llmOpts.Anthropic.ApiKey
-                    ?? Error("--key, Llm:Anthropic:ApiKey in appsettings.json required"),
-                Model: settings.Model ?? _llmOpts.Anthropic.Model,
-                MaxTokens: _llmOpts.Anthropic.MaxTokens),
-        };
-
         RepositoryAnalysis? repo = null;
         try
         {
@@ -99,29 +56,36 @@ public sealed class QueryCommand : AsyncCommand<QuerySettings>
 
         if (repo is null) return 1;
 
-        await using var agent = await GraphAgentFactory.CreateAsync(config, repo.Graph, cancellationToken);
-        await using var session = await agent.CreateSessionAsync(cancellationToken);
-
-        AnsiConsole.MarkupLine("[bold]Querying LLM...[/]");
-        string answer;
+        IGraphAgent agent;
         try
         {
-            answer = await agent.AnswerAsync(settings.Question, session, cancellationToken);
+            agent = await _agentResolver.CreateAgentAsync(repo.Graph, settings.Provider, cancellationToken);
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex)
         {
-            AnsiConsole.MarkupLineInterpolated($"[red]LLM error: {ex.Message}[/]");
+            AnsiConsole.MarkupLineInterpolated($"[red]{ex.Message}[/]");
             return 1;
         }
 
-        AnsiConsole.WriteLine();
-        AnsiConsole.Write(new Panel(answer).Header("Answer").Expand());
-        return 0;
-    }
+        await using (agent)
+        {
+            await using var session = await agent.CreateSessionAsync(cancellationToken);
 
-    private static string Error(string message)
-    {
-        AnsiConsole.MarkupLineInterpolated($"[red]{message}[/]");
-        throw new InvalidOperationException(message);
+            AnsiConsole.MarkupLine("[bold]Querying LLM...[/]");
+            string answer;
+            try
+            {
+                answer = await agent.AnswerAsync(settings.Question, session, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                AnsiConsole.MarkupLineInterpolated($"[red]LLM error: {ex.Message}[/]");
+                return 1;
+            }
+
+            AnsiConsole.WriteLine();
+            AnsiConsole.Write(new Panel(answer).Header("Answer").Expand());
+        }
+        return 0;
     }
 }

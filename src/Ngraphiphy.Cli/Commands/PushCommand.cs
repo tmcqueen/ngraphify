@@ -32,7 +32,7 @@ public sealed class PushSettings : CommandSettings
     public string? Host { get; init; }
 
     [CommandOption("--port <port>")]
-    [Description("Memgraph port. Default: 7687")]
+    [Description("Memgraph port. Default: 7688")]
     public int? Port { get; init; }
 
     [CommandOption("--username <username>")]
@@ -44,36 +44,20 @@ public sealed class PushSettings : CommandSettings
     public string? Password { get; init; }
 
     [CommandOption("--embed")]
-    [Description("Embed nodes after push.")]
+    [Description("Embed nodes after push using the configured embedding provider.")]
     public bool Embed { get; init; }
 
-    [CommandOption("--cf-account <id>")]
-    [Description("Cloudflare account ID (for --embed).")]
-    public string? CloudflareAccount { get; init; }
-
-    [CommandOption("--cf-token <token>")]
-    [Description("Cloudflare API token (or CF_API_TOKEN env).")]
-    public string? CloudflareToken { get; init; }
-
-    [CommandOption("--cf-model <model>")]
-    [Description("Cloudflare embedding model. Default: @cf/baai/bge-base-en-v1.5")]
-    public string? CloudflareModel { get; init; }
+    [CommandOption("--embed-provider <name>")]
+    [Description("Named embedding provider from the Providers config section. Defaults to Embedding:Provider.")]
+    public string? EmbedProvider { get; init; }
 
     [CommandOption("--summarize")]
-    [Description("Generate community summaries.")]
+    [Description("Generate community summaries using the configured LLM provider.")]
     public bool Summarize { get; init; }
 
-    [CommandOption("--provider <provider>")]
-    [Description("LLM provider for summaries: anthropic (default), openai, ollama, copilot, a2a")]
+    [CommandOption("--provider <name>")]
+    [Description("Named LLM provider for --summarize. Defaults to Llm:Provider.")]
     public string? LlmProvider { get; init; }
-
-    [CommandOption("--key <key>")]
-    [Description("LLM API key (or env var).")]
-    public string? ApiKey { get; init; }
-
-    [CommandOption("--model <model>")]
-    [Description("LLM model name.")]
-    public string? Model { get; init; }
 
     [CommandOption("--force")]
     [Description("Re-push even if snapshot exists.")]
@@ -86,18 +70,18 @@ public sealed class PushSettings : CommandSettings
 
 public sealed class PushCommand : AsyncCommand<PushSettings>
 {
-    private readonly LlmOptions _llmOpts;
     private readonly GraphDatabaseOptions _dbOpts;
-    private readonly EmbeddingOptions _embedOpts;
+    private readonly AgentProviderResolver _agentResolver;
+    private readonly EmbeddingProviderResolver _embedResolver;
 
     public PushCommand(
-        IOptions<LlmOptions> llmOptions,
         IOptions<GraphDatabaseOptions> dbOptions,
-        IOptions<EmbeddingOptions> embeddingOptions)
+        AgentProviderResolver agentResolver,
+        EmbeddingProviderResolver embedResolver)
     {
-        _llmOpts = llmOptions.Value;
         _dbOpts = dbOptions.Value;
-        _embedOpts = embeddingOptions.Value;
+        _agentResolver = agentResolver;
+        _embedResolver = embedResolver;
     }
 
     protected override async Task<int> ExecuteAsync(
@@ -108,8 +92,7 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
         var snapshotId = SnapshotId.Resolve(settings.Path);
         Console.Error.WriteLine($"[ngraphiphy] Snapshot: {snapshotId.Id}");
 
-        // 2. Create graph store config based on backend
-        // Backend selection — CLI flag ?? config file ?? code default
+        // 2. Create graph store config
         var backend = (settings.Backend ?? _dbOpts.Backend).ToLowerInvariant();
 
         IGraphStoreConfig storeConfig = backend switch
@@ -131,7 +114,7 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
         // 3. Create graph store
         await using var store = await GraphStoreFactory.CreateAsync(storeConfig, ct: cancellationToken);
 
-        // 4. Check if snapshot already exists
+        // 4. Check snapshot
         var exists = await store.SnapshotExistsAsync(snapshotId, cancellationToken);
         if (exists && !settings.Force)
         {
@@ -149,35 +132,27 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
                     onProgress: msg => ctx.Status(msg), ct: cancellationToken);
             });
 
-        if (analysis is null)
-            return 1;
+        if (analysis is null) return 1;
 
         // 6. Save snapshot
         AnsiConsole.MarkupLine("[blue][ngraphiphy] Saving snapshot...[/]");
         await store.SaveSnapshotAsync(analysis, snapshotId, cancellationToken);
-        AnsiConsole.MarkupLineInterpolated($"[green][ngraphiphy] Snapshot saved: {analysis.Graph.VertexCount} nodes, {analysis.Graph.EdgeCount} edges[/]");
+        AnsiConsole.MarkupLineInterpolated(
+            $"[green][ngraphiphy] Snapshot saved: {analysis.Graph.VertexCount} nodes, {analysis.Graph.EdgeCount} edges[/]");
 
         // 7. Embed nodes (optional)
         if (settings.Embed)
         {
-            // Embedding — CF_API_TOKEN kept as legacy fallback
-            var cfAccount = settings.CloudflareAccount ?? _embedOpts.Cloudflare.AccountId;
-            var cfToken = settings.CloudflareToken
-                ?? _embedOpts.Cloudflare.ApiToken
-                ?? Environment.GetEnvironmentVariable("CF_API_TOKEN");
-            // CloudflareModel: detect explicit CLI override vs. use config
-            var cfModel = (settings.CloudflareModel == null || settings.CloudflareModel == "@cf/baai/bge-base-en-v1.5")
-                ? _embedOpts.Cloudflare.Model ?? "@cf/baai/bge-base-en-v1.5"  // default → use config or fallback
-                : settings.CloudflareModel;                                    // non-default → user explicitly set
-
-            if (string.IsNullOrEmpty(cfAccount) || string.IsNullOrEmpty(cfToken))
+            IEmbeddingProvider embedder;
+            try
             {
-                AnsiConsole.MarkupLine("[red]Error: --cf-account and --cf-token (or CF_API_TOKEN) required for --embed[/]");
+                embedder = _embedResolver.Resolve(settings.EmbedProvider);
+            }
+            catch (InvalidOperationException ex)
+            {
+                AnsiConsole.MarkupLineInterpolated($"[red]Embedding config error: {ex.Message}[/]");
                 return 1;
             }
-
-            var embedConfig = new CloudflareEmbeddingConfig(cfAccount, cfToken, cfModel);
-            var embedder = new CloudflareEmbeddingProvider(embedConfig);
 
             AnsiConsole.MarkupLine("[blue][ngraphiphy] Embedding nodes...[/]");
             await AnsiConsole.Status().Spinner(Spinner.Known.Dots)
@@ -188,71 +163,56 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
             AnsiConsole.MarkupLine("[green][ngraphiphy] Nodes embedded[/]");
         }
 
-        // 8. Generate community summaries (optional)
+        // 8. Community summaries (optional)
         if (settings.Summarize)
         {
-            // LLM for --summarize (same pattern as QueryCommand)
-            var llmProvider = (settings.LlmProvider ?? _llmOpts.Provider).ToLowerInvariant();
-            IAgentConfig llmConfig = llmProvider switch
+            IGraphAgent agent;
+            try
             {
-                "openai" => new OpenAiConfig(
-                    ApiKey: settings.ApiKey ?? _llmOpts.OpenAi.ApiKey
-                        ?? Error("--key or Llm:OpenAi:ApiKey required"),
-                    Model: settings.Model ?? _llmOpts.OpenAi.Model),
-                "ollama" => new OllamaConfig(
-                    Model: settings.Model ?? _llmOpts.Ollama.Model,
-                    Endpoint: _llmOpts.Ollama.Endpoint),
-                "copilot" => new CopilotConfig(),
-                "a2a" => new A2AConfig(
-                    AgentUrl: _llmOpts.A2A.AgentUrl ?? Error("Llm:A2A:AgentUrl required"),
-                    ApiKey: settings.ApiKey ?? _llmOpts.A2A.ApiKey),
-                _ => new AnthropicConfig(
-                    ApiKey: settings.ApiKey ?? _llmOpts.Anthropic.ApiKey
-                        ?? Error("--key or Llm:Anthropic:ApiKey required"),
-                    Model: settings.Model ?? _llmOpts.Anthropic.Model,
-                    MaxTokens: _llmOpts.Anthropic.MaxTokens),
-            };
-
-            AnsiConsole.MarkupLine("[blue][ngraphiphy] Generating community summaries...[/]");
-            await using var agent = await GraphAgentFactory.CreateAsync(llmConfig, analysis.Graph, cancellationToken);
-            await using var session = await agent.CreateSessionAsync(cancellationToken);
-
-            var summaries = new List<CommunitySummary>();
-            var communities = analysis.Graph.Vertices
-                .Where(n => n.Community.HasValue)
-                .GroupBy(n => n.Community!.Value)
-                .ToList();
-
-            foreach (var community in communities)
+                agent = await _agentResolver.CreateAgentAsync(
+                    analysis.Graph, settings.LlmProvider, cancellationToken);
+            }
+            catch (InvalidOperationException ex)
             {
-                var nodes = string.Join(", ", community.Select(n => n.Label).Take(5));
-                var prompt = $"Summarize this software module in 1-2 sentences: {nodes}";
-
-                try
-                {
-                    var summary = await agent.AnswerAsync(prompt, session, cancellationToken);
-                    summaries.Add(new(community.Key, summary, community.Count()));
-                    AnsiConsole.MarkupLineInterpolated($"[dim]  Community {community.Key}: summarized[/]");
-                }
-                catch (Exception ex)
-                {
-                    AnsiConsole.MarkupLineInterpolated($"[yellow]  Community {community.Key}: summary failed ({ex.Message})[/]");
-                }
+                AnsiConsole.MarkupLineInterpolated($"[red]LLM config error: {ex.Message}[/]");
+                return 1;
             }
 
-            await store.SaveCommunitySummariesAsync(snapshotId, summaries, cancellationToken);
-            AnsiConsole.MarkupLineInterpolated($"[green][ngraphiphy] Saved {summaries.Count} community summaries[/]");
+            AnsiConsole.MarkupLine("[blue][ngraphiphy] Generating community summaries...[/]");
+            await using (agent)
+            {
+                await using var session = await agent.CreateSessionAsync(cancellationToken);
+
+                var summaries = new List<CommunitySummary>();
+                var communities = analysis.Graph.Vertices
+                    .Where(n => n.Community.HasValue)
+                    .GroupBy(n => n.Community!.Value)
+                    .ToList();
+
+                foreach (var community in communities)
+                {
+                    var nodes = string.Join(", ", community.Select(n => n.Label).Take(5));
+                    var prompt = $"Summarize this software module in 1-2 sentences: {nodes}";
+                    try
+                    {
+                        var summary = await agent.AnswerAsync(prompt, session, cancellationToken);
+                        summaries.Add(new(community.Key, summary, community.Count()));
+                        AnsiConsole.MarkupLineInterpolated($"[dim]  Community {community.Key}: summarized[/]");
+                    }
+                    catch (Exception ex)
+                    {
+                        AnsiConsole.MarkupLineInterpolated(
+                            $"[yellow]  Community {community.Key}: summary failed ({ex.Message})[/]");
+                    }
+                }
+
+                await store.SaveCommunitySummariesAsync(snapshotId, summaries, cancellationToken);
+                AnsiConsole.MarkupLineInterpolated(
+                    $"[green][ngraphiphy] Saved {summaries.Count} community summaries[/]");
+            }
         }
 
         AnsiConsole.MarkupLine("[green][ngraphiphy] Push complete[/]");
         return 0;
-    }
-
-    private static string? Env(string name) => Environment.GetEnvironmentVariable(name);
-
-    private static string Error(string message)
-    {
-        AnsiConsole.MarkupLineInterpolated($"[red]{message}[/]");
-        throw new InvalidOperationException(message);
     }
 }
