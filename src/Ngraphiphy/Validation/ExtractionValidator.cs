@@ -4,15 +4,23 @@ namespace Ngraphiphy.Validation;
 
 public static class ExtractionValidator
 {
+    public sealed record Result(IReadOnlyList<string> Errors, IReadOnlyList<string> Warnings);
+
+    // File types fully processed by the analysis pipeline.
     private static readonly HashSet<string> ValidFileTypes =
         ["code", "document", "paper", "image", "rationale", "concept"];
+
+    // File types known to the FileType enum but not yet processed by the pipeline.
+    // Encountering one is a warning, not a hard failure.
+    private static readonly HashSet<string> WarnFileTypes = ["video"];
 
     private static readonly HashSet<string> ValidConfidences =
         ["EXTRACTED", "INFERRED", "AMBIGUOUS"];
 
-    public static List<string> Validate(Models.Extraction extraction)
+    public static Result Validate(Models.Extraction extraction)
     {
         var errors = new List<string>();
+        var warnings = new List<string>();
         var nodeIds = new HashSet<string>();
 
         for (int i = 0; i < extraction.Nodes.Count; i++)
@@ -30,8 +38,15 @@ public static class ExtractionValidator
             if (string.IsNullOrWhiteSpace(node.SourceFile))
                 errors.Add($"Node[{i}]: missing required field 'source_file'");
 
-            if (!ValidFileTypes.Contains(node.FileTypeString))
-                errors.Add($"Node[{i}]: invalid file_type '{node.FileTypeString}' (must be one of: {string.Join(", ", ValidFileTypes)})");
+            if (ValidFileTypes.Contains(node.FileTypeString))
+                continue;
+
+            if (WarnFileTypes.Contains(node.FileTypeString))
+                warnings.Add(
+                    $"Node[{i}]: file_type '{node.FileTypeString}' is recognized but not yet processed by the pipeline");
+            else
+                errors.Add(
+                    $"Node[{i}]: invalid file_type '{node.FileTypeString}' (must be one of: {string.Join(", ", ValidFileTypes)})");
         }
 
         for (int i = 0; i < extraction.Edges.Count; i++)
@@ -60,14 +75,14 @@ public static class ExtractionValidator
                 errors.Add($"Edge[{i}]: dangling target '{edge.Target}' not found in nodes");
         }
 
-        return errors;
+        return new Result(errors, warnings);
     }
 
     public static void AssertValid(Models.Extraction extraction)
     {
-        var errors = Validate(extraction);
-        if (errors.Count > 0)
+        var result = Validate(extraction);
+        if (result.Errors.Count > 0)
             throw new InvalidOperationException(
-                $"Invalid extraction ({errors.Count} errors):\n" + string.Join("\n", errors));
+                $"Invalid extraction ({result.Errors.Count} errors):\n" + string.Join("\n", result.Errors));
     }
 }

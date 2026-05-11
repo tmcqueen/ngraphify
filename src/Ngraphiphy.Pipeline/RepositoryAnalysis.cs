@@ -6,6 +6,7 @@ using Ngraphiphy.Detection;
 using Ngraphiphy.Extraction;
 using Ngraphiphy.Models;
 using Ngraphiphy.Report;
+using Ngraphiphy.Validation;
 using QuikGraph;
 using ExtractionModel = Ngraphiphy.Models.Extraction;
 
@@ -51,6 +52,13 @@ public sealed class RepositoryAnalysis
 
             var source = await File.ReadAllTextAsync(file.AbsolutePath, ct);
             var extraction = extractor.Extract(file.AbsolutePath, source);
+            var validation = ExtractionValidator.Validate(extraction);
+            foreach (var warning in validation.Warnings)
+                onProgress?.Invoke($"Warning [{file.AbsolutePath}]: {warning}");
+            if (validation.Errors.Count > 0)
+                throw new InvalidOperationException(
+                    $"Invalid extraction for {file.AbsolutePath} ({validation.Errors.Count} errors):\n"
+                    + string.Join("\n", validation.Errors));
             cache.Save(hash, extraction);
             extractions.Add(extraction);
         }

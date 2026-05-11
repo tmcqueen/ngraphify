@@ -5,6 +5,12 @@ namespace Ngraphiphy.Tests.Validation;
 
 public class ExtractionValidatorTests
 {
+    private static Models.Extraction Single(Node n) => new()
+    {
+        Nodes = [n],
+        Edges = [],
+    };
+
     [Test]
     public async Task ValidExtraction_ReturnsNoErrors()
     {
@@ -20,9 +26,9 @@ public class ExtractionValidatorTests
             ]
         };
 
-        var errors = ExtractionValidator.Validate(extraction);
+        var result = ExtractionValidator.Validate(extraction);
 
-        await Assert.That(errors).IsEmpty();
+        await Assert.That(result.Errors).IsEmpty();
     }
 
     [Test]
@@ -37,10 +43,10 @@ public class ExtractionValidatorTests
             Edges = []
         };
 
-        var errors = ExtractionValidator.Validate(extraction);
+        var result = ExtractionValidator.Validate(extraction);
 
-        await Assert.That(errors).IsNotEmpty();
-        await Assert.That(errors[0]).Contains("id");
+        await Assert.That(result.Errors).IsNotEmpty();
+        await Assert.That(result.Errors[0]).Contains("id");
     }
 
     [Test]
@@ -55,10 +61,10 @@ public class ExtractionValidatorTests
             Edges = []
         };
 
-        var errors = ExtractionValidator.Validate(extraction);
+        var result = ExtractionValidator.Validate(extraction);
 
-        await Assert.That(errors).IsNotEmpty();
-        await Assert.That(errors[0]).Contains("label");
+        await Assert.That(result.Errors).IsNotEmpty();
+        await Assert.That(result.Errors[0]).Contains("label");
     }
 
     [Test]
@@ -73,10 +79,10 @@ public class ExtractionValidatorTests
             Edges = []
         };
 
-        var errors = ExtractionValidator.Validate(extraction);
+        var result = ExtractionValidator.Validate(extraction);
 
-        await Assert.That(errors).IsNotEmpty();
-        await Assert.That(errors[0]).Contains("file_type");
+        await Assert.That(result.Errors).IsNotEmpty();
+        await Assert.That(result.Errors[0]).Contains("file_type");
     }
 
     [Test]
@@ -94,10 +100,10 @@ public class ExtractionValidatorTests
             ]
         };
 
-        var errors = ExtractionValidator.Validate(extraction);
+        var result = ExtractionValidator.Validate(extraction);
 
-        await Assert.That(errors).IsNotEmpty();
-        await Assert.That(errors[0]).Contains("confidence");
+        await Assert.That(result.Errors).IsNotEmpty();
+        await Assert.That(result.Errors[0]).Contains("confidence");
     }
 
     [Test]
@@ -115,10 +121,10 @@ public class ExtractionValidatorTests
             ]
         };
 
-        var errors = ExtractionValidator.Validate(extraction);
+        var result = ExtractionValidator.Validate(extraction);
 
-        await Assert.That(errors).IsNotEmpty();
-        await Assert.That(errors[0]).Contains("dangling");
+        await Assert.That(result.Errors).IsNotEmpty();
+        await Assert.That(result.Errors[0]).Contains("dangling");
     }
 
     [Test]
@@ -136,9 +142,67 @@ public class ExtractionValidatorTests
             ]
         };
 
-        var errors = ExtractionValidator.Validate(extraction);
+        var result = ExtractionValidator.Validate(extraction);
 
-        await Assert.That(errors).IsNotEmpty();
-        await Assert.That(errors[0]).Contains("source_file");
+        await Assert.That(result.Errors).IsNotEmpty();
+        await Assert.That(result.Errors[0]).Contains("source_file");
+    }
+
+    [Test]
+    public async Task Validate_VideoFileType_ProducesWarningNotError()
+    {
+        var ext = Single(new Node
+        {
+            Id = "v1", Label = "demo.mp4",
+            FileTypeString = "video", SourceFile = "demo.mp4",
+        });
+
+        var result = ExtractionValidator.Validate(ext);
+
+        await Assert.That(result.Errors).IsEmpty();
+        await Assert.That(result.Warnings.Count).IsGreaterThan(0);
+    }
+
+    [Test]
+    public async Task AssertValid_VideoFileType_DoesNotThrow()
+    {
+        var ext = Single(new Node
+        {
+            Id = "v1", Label = "demo.mp4",
+            FileTypeString = "video", SourceFile = "demo.mp4",
+        });
+
+        var act = () => ExtractionValidator.AssertValid(ext);
+
+        await Assert.That(act).ThrowsNothing();
+    }
+
+    [Test]
+    public async Task Validate_UnknownFileType_IsError()
+    {
+        var ext = Single(new Node
+        {
+            Id = "x", Label = "weird",
+            FileTypeString = "garbage-not-in-enum", SourceFile = "x",
+        });
+
+        var result = ExtractionValidator.Validate(ext);
+
+        await Assert.That(result.Errors.Count).IsGreaterThan(0);
+    }
+
+    [Test]
+    public async Task Validate_ValidCodeNode_NoErrorsOrWarnings()
+    {
+        var ext = Single(new Node
+        {
+            Id = "c1", Label = "MyClass",
+            FileTypeString = "code", SourceFile = "MyClass.cs",
+        });
+
+        var result = ExtractionValidator.Validate(ext);
+
+        await Assert.That(result.Errors).IsEmpty();
+        await Assert.That(result.Warnings).IsEmpty();
     }
 }
