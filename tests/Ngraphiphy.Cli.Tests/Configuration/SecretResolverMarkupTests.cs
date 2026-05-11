@@ -7,12 +7,12 @@ public class SecretResolverMarkupTests
 {
     private sealed class BracketMessageProvider : ISecretProvider
     {
-        public string Resolve(string path)
+        public Task<string> ResolveAsync(string path, CancellationToken ct = default)
             => throw new InvalidOperationException("connection [host:port] failed");
     }
 
     [Test]
-    public async Task ResolveAndOverlay_ExceptionMessageHasBrackets_DoesNotThrowMarkupException()
+    public async Task ResolveAndOverlayAsync_ExceptionMessageHasBrackets_DoesNotThrowMarkupException()
     {
         var providers = new Dictionary<string, ISecretProvider>(StringComparer.Ordinal)
         {
@@ -23,7 +23,7 @@ public class SecretResolverMarkupTests
             .Build();
         var target = new ConfigurationBuilder();
 
-        var act = () => SecretResolver.ResolveAndOverlay(target, snapshot, providers);
+        var act = async () => await SecretResolver.ResolveAndOverlayAsync(target, snapshot, providers);
 
         await Assert.That(act).ThrowsNothing();
     }

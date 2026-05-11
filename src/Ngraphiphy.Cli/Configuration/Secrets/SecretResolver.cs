@@ -10,10 +10,11 @@ public static class SecretResolver
     /// env:// references, and adds an in-memory overlay on <paramref name="configBuilder"/>
     /// so subsequent IOptions binding sees plain strings.
     /// </summary>
-    public static void ResolveAndOverlay(
+    public static async Task ResolveAndOverlayAsync(
         IConfigurationBuilder configBuilder,
         IConfiguration snapshot,
-        IReadOnlyDictionary<string, ISecretProvider> providers)
+        IReadOnlyDictionary<string, ISecretProvider> providers,
+        CancellationToken ct = default)
     {
         var overlay = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -32,7 +33,7 @@ public static class SecretResolver
 
             try
             {
-                var resolved = provider.Resolve(reference.Path);
+                var resolved = await provider.ResolveAsync(reference.Path, ct);
                 if (resolved is not null)
                     overlay[key] = resolved;
             }

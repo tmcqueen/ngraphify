@@ -36,7 +36,8 @@ public static class CliHostExtensions
         };
 
         var snapshot = ((IConfigurationBuilder)builder.Configuration).Build();
-        SecretResolver.ResolveAndOverlay(builder.Configuration, snapshot, providers);
+        SecretResolver.ResolveAndOverlayAsync(builder.Configuration, snapshot, providers)
+            .GetAwaiter().GetResult();
 
         // 3. Register singleton providers for any code that needs late resolution
         builder.Services.AddSingleton<ISecretProvider>(passProvider);

@@ -2,5 +2,8 @@ namespace Ngraphiphy.Cli.Configuration.Secrets;
 
 internal interface IProcessRunner
 {
-    (string Stdout, string Stderr, int ExitCode) Run(string executable, string arguments);
+    Task<(string Stdout, string Stderr, int ExitCode)> RunAsync(
+        string executable,
+        IReadOnlyList<string> arguments,
+        CancellationToken ct = default);
 }

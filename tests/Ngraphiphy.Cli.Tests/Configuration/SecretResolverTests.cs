@@ -7,7 +7,7 @@ public class SecretResolverTests
 {
     private sealed class FakeProvider(string value) : ISecretProvider
     {
-        public string Resolve(string _) => value;
+        public Task<string> ResolveAsync(string _, CancellationToken ct = default) => Task.FromResult(value);
     }
 
     private static IReadOnlyDictionary<string, ISecretProvider> MakeProviders() =>
@@ -18,7 +18,7 @@ public class SecretResolverTests
         };
 
     [Test]
-    public async Task ResolveAndOverlay_PassReference_IsReplaced()
+    public async Task ResolveAndOverlayAsync_PassReference_IsReplaced()
     {
         var configBuilder = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -26,14 +26,14 @@ public class SecretResolverTests
                 ["Llm:Anthropic:ApiKey"] = "pass://anthropic/key"
             });
 
-        SecretResolver.ResolveAndOverlay(configBuilder, configBuilder.Build(), MakeProviders());
+        await SecretResolver.ResolveAndOverlayAsync(configBuilder, configBuilder.Build(), MakeProviders());
 
         var final = configBuilder.Build();
         await Assert.That(final["Llm:Anthropic:ApiKey"]).IsEqualTo("resolved-pass");
     }
 
     [Test]
-    public async Task ResolveAndOverlay_PlainValue_IsUntouched()
+    public async Task ResolveAndOverlayAsync_PlainValue_IsUntouched()
     {
         var configBuilder = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -41,14 +41,14 @@ public class SecretResolverTests
                 ["Llm:Anthropic:Model"] = "claude-sonnet-4-6"
             });
 
-        SecretResolver.ResolveAndOverlay(configBuilder, configBuilder.Build(), MakeProviders());
+        await SecretResolver.ResolveAndOverlayAsync(configBuilder, configBuilder.Build(), MakeProviders());
 
         var final = configBuilder.Build();
         await Assert.That(final["Llm:Anthropic:Model"]).IsEqualTo("claude-sonnet-4-6");
     }
 
     [Test]
-    public async Task ResolveAndOverlay_UnknownScheme_TreatedAsLiteral()
+    public async Task ResolveAndOverlayAsync_UnknownScheme_TreatedAsLiteral()
     {
         // "vault://" is not registered → SecretReference.Parse returns IsReference=false
         // → treated as plain string → not touched
@@ -58,14 +58,14 @@ public class SecretResolverTests
                 ["SomeKey"] = "vault://some/path"
             });
 
-        SecretResolver.ResolveAndOverlay(configBuilder, configBuilder.Build(), MakeProviders());
+        await SecretResolver.ResolveAndOverlayAsync(configBuilder, configBuilder.Build(), MakeProviders());
 
         var final = configBuilder.Build();
         await Assert.That(final["SomeKey"]).IsEqualTo("vault://some/path");
     }
 
     [Test]
-    public async Task ResolveAndOverlay_EnvReference_IsReplaced()
+    public async Task ResolveAndOverlayAsync_EnvReference_IsReplaced()
     {
         var configBuilder = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -73,14 +73,14 @@ public class SecretResolverTests
                 ["A2A:AgentUrl"] = "env://A2A_AGENT_URL"
             });
 
-        SecretResolver.ResolveAndOverlay(configBuilder, configBuilder.Build(), MakeProviders());
+        await SecretResolver.ResolveAndOverlayAsync(configBuilder, configBuilder.Build(), MakeProviders());
 
         var final = configBuilder.Build();
         await Assert.That(final["A2A:AgentUrl"]).IsEqualTo("resolved-env");
     }
 
     [Test]
-    public async Task ResolveAndOverlay_ProviderThrowsWin32Exception_DoesNotPropagate()
+    public async Task ResolveAndOverlayAsync_ProviderThrowsWin32Exception_DoesNotPropagate()
     {
         var throwingProvider = new Win32ThrowingProvider();
         var providers = new Dictionary<string, ISecretProvider>(StringComparer.Ordinal)
@@ -92,14 +92,14 @@ public class SecretResolverTests
             .Build();
         var target = new ConfigurationBuilder();
 
-        var act = () => SecretResolver.ResolveAndOverlay(target, snapshot, providers);
+        var act = async () => await SecretResolver.ResolveAndOverlayAsync(target, snapshot, providers);
 
         await Assert.That(act).ThrowsNothing();
     }
 
     private sealed class Win32ThrowingProvider : ISecretProvider
     {
-        public string Resolve(string path)
+        public Task<string> ResolveAsync(string path, CancellationToken ct = default)
             => throw new System.ComponentModel.Win32Exception(2, "No such file or directory");
     }
 }

@@ -15,17 +15,16 @@ public sealed class PassSecretProvider : ISecretProvider
         _runner = runner;
     }
 
-    public string Resolve(string path)
+    public async Task<string> ResolveAsync(string path, CancellationToken ct = default)
     {
         if (_cache.TryGetValue(path, out var cached))
             return cached;
 
-        var (stdout, stderr, exitCode) = _runner.Run("pass", $"show {path}");
+        var (stdout, stderr, exitCode) = await _runner.RunAsync("pass", ["show", path], ct);
 
         if (exitCode != 0)
             throw new InvalidOperationException(
-                $"Secret reference pass://{path}: 'pass show {path}' exited {exitCode}. " +
-                $"stderr: {stderr.Trim()}");
+                $"Secret reference pass://{path}: 'pass show' exited {exitCode}. stderr: {stderr.Trim()}");
 
         // pass show outputs the secret on the first line; additional lines may contain metadata.
         var secret = stdout.Split('\n')[0].TrimEnd();
