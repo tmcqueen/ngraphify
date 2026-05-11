@@ -205,6 +205,39 @@ Querying LLM...
 - LLM request failed: Error with service-specific message
 - Analysis failed: Error with root cause
 
+### push
+
+Push a repository graph snapshot to a graph database (Neo4j or Memgraph).
+
+**Syntax:**
+
+```bash
+ngraphiphy-cli push <path> [options]
+```
+
+**Arguments:**
+
+- `<path>` — Repository root directory (required)
+
+**Options:**
+
+- `--backend <neo4j|memgraph>` — Graph database backend (default: from `GraphDatabase.Backend`)
+- `--embed` — Embed nodes using the configured embedding provider
+- `--embed-provider <name>` — Named embedding provider from `Providers` (default: `Embedding.Provider`)
+- `--summarize` — Generate community summaries using the LLM provider
+- `--provider <name>` — Named LLM provider for `--summarize` (default: `Llm.Provider`)
+- `--force` — Re-push even if snapshot already exists
+
+**Examples:**
+
+```bash
+# Push to Neo4j with embeddings using CloudflareAI provider
+ngraphiphy-cli push /path/to/repo --embed
+
+# Use a specific embedding provider defined in appsettings.json
+ngraphiphy-cli push /path/to/repo --embed --embed-provider OpenAI
+```
+
 ### serve
 
 Start an MCP (Model Context Protocol) server on stdio for use with Claude, Cursor, etc.
@@ -748,7 +781,7 @@ dotnet build -m  # Multiple projects, one analysis
 For offline work, use Ollama with local models:
 
 ```bash
-ngraphiphy-cli query . "Summarize classes" --provider ollama --model llama3.2
+ngraphiphy-cli query . "Summarize classes" --provider Ollama --model llama3.2
 ```
 
 No network, no API key, instant (or slow, depending on model size).
@@ -1021,9 +1054,7 @@ Ask: "What are the main classes and their dependencies in this codebase?"
 
 **Use a more capable model:**
 
-```bash
-ngraphiphy-cli query . "..." --model claude-opus-4
-```
+Switch the provider to one using a more capable model (e.g., set `Llm:Provider` in `appsettings.json` to a provider configured with `claude-opus-4`).
 
 **Provide context in question:**
 
@@ -1068,7 +1099,7 @@ curl http://localhost:11434/api/tags
 **Use custom endpoint:**
 
 ```bash
-ngraphiphy-cli query . "..." --provider ollama --model llama3.2 \
+ngraphiphy-cli query . "..." --provider Ollama --model llama3.2 \
   # Note: Currently uses default endpoint; for custom, file a feature request
 ```
 
