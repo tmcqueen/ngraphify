@@ -14,7 +14,7 @@ public sealed record SnapshotId(string RootPath, string CommitHash)
             var commitHash = repo.Head.Tip.Sha;
             return new(rootPath, commitHash);
         }
-        catch
+        catch (Exception)
         {
             // Not a git repo or error resolving — use content hash instead
             var contentHash = ComputeContentHash(rootPath);
@@ -33,8 +33,9 @@ public sealed record SnapshotId(string RootPath, string CommitHash)
 
         foreach (var file in files)
         {
+            var fileInfo = new FileInfo(file);
             hasher.TransformBlock(System.Text.Encoding.UTF8.GetBytes(file), 0, file.Length, null, 0);
-            hasher.TransformBlock(File.ReadAllBytes(file), 0, (int)new FileInfo(file).Length, null, 0);
+            hasher.TransformBlock(File.ReadAllBytes(file), 0, (int)fileInfo.Length, null, 0);
         }
         hasher.TransformFinalBlock([], 0, 0);
 
