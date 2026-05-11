@@ -19,5 +19,6 @@
     <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="1.5.0" />
     <!-- Ollama: OllamaApiClient implements IChatClient, AsAIAgent() comes from Microsoft.Agents.AI -->
     <PackageReference Include="OllamaSharp" Version="5.4.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.7" />
   </ItemGroup>
 </Project>
