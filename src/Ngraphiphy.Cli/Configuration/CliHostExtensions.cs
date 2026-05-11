@@ -40,6 +40,9 @@ public static class CliHostExtensions
             .GetAwaiter().GetResult();
 
         // 3. Register singleton providers for any code that needs late resolution
+        builder.Services.AddKeyedSingleton<ISecretProvider>("pass", passProvider);
+        builder.Services.AddKeyedSingleton<ISecretProvider>("env", envProvider);
+        // Default (unkeyed) for backward compat — resolves to pass provider
         builder.Services.AddSingleton<ISecretProvider>(passProvider);
 
         // 4. Bind options — executed after the overlay, so secrets are plain strings
