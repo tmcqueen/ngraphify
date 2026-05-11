@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Ngraphiphy.Cli.Configuration.Options;
 using Ngraphiphy.Cli.Configuration.Secrets;
+using Spectre.Console;
 
 namespace Ngraphiphy.Cli.Configuration;
 
@@ -36,7 +37,9 @@ public static class CliHostExtensions
         };
 
         var snapshot = ((IConfigurationBuilder)builder.Configuration).Build();
-        SecretResolver.ResolveAndOverlayAsync(builder.Configuration, snapshot, providers)
+        SecretResolver.ResolveAndOverlayAsync(
+                builder.Configuration, snapshot, providers,
+                warn: msg => AnsiConsole.MarkupLineInterpolated($"[yellow]{msg}[/]"))
             .GetAwaiter().GetResult();
 
         // 3. Register singleton providers for any code that needs late resolution

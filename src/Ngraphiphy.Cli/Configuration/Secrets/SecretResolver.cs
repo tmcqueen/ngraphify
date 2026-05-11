@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Configuration;
-using Spectre.Console;
 
 namespace Ngraphiphy.Cli.Configuration.Secrets;
 
@@ -14,6 +13,7 @@ public static class SecretResolver
         IConfigurationBuilder configBuilder,
         IConfiguration snapshot,
         IReadOnlyDictionary<string, ISecretProvider> providers,
+        Action<string>? warn = null,
         CancellationToken ct = default)
     {
         var overlay = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -27,7 +27,7 @@ public static class SecretResolver
 
             if (!providers.TryGetValue(reference.Scheme, out var provider))
             {
-                AnsiConsole.MarkupLineInterpolated($"[yellow]Warning: No secret provider registered for scheme '{reference.Scheme}' (key: {key})[/]");
+                warn?.Invoke($"Warning: No secret provider registered for scheme '{reference.Scheme}' (key: {key})");
                 continue;
             }
 
@@ -43,7 +43,7 @@ public static class SecretResolver
             {
                 // Secret couldn't be resolved, but don't fail the entire CLI startup.
                 // The command that actually needs this secret will fail with a clear error.
-                AnsiConsole.MarkupLineInterpolated($"[yellow]Warning: Could not resolve secret reference '{key}': {ex.Message}[/]");
+                warn?.Invoke($"Warning: Could not resolve secret reference '{key}': {ex.Message}");
                 // Don't add to overlay — the config value (pass://...) remains
             }
         }
