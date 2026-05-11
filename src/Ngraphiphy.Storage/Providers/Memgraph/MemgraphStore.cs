@@ -35,9 +35,11 @@ public sealed class MemgraphStore : BoltStoreBase
                 return 0;
             });
         }
-        catch
+        catch (Exception ex) when (
+            ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase)
+            || ex.Message.Contains("Index already created", StringComparison.OrdinalIgnoreCase))
         {
-            // Index may already exist; continue
+            // Expected: vector index was created in a previous run.
         }
         finally
         {
