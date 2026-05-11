@@ -6,10 +6,8 @@ public sealed class EnvSecretProvider : ISecretProvider
     {
         var value = Environment.GetEnvironmentVariable(path);
         if (value is null)
-        {
-            // Return empty string for missing env vars to allow help/version commands to work
-            return string.Empty;
-        }
+            throw new InvalidOperationException(
+                $"Secret reference env://{path}: environment variable '{path}' is not set.");
         return value;
     }
 }
