@@ -40,6 +40,7 @@ public sealed class RepositoryAnalysis
 
         onProgress?.Invoke($"Extracting {files.Count} files...");
         var extractionBag = new System.Collections.Concurrent.ConcurrentBag<ExtractionModel>();
+        var progressLock = new object();
         await Parallel.ForEachAsync(files, new ParallelOptions
         {
             CancellationToken = ct,
@@ -58,7 +59,7 @@ public sealed class RepositoryAnalysis
 
             var validation = ExtractionValidator.Validate(extraction);
             foreach (var warning in validation.Warnings)
-                onProgress?.Invoke($"Warning [{file.AbsolutePath}]: {warning}");
+                lock (progressLock) onProgress?.Invoke($"Warning [{file.AbsolutePath}]: {warning}");
             if (validation.Errors.Count > 0)
                 throw new InvalidOperationException(
                     $"Invalid extraction for {file.AbsolutePath} ({validation.Errors.Count} errors):\n"
