@@ -38,6 +38,9 @@ public static class EntityDeduplicator
                 uf.Union(winner.Id, n.Id);
         }
 
+        // Build O(1) lookup index
+        var nodesById = nodes.ToDictionary(n => n.Id);
+
         // Pass 2: MinHash/LSH + Jaro-Winkler for high-entropy labels
         var highEntropy = nodes.Where(n => Entropy(n.Label) >= EntropyThreshold).ToList();
         if (highEntropy.Count > 1)
@@ -80,7 +83,7 @@ public static class EntityDeduplicator
                         ? (node.Id, candidateId) : (candidateId, node.Id);
                     if (!checked_.Add(pair)) continue;
 
-                    var other = nodes.First(n => n.Id == candidateId);
+                    var other = nodesById[candidateId];
                     var similarity = jw.Similarity(Normalize(node.Label), Normalize(other.Label));
                     if (similarity >= MergeThreshold)
                         uf.Union(node.Id, candidateId);
@@ -95,7 +98,7 @@ public static class EntityDeduplicator
 
         foreach (var (root, members) in groups)
         {
-            var memberNodes = members.Select(id => nodes.First(n => n.Id == id)).ToList();
+            var memberNodes = members.Select(id => nodesById[id]).ToList();
             var winner = PickWinner(memberNodes);
             foreach (var id in members)
                 remap[id] = winner.Id;
