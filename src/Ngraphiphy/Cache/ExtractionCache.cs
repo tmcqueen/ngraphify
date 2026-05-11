@@ -28,6 +28,20 @@ public sealed class ExtractionCache
         return Convert.ToHexStringLower(bytes);
     }
 
+    public static string FileHash(string filePath, string rootDir, string fileContent)
+    {
+        var relativePath = Path.GetRelativePath(rootDir, filePath).Replace('\\', '/');
+        var content = fileContent;
+
+        // Strip markdown frontmatter before hashing
+        if (relativePath.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+            content = StripFrontmatter(content);
+
+        var input = relativePath + "\n" + content;
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(input));
+        return Convert.ToHexStringLower(bytes);
+    }
+
     public void Save(string hash, ExtractionModel extraction)
     {
         Directory.CreateDirectory(_cacheDir);

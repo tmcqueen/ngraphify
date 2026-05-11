@@ -46,11 +46,10 @@ public sealed class RepositoryAnalysis
             var extractor = registry.GetExtractor(file.AbsolutePath);
             if (extractor is null) continue;
 
-            var hash = ExtractionCache.FileHash(file.AbsolutePath, rootPath);
+            var source = await File.ReadAllTextAsync(file.AbsolutePath, ct);
+            var hash = ExtractionCache.FileHash(file.AbsolutePath, rootPath, source);
             var cached = cache.Load(hash);
             if (cached is not null) { extractions.Add(cached); continue; }
-
-            var source = await File.ReadAllTextAsync(file.AbsolutePath, ct);
             var extraction = extractor.Extract(file.AbsolutePath, source);
             var validation = ExtractionValidator.Validate(extraction);
             foreach (var warning in validation.Warnings)
