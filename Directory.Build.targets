@@ -1,16 +1,22 @@
 <Project>
   <!--
-    Ngraphiphy self-analysis: runs before each build, but only when source files change.
+    Ngraphiphy self-analysis: runs before each build (top-level only).
     Set <NgraphiphyEnabled>false</NgraphiphyEnabled> in a project to opt out.
+    Automatically excluded: Ngraphiphy.MSBuild, Ngraphiphy.Cli (to avoid nested builds).
   -->
+  <PropertyGroup>
+    <_NgraphiphyIsNested Condition="'$(NGRAPHIPHY_ANALYZING)' == 'true'">true</_NgraphiphyIsNested>
+  </PropertyGroup>
+
   <Target Name="NgraphiphyAnalyze"
           BeforeTargets="Build"
-          Condition="'$(NgraphiphyEnabled)' != 'false'"
+          Condition="'$(NgraphiphyEnabled)' != 'false' AND '$(MSBuildProjectName)' == 'Ngraphiphy' AND '$(_NgraphiphyIsNested)' != 'true'"
           Inputs="@(Compile)"
           Outputs="$(MSBuildThisFileDirectory).ngraphiphy-cache/.msbuild-stamp">
-    <Message Text="[ngraphiphy] Analyzing $(MSBuildProjectName)..." Importance="normal" />
-    <Exec Command="dotnet run --project &quot;$(MSBuildThisFileDirectory)src/Ngraphiphy.Cli/&quot; -- analyze &quot;$(MSBuildProjectDirectory)&quot; --cache &quot;$(MSBuildThisFileDirectory).ngraphiphy-cache&quot;"
+    <Message Text="[ngraphiphy] Analyzing repository..." Importance="normal" />
+    <Exec Command="dotnet run --project &quot;$(MSBuildThisFileDirectory)src/Ngraphiphy.Cli/&quot; -- analyze &quot;$(MSBuildThisFileDirectory)&quot; --cache &quot;$(MSBuildThisFileDirectory).ngraphiphy-cache&quot;"
           ContinueOnError="true"
+          EnvironmentVariables="NGRAPHIPHY_ANALYZING=true"
           WorkingDirectory="$(MSBuildThisFileDirectory)" />
     <Touch Files="$(MSBuildThisFileDirectory).ngraphiphy-cache/.msbuild-stamp" AlwaysCreate="true" />
   </Target>
