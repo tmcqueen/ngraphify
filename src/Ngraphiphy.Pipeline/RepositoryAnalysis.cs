@@ -39,18 +39,23 @@ public sealed class RepositoryAnalysis
         var files = FileDetector.Detect(rootPath);
 
         onProgress?.Invoke($"Extracting {files.Count} files...");
-        var extractions = new List<ExtractionModel>();
-        foreach (var file in files)
+        var extractionBag = new System.Collections.Concurrent.ConcurrentBag<ExtractionModel>();
+        await Parallel.ForEachAsync(files, new ParallelOptions
         {
-            ct.ThrowIfCancellationRequested();
+            CancellationToken = ct,
+            MaxDegreeOfParallelism = Environment.ProcessorCount,
+        }, async (file, token) =>
+        {
             var extractor = registry.GetExtractor(file.AbsolutePath);
-            if (extractor is null) continue;
+            if (extractor is null) return;
 
-            var source = await File.ReadAllTextAsync(file.AbsolutePath, ct);
+            var source = await File.ReadAllTextAsync(file.AbsolutePath, token);
             var hash = ExtractionCache.FileHash(file.AbsolutePath, rootPath, source);
             var cached = cache.Load(hash);
-            if (cached is not null) { extractions.Add(cached); continue; }
+            if (cached is not null) { extractionBag.Add(cached); return; }
+
             var extraction = extractor.Extract(file.AbsolutePath, source);
+
             var validation = ExtractionValidator.Validate(extraction);
             foreach (var warning in validation.Warnings)
                 onProgress?.Invoke($"Warning [{file.AbsolutePath}]: {warning}");
@@ -58,9 +63,11 @@ public sealed class RepositoryAnalysis
                 throw new InvalidOperationException(
                     $"Invalid extraction for {file.AbsolutePath} ({validation.Errors.Count} errors):\n"
                     + string.Join("\n", validation.Errors));
+
             cache.Save(hash, extraction);
-            extractions.Add(extraction);
-        }
+            extractionBag.Add(extraction);
+        });
+        var extractions = extractionBag.ToList();
 
         onProgress?.Invoke("Building graph...");
         var rawGraph = GraphBuilder.Build(extractions);
