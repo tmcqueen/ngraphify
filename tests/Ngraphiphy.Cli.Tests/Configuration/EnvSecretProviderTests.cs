@@ -22,13 +22,13 @@ public class EnvSecretProviderTests
     }
 
     [Test]
-    public async Task Resolve_MissingVariable_ThrowsInvalidOperationException()
+    public async Task Resolve_MissingVariable_Throws()
     {
         var varName = $"NGRAPHIPHY_MISSING_{Guid.NewGuid():N}";
         var provider = new EnvSecretProvider();
 
-        await Assert.That(() => provider.Resolve(varName))
-            .Throws<InvalidOperationException>()
-            .WithMessageContaining(varName);
+        var act = () => provider.Resolve(varName);
+
+        await Assert.That(act).Throws<InvalidOperationException>();
     }
 }

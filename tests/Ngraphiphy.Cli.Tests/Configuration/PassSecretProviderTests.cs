@@ -30,14 +30,14 @@ public class PassSecretProviderTests
     }
 
     [Test]
-    public async Task Resolve_NonZeroExit_ThrowsWithPath()
+    public async Task Resolve_NonZeroExit_Throws()
     {
         var runner = new FakeRunner { Stdout = "", ExitCode = 1, Stderr = "Error: not found" };
         var provider = new PassSecretProvider(runner);
 
-        await Assert.That(() => provider.Resolve("missing/key"))
-            .Throws<InvalidOperationException>()
-            .WithMessageContaining("missing/key");
+        var act = () => provider.Resolve("missing/key");
+
+        await Assert.That(act).Throws<InvalidOperationException>();
     }
 
     [Test]

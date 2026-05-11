@@ -28,7 +28,9 @@ public static class SecretResolver
                     $"No secret provider registered for scheme '{reference.Scheme}' " +
                     $"(key: {key}).");
 
-            overlay[key] = provider.Resolve(reference.Path);
+            var resolved = provider.Resolve(reference.Path);
+            if (resolved is not null)
+                overlay[key] = resolved;
         }
 
         if (overlay.Count > 0)
