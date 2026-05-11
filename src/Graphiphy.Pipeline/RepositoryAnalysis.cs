@@ -60,17 +60,20 @@ public sealed class RepositoryAnalysis
 
             var validation = ExtractionValidator.Validate(extraction);
             foreach (var warning in validation.Warnings)
-                lock (progressLock) onProgress?.Invoke($"Warning [{file.AbsolutePath}]: {warning}");
+                lock (progressLock) onProgress?.Invoke($"Warning [[{file.AbsolutePath}]]: {warning}");
 
             if (validation.Errors.Count > 0)
             {
-                var errorSummary = $"{file.AbsolutePath} ({validation.Errors.Count} errors): {validation.Errors[0]}";
+                // Escape [ and ] so the strings are safe to pass to Spectre.Console markup consumers.
+                static string Esc(string s) => s.Replace("[", "[[").Replace("]", "]]");
+                var errorSummary = Esc($"{file.AbsolutePath} ({validation.Errors.Count} errors): {validation.Errors[0]}");
                 switch (malformedEdgeBehavior)
                 {
                     case MalformedEdgeBehavior.Throw:
+                        // Raw (unescaped) for the exception message — not displayed via Spectre.
                         throw new InvalidOperationException(
-                            $"Invalid extraction for {errorSummary}\n"
-                            + string.Join("\n", validation.Errors.Skip(1)));
+                            $"Invalid extraction for {file.AbsolutePath} ({validation.Errors.Count} errors): "
+                            + string.Join("\n", validation.Errors));
 
                     case MalformedEdgeBehavior.SkipFile:
                         lock (progressLock) onProgress?.Invoke($"Warning: skipping {errorSummary}");
@@ -81,7 +84,7 @@ public sealed class RepositoryAnalysis
                         var dropped = extraction.Edges.RemoveAll(
                             e => !validNodeIds.Contains(e.Source) || !validNodeIds.Contains(e.Target));
                         lock (progressLock) onProgress?.Invoke(
-                            $"Warning: dropped {dropped} dangling edge(s) from {file.AbsolutePath}");
+                            $"Warning: dropped {dropped} dangling edge(s) from [[{file.AbsolutePath}]]");
                         break;
 
                     case MalformedEdgeBehavior.Warn:
