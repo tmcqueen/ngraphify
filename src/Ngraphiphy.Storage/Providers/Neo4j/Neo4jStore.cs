@@ -45,11 +45,12 @@ public sealed class Neo4jStore : BoltStoreBase
 
     public override async Task EmbedNodesAsync(SnapshotId id, IEmbeddingProvider embedder, CancellationToken ct)
     {
-        // Retrieve all nodes in snapshot
-        var session = _driver.AsyncSession();
+        // Phase 1: Retrieve all nodes in snapshot
+        IReadOnlyList<IRecord> nodes;
+        var readSession = _driver.AsyncSession();
         try
         {
-            var nodes = await session.ExecuteReadAsync(
+            nodes = await readSession.ExecuteReadAsync(
                 async tx =>
                 {
                     var cursor = await tx.RunAsync(
@@ -57,9 +58,17 @@ public sealed class Neo4jStore : BoltStoreBase
                         new { snapshotId = id.Id });
                     return await cursor.ToListAsync();
                 });
+        }
+        finally
+        {
+            await readSession.CloseAsync();
+        }
 
-            // Embed each node
-            await session.ExecuteWriteAsync(async tx =>
+        // Phase 2: Embed each node in a separate write session
+        var writeSession = _driver.AsyncSession();
+        try
+        {
+            await writeSession.ExecuteWriteAsync(async tx =>
             {
                 foreach (var record in nodes)
                 {
@@ -78,7 +87,7 @@ public sealed class Neo4jStore : BoltStoreBase
         }
         finally
         {
-            await session.CloseAsync();
+            await writeSession.CloseAsync();
         }
     }
 

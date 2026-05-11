@@ -37,7 +37,7 @@ public class Neo4jStoreTests
         }
         finally
         {
-            await store.DisposeAsync();
+            await ((IAsyncDisposable)store).DisposeAsync();
         }
     }
 
@@ -56,7 +56,7 @@ public class Neo4jStoreTests
         }
         finally
         {
-            await store.DisposeAsync();
+            await ((IAsyncDisposable)store).DisposeAsync();
         }
     }
 }

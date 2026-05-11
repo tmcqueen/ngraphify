@@ -286,7 +286,7 @@ public abstract class BoltStoreBase : IGraphStore
     public abstract Task EmbedNodesAsync(SnapshotId id, IEmbeddingProvider embedder, CancellationToken ct);
     public abstract Task<IReadOnlyList<Node>> SearchSimilarAsync(SnapshotId id, float[] queryVector, int topN, CancellationToken ct);
 
-    public virtual async ValueTask DisposeAsync()
+    async ValueTask IAsyncDisposable.DisposeAsync()
     {
         await _driver.DisposeAsync();
     }
