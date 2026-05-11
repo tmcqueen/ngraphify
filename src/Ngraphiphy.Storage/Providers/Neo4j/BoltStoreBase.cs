@@ -166,6 +166,9 @@ public abstract class BoltStoreBase : IGraphStore
 
     public async Task<IReadOnlyList<Node>> GetNeighborsAsync(string nodeId, int depth, CancellationToken ct)
     {
+        if (depth < 1 || depth > 10)
+            throw new ArgumentOutOfRangeException(nameof(depth), depth, "depth must be between 1 and 10");
+
         var session = _driver.AsyncSession();
         try
         {
@@ -175,12 +178,12 @@ public abstract class BoltStoreBase : IGraphStore
                 async tx =>
                 {
                     var cursor = await tx.RunAsync(
-                        @"MATCH (n:GraphNode {id: $nodeId})-[*1..$depth]->(neighbor:GraphNode)
-                          RETURN DISTINCT neighbor.id as id, neighbor.label as label,
-                                 neighbor.fileType as fileType, neighbor.sourceFile as sourceFile,
-                                 neighbor.sourceLocation as sourceLocation, neighbor.community as community,
-                                 neighbor.normLabel as normLabel",
-                        new { nodeId, depth });
+                        $@"MATCH (n:GraphNode {{id: $nodeId}})-[*1..{depth}]->(neighbor:GraphNode)
+                           RETURN DISTINCT neighbor.id as id, neighbor.label as label,
+                                  neighbor.fileType as fileType, neighbor.sourceFile as sourceFile,
+                                  neighbor.sourceLocation as sourceLocation, neighbor.community as community,
+                                  neighbor.normLabel as normLabel",
+                        new { nodeId });
                     return await cursor.ToListAsync();
                 });
 
