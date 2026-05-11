@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+
 namespace Ngraphiphy.Cli.Configuration.Secrets;
 
 /// <summary>
@@ -6,7 +8,7 @@ namespace Ngraphiphy.Cli.Configuration.Secrets;
 public sealed class PassSecretProvider : ISecretProvider
 {
     private readonly IProcessRunner _runner;
-    private readonly Dictionary<string, string> _cache = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, string> _cache = new(StringComparer.Ordinal);
 
     public PassSecretProvider() : this(new SystemProcessRunner()) { }
 
@@ -28,7 +30,7 @@ public sealed class PassSecretProvider : ISecretProvider
 
         // pass show outputs the secret on the first line; additional lines may contain metadata.
         var secret = stdout.Split('\n')[0].TrimEnd();
-        _cache[path] = secret;
+        _cache.TryAdd(path, secret);  // ConcurrentDictionary — safe, idempotent
         return secret;
     }
 }

@@ -34,8 +34,7 @@ public static class SecretResolver
             try
             {
                 var resolved = await provider.ResolveAsync(reference.Path, ct);
-                if (resolved is not null)
-                    overlay[key] = resolved;
+                overlay[key] = resolved;
             }
             catch (Exception ex) when (
                 ex is InvalidOperationException
