@@ -1,12 +1,12 @@
 services:
   neo4j:
     image: neo4j:5-community
-    container_name: ngraphiphy-neo4j
+    container_name: graphiphy-neo4j
     ports:
       - "7474:7474"   # Browser UI
       - "7687:7687"   # Bolt
     environment:
-      NEO4J_AUTH: neo4j/ngraphiphy
+      NEO4J_AUTH: neo4j/graphiphy
       NEO4J_PLUGINS: '["apoc"]'
       NEO4J_dbms_security_procedures_unrestricted: apoc.*
       NEO4J_dbms_memory_heap_initial__size: 512m

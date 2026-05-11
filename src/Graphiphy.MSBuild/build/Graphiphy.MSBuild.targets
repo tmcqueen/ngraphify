@@ -1,0 +1,30 @@
+<Project>
+  <!--
+    Graphiphy.MSBuild — runs codebase analysis before build.
+
+    Prerequisites:
+      dotnet tool install -g Graphiphy.Cli
+      (or add to dotnet-tools.json for local tool restore)
+
+    Opt out per-project:
+      <GraphiphyEnabled>false</GraphiphyEnabled>
+
+    Override cache directory:
+      <GraphiphyCacheDir>$(MSBuildProjectDirectory)/.graphiphy-cache</GraphiphyCacheDir>
+  -->
+
+  <PropertyGroup>
+    <GraphiphyCacheDir Condition="'$(GraphiphyCacheDir)' == ''">$(MSBuildProjectDirectory)/.graphiphy-cache</GraphiphyCacheDir>
+  </PropertyGroup>
+
+  <Target Name="GraphiphyAnalyze"
+          BeforeTargets="Build"
+          Condition="'$(GraphiphyEnabled)' != 'false'"
+          Inputs="@(Compile)"
+          Outputs="$(GraphiphyCacheDir)/.msbuild-stamp">
+    <Message Text="[graphiphy] Analyzing $(MSBuildProjectName)..." Importance="normal" />
+    <Exec Command="dotnet tool run graphiphy-cli -- analyze &quot;$(MSBuildProjectDirectory)&quot; --cache &quot;$(GraphiphyCacheDir)&quot;"
+          ContinueOnError="true" />
+    <Touch Files="$(GraphiphyCacheDir)/.msbuild-stamp" AlwaysCreate="true" />
+  </Target>
+</Project>

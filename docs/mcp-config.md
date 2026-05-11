@@ -1,9 +1,9 @@
-# Using Ngraphiphy as an MCP Server with Claude Desktop
+# Using Graphiphy as an MCP Server with Claude Desktop
 
 ## Build
 
 ```bash
-dotnet publish src/Ngraphiphy.Cli/ -c Release -o ./dist
+dotnet publish src/Graphiphy.Cli/ -c Release -o ./dist
 ```
 
 ## Claude Desktop Configuration
@@ -13,8 +13,8 @@ Add to `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "ngraphiphy": {
-      "command": "/absolute/path/to/dist/ngraphiphy-cli",
+    "graphiphy": {
+      "command": "/absolute/path/to/dist/graphiphy-cli",
       "args": ["serve", "/absolute/path/to/your/repo"]
     }
   }

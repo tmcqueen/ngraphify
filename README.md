@@ -1,10 +1,10 @@
-# Ngraphiphy
+# Graphiphy
 
 A .NET 10 codebase analysis tool that builds knowledge graphs from source code using TreeSitter extraction and graph clustering. Analyze repositories, discover dependencies, and ask LLM questions about your codebase architecture.
 
 ## What It Does
 
-Ngraphiphy parses source files in **9 languages** (C#, Java, Python, JavaScript, TypeScript, Go, Rust, C++, C) via TreeSitter, builds a **knowledge graph** using QuikGraph with Leiden clustering, and exposes analysis through:
+Graphiphy parses source files in **9 languages** (C#, Java, Python, JavaScript, TypeScript, Go, Rust, C++, C) via TreeSitter, builds a **knowledge graph** using QuikGraph with Leiden clustering, and exposes analysis through:
 
 - **CLI commands** — analyze, report, query, and serve
 - **MCP server** — integrate with Claude and other AI clients
@@ -17,7 +17,7 @@ Ngraphiphy parses source files in **9 languages** (C#, Java, Python, JavaScript,
 - **Graph Analysis** — god nodes (highly connected), surprising connections, community detection
 - **LLM Integration** — 5 providers (Anthropic, OpenAI, Ollama, Copilot, A2A)
 - **MCP Server** — use with Claude Desktop, Cursor, and other MCP clients
-- **Caching** — incremental analysis, `.ngraphiphy-cache/` directory
+- **Caching** — incremental analysis, `.graphiphy-cache/` directory
 - **Markdown Reports** — detailed codebase summaries and visualizations
 
 ## Quick Start
@@ -27,7 +27,7 @@ Ngraphiphy parses source files in **9 languages** (C#, Java, Python, JavaScript,
 Install the CLI globally:
 
 ```bash
-dotnet tool install -g Ngraphiphy.Cli
+dotnet tool install -g Graphiphy.Cli
 ```
 
 Or build from source:
@@ -35,7 +35,7 @@ Or build from source:
 ```bash
 git clone https://github.com/timm/ngraphify
 cd ngraphify
-dotnet build src/Ngraphiphy.Cli
+dotnet build src/Graphiphy.Cli
 ```
 
 ### First Command
@@ -43,7 +43,7 @@ dotnet build src/Ngraphiphy.Cli
 Analyze a repository:
 
 ```bash
-ngraphiphy-cli analyze /path/to/repo
+graphiphy-cli analyze /path/to/repo
 ```
 
 Output:
@@ -60,20 +60,20 @@ Top entity            UserService (Services/UserService.cs)
 Generate a Markdown report:
 
 ```bash
-ngraphiphy-cli report /path/to/repo --out analysis.md
+graphiphy-cli report /path/to/repo --out analysis.md
 ```
 
 Query with an LLM (requires API key):
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
-ngraphiphy-cli query /path/to/repo "What are the main dependencies in this codebase?"
+graphiphy-cli query /path/to/repo "What are the main dependencies in this codebase?"
 ```
 
 Start the MCP server:
 
 ```bash
-ngraphiphy-cli serve /path/to/repo
+graphiphy-cli serve /path/to/repo
 ```
 
 Then add to Claude Desktop (`claude_desktop_config.json`):
@@ -81,8 +81,8 @@ Then add to Claude Desktop (`claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
-    "ngraphiphy": {
-      "command": "/path/to/ngraphiphy-cli",
+    "graphiphy": {
+      "command": "/path/to/graphiphy-cli",
       "args": ["serve", "/path/to/repo"]
     }
   }
@@ -102,19 +102,19 @@ Then add to Claude Desktop (`claude_desktop_config.json`):
 Fastest and recommended:
 
 ```bash
-dotnet tool install -g Ngraphiphy.Cli
+dotnet tool install -g Graphiphy.Cli
 ```
 
 Update:
 
 ```bash
-dotnet tool update -g Ngraphiphy.Cli
+dotnet tool update -g Graphiphy.Cli
 ```
 
 Uninstall:
 
 ```bash
-dotnet tool uninstall -g Ngraphiphy.Cli
+dotnet tool uninstall -g Graphiphy.Cli
 ```
 
 ### 2. Local Tool (via dotnet-tools.json)
@@ -123,13 +123,13 @@ In your repository root:
 
 ```bash
 dotnet new tool-manifest  # if not already created
-dotnet tool install Ngraphiphy.Cli
+dotnet tool install Graphiphy.Cli
 ```
 
 Run:
 
 ```bash
-dotnet tool run ngraphiphy-cli analyze .
+dotnet tool run graphiphy-cli analyze .
 ```
 
 ### 3. Build from Source
@@ -137,8 +137,8 @@ dotnet tool run ngraphiphy-cli analyze .
 ```bash
 git clone https://github.com/timm/ngraphify
 cd ngraphify
-dotnet publish src/Ngraphiphy.Cli -c Release -o ./dist
-./dist/ngraphiphy-cli analyze /path/to/repo
+dotnet publish src/Graphiphy.Cli -c Release -o ./dist
+./dist/graphiphy-cli analyze /path/to/repo
 ```
 
 ### 4. NuGet Package (MSBuild Integration)
@@ -146,7 +146,7 @@ dotnet publish src/Ngraphiphy.Cli -c Release -o ./dist
 Install in any .NET project:
 
 ```bash
-dotnet add package Ngraphiphy.MSBuild
+dotnet add package Graphiphy.MSBuild
 ```
 
 This enables automatic analysis during builds. See [MSBuild Integration](docs/MSBuild-Integration.md).
@@ -158,18 +158,18 @@ This enables automatic analysis during builds. See [MSBuild Integration](docs/MS
 Get repository statistics and extract the graph.
 
 ```bash
-ngraphiphy-cli analyze <path> [options]
+graphiphy-cli analyze <path> [options]
 ```
 
 Options:
 
 - `--out, -o <file>` — Write Markdown report to file
-- `--cache <dir>` — Cache directory (default: `<path>/.ngraphiphy-cache`)
+- `--cache <dir>` — Cache directory (default: `<path>/.graphiphy-cache`)
 
 Example:
 
 ```bash
-ngraphiphy-cli analyze /path/to/repo --out report.md
+graphiphy-cli analyze /path/to/repo --out report.md
 ```
 
 ### report
@@ -177,18 +177,18 @@ ngraphiphy-cli analyze /path/to/repo --out report.md
 Generate a detailed Markdown analysis report.
 
 ```bash
-ngraphiphy-cli report <path> [options]
+graphiphy-cli report <path> [options]
 ```
 
 Options:
 
 - `--out, -o <file>` — Write to file (prints to stdout if omitted)
-- `--cache <dir>` — Cache directory (default: `<path>/.ngraphiphy-cache`)
+- `--cache <dir>` — Cache directory (default: `<path>/.graphiphy-cache`)
 
 Example:
 
 ```bash
-ngraphiphy-cli report /path/to/repo --out analysis.md
+graphiphy-cli report /path/to/repo --out analysis.md
 cat analysis.md | less
 ```
 
@@ -197,7 +197,7 @@ cat analysis.md | less
 Ask an LLM a question about the codebase.
 
 ```bash
-ngraphiphy-cli query <path> <question> [options]
+graphiphy-cli query <path> <question> [options]
 ```
 
 Options:
@@ -213,20 +213,20 @@ Examples:
 ```bash
 # Using Anthropic (default)
 export ANTHROPIC_API_KEY=sk-ant-...
-ngraphiphy-cli query /path/to/repo "What is the main entry point?"
+graphiphy-cli query /path/to/repo "What is the main entry point?"
 
 # Using OpenAI
 export OPENAI_API_KEY=sk-...
-ngraphiphy-cli query /path/to/repo "Summarize the architecture" --provider openai --model gpt-4o
+graphiphy-cli query /path/to/repo "Summarize the architecture" --provider openai --model gpt-4o
 
 # Using Ollama (local)
-ngraphiphy-cli query /path/to/repo "Find security issues" --provider ollama --model llama3.2
+graphiphy-cli query /path/to/repo "Find security issues" --provider ollama --model llama3.2
 
 # Using GitHub Copilot
-ngraphiphy-cli query /path/to/repo "List all services" --provider copilot
+graphiphy-cli query /path/to/repo "List all services" --provider copilot
 
 # Using remote A2A agent
-ngraphiphy-cli query /path/to/repo "Explain this codebase" --provider a2a --agent-url http://agent.example.com
+graphiphy-cli query /path/to/repo "Explain this codebase" --provider a2a --agent-url http://agent.example.com
 ```
 
 ### serve
@@ -234,7 +234,7 @@ ngraphiphy-cli query /path/to/repo "Explain this codebase" --provider a2a --agen
 Start an MCP (Model Context Protocol) server on stdio.
 
 ```bash
-ngraphiphy-cli serve [path] [options]
+graphiphy-cli serve [path] [options]
 ```
 
 Arguments:
@@ -248,7 +248,7 @@ Options:
 Example:
 
 ```bash
-ngraphiphy-cli serve /path/to/repo
+graphiphy-cli serve /path/to/repo
 ```
 
 Diagnostics go to stderr; stdout is reserved for MCP JSON-RPC protocol.
@@ -281,23 +281,23 @@ With the server running in Claude Desktop:
 
 ### Cache Directory
 
-By default, analysis is cached in `.ngraphiphy-cache/` at the repository root. To use a custom location:
+By default, analysis is cached in `.graphiphy-cache/` at the repository root. To use a custom location:
 
 ```bash
-ngraphiphy-cli analyze /path/to/repo --cache /tmp/ngraph-cache
+graphiphy-cli analyze /path/to/repo --cache /tmp/ngraph-cache
 ```
 
 Or in MSBuild:
 
 ```xml
 <PropertyGroup>
-  <NgraphiphyCacheDir>$(MSBuildProjectDirectory)/.ngraphiphy-cache</NgraphiphyCacheDir>
+  <GraphiphyCacheDir>$(MSBuildProjectDirectory)/.graphiphy-cache</GraphiphyCacheDir>
 </PropertyGroup>
 ```
 
 ### .gitignore Handling
 
-Ngraphiphy respects `.gitignore` files at any depth in your repository. Files matching `.gitignore` patterns are automatically excluded.
+Graphiphy respects `.gitignore` files at any depth in your repository. Files matching `.gitignore` patterns are automatically excluded.
 
 Additionally, sensitive files are **always blocked**:
 
@@ -318,7 +318,7 @@ export GITHUB_TOKEN=ghp_...  # For Copilot provider
 #### For Build Integration
 
 ```bash
-export NGRAPHIPHY_ANALYZING=1  # Prevents recursive analysis during MSBuild
+export GRAPHIPHY_ANALYZING=1  # Prevents recursive analysis during MSBuild
 ```
 
 ## Architecture
@@ -347,15 +347,15 @@ Analysis & Reporting
 
 ### Components
 
-- `Ngraphiphy` — Core: extraction, graph building, dedup, clustering, analysis, reporting, caching
-- `Ngraphiphy.Llm` — LLM integration (MAF 1.5.0 agent, 5 providers)
-- `Ngraphiphy.Pipeline` — Orchestration (`RepositoryAnalysis.RunAsync`)
-- `Ngraphiphy.Cli` — Command-line interface and MCP server
-- `Ngraphiphy.MSBuild` — MSBuild integration targets
+- `Graphiphy` — Core: extraction, graph building, dedup, clustering, analysis, reporting, caching
+- `Graphiphy.Llm` — LLM integration (MAF 1.5.0 agent, 5 providers)
+- `Graphiphy.Pipeline` — Orchestration (`RepositoryAnalysis.RunAsync`)
+- `Graphiphy.Cli` — Command-line interface and MCP server
+- `Graphiphy.MSBuild` — MSBuild integration targets
 
 ## Supported Languages
 
-Ngraphiphy extracts and analyzes code in these languages:
+Graphiphy extracts and analyzes code in these languages:
 
 | Language | Extensions |
 |----------|-----------|
@@ -371,7 +371,7 @@ Ngraphiphy extracts and analyzes code in these languages:
 
 ## Troubleshooting
 
-### "ngraphiphy-cli not found"
+### "graphiphy-cli not found"
 
 Ensure the tool is installed:
 
@@ -382,7 +382,7 @@ dotnet tool list -g
 If not listed, install it:
 
 ```bash
-dotnet tool install -g Ngraphiphy.Cli
+dotnet tool install -g Graphiphy.Cli
 ```
 
 ### "Leiden clustering library not found"
@@ -415,28 +415,28 @@ For the `query` command, provide an API key via:
 
 - **First run** — Full extraction uses all available CPU cores for parallel processing. Subsequent runs use cache.
 - **Large repos** — For repos with 1000+ files, incremental builds are faster. Parallel file extraction significantly speeds up analysis of large codebases.
-- **Memory** — Disable Leiden clustering if memory is constrained: set `<NgraphiphyEnabled>false</NgraphiphyEnabled>` in MSBuild.
+- **Memory** — Disable Leiden clustering if memory is constrained: set `<GraphiphyEnabled>false</GraphiphyEnabled>` in MSBuild.
 
 ### Build Integration Not Running
 
 1. Check that source files have been modified since last build:
 
    ```bash
-   rm .ngraphiphy-cache/.msbuild-stamp
+   rm .graphiphy-cache/.msbuild-stamp
    dotnet build
    ```
 
-2. Verify `ngraphiphy-cli` is installed:
+2. Verify `graphiphy-cli` is installed:
 
    ```bash
-   ngraphiphy-cli analyze . > /dev/null && echo "OK" || echo "Not found"
+   graphiphy-cli analyze . > /dev/null && echo "OK" || echo "Not found"
    ```
 
 3. Disable and re-enable in the project:
 
    ```xml
    <PropertyGroup>
-     <NgraphiphyEnabled>true</NgraphiphyEnabled>
+     <GraphiphyEnabled>true</GraphiphyEnabled>
    </PropertyGroup>
    ```
 
@@ -467,4 +467,4 @@ See [LICENSE](LICENSE) for details.
 
 ## About
 
-Ngraphiphy is a .NET reimplementation of the Python `graphify` project, providing fast, integrated codebase analysis for .NET development workflows.
+Graphiphy is a .NET reimplementation of the Python `graphify` project, providing fast, integrated codebase analysis for .NET development workflows.

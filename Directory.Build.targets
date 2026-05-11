@@ -1,23 +1,23 @@
 <Project>
   <!--
-    Ngraphiphy self-analysis: runs before each build (top-level only).
-    Set <NgraphiphyEnabled>false</NgraphiphyEnabled> in a project to opt out.
-    Automatically excluded: Ngraphiphy.MSBuild, Ngraphiphy.Cli (to avoid nested builds).
+    Graphiphy self-analysis: runs before each build (top-level only).
+    Set <GraphiphyEnabled>false</GraphiphyEnabled> in a project to opt out.
+    Automatically excluded: Graphiphy.MSBuild, Graphiphy.Cli (to avoid nested builds).
   -->
   <PropertyGroup>
-    <_NgraphiphyIsNested Condition="'$(NGRAPHIPHY_ANALYZING)' == 'true'">true</_NgraphiphyIsNested>
+    <_GraphiphyIsNested Condition="'$(GRAPHIPHY_ANALYZING)' == 'true'">true</_GraphiphyIsNested>
   </PropertyGroup>
 
-  <Target Name="NgraphiphyAnalyze"
+  <Target Name="GraphiphyAnalyze"
           BeforeTargets="Build"
-          Condition="'$(NgraphiphyEnabled)' != 'false' AND '$(MSBuildProjectName)' == 'Ngraphiphy' AND '$(_NgraphiphyIsNested)' != 'true'"
+          Condition="'$(GraphiphyEnabled)' != 'false' AND '$(MSBuildProjectName)' == 'Graphiphy' AND '$(_GraphiphyIsNested)' != 'true'"
           Inputs="@(Compile)"
-          Outputs="$(MSBuildThisFileDirectory).ngraphiphy-cache/.msbuild-stamp">
-    <Message Text="[ngraphiphy] Analyzing repository..." Importance="normal" />
-    <Exec Command="dotnet run --project &quot;$(MSBuildThisFileDirectory)src/Ngraphiphy.Cli/&quot; -- analyze &quot;$(MSBuildThisFileDirectory)&quot; --cache &quot;$(MSBuildThisFileDirectory).ngraphiphy-cache&quot;"
+          Outputs="$(MSBuildThisFileDirectory).graphiphy-cache/.msbuild-stamp">
+    <Message Text="[graphiphy] Analyzing repository..." Importance="normal" />
+    <Exec Command="dotnet run --project &quot;$(MSBuildThisFileDirectory)src/Graphiphy.Cli/&quot; -- analyze &quot;$(MSBuildThisFileDirectory)&quot; --cache &quot;$(MSBuildThisFileDirectory).graphiphy-cache&quot;"
           ContinueOnError="true"
-          EnvironmentVariables="NGRAPHIPHY_ANALYZING=true"
+          EnvironmentVariables="GRAPHIPHY_ANALYZING=true"
           WorkingDirectory="$(MSBuildThisFileDirectory)" />
-    <Touch Files="$(MSBuildThisFileDirectory).ngraphiphy-cache/.msbuild-stamp" AlwaysCreate="true" />
+    <Touch Files="$(MSBuildThisFileDirectory).graphiphy-cache/.msbuild-stamp" AlwaysCreate="true" />
   </Target>
 </Project>

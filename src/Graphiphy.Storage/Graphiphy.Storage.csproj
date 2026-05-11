@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Graphiphy.Storage</RootNamespace>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Neo4j.Driver" Version="5.18.0" />
+    <PackageReference Include="LibGit2Sharp" Version="0.29.0" />
+    <PackageReference Include="OpenAI" Version="2.3.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Graphiphy\Graphiphy.csproj" />
+    <ProjectReference Include="..\Graphiphy.Pipeline\Graphiphy.Pipeline.csproj" />
+  </ItemGroup>
+</Project>

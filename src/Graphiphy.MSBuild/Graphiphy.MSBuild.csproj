@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>Graphiphy.MSBuild</PackageId>
+    <Version>1.0.0</Version>
+    <Description>MSBuild integration for Graphiphy — runs codebase analysis before build.</Description>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <NoWarn>NU5128</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="build\Graphiphy.MSBuild.targets"
+             Pack="true"
+             PackagePath="build/" />
+  </ItemGroup>
+</Project>

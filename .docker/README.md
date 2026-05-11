@@ -13,7 +13,7 @@ docker compose -f .docker/neo4j.docker-compose.yml up -d
 | Browser | http://localhost:7474 |
 | Bolt | bolt://localhost:7687 |
 | Username | `neo4j` |
-| Password | `ngraphiphy` |
+| Password | `graphiphy` |
 
 Matching `appsettings.json`:
 ```json
@@ -22,7 +22,7 @@ Matching `appsettings.json`:
   "Neo4j": {
     "Uri": "bolt://localhost:7687",
     "Username": "neo4j",
-    "Password": "ngraphiphy"
+    "Password": "graphiphy"
   }
 }
 ```

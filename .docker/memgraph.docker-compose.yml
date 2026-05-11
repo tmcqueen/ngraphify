@@ -1,7 +1,7 @@
 services:
   memgraph:
     image: memgraph/memgraph:latest
-    container_name: ngraphiphy-memgraph
+    container_name: graphiphy-memgraph
     ports:
       - "7688:7687"   # Bolt (mapped to 7688 to avoid conflict with Neo4j)
       - "7444:7444"   # Monitoring
@@ -21,7 +21,7 @@ services:
 
   memgraph-lab:
     image: memgraph/lab:latest
-    container_name: ngraphiphy-memgraph-lab
+    container_name: graphiphy-memgraph-lab
     ports:
       - "3000:3000"   # Web UI
     environment:

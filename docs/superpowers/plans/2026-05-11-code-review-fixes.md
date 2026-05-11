@@ -13,46 +13,46 @@
 ## File map
 
 **Modified:**
-- `src/Ngraphiphy.Storage/Models/SnapshotId.cs` — fix hash byte-length bug, also pass in the source-content reading
-- `src/Ngraphiphy.Cli/Configuration/Secrets/SecretResolver.cs` — broaden catch, accept logger delegate
-- `src/Ngraphiphy.Cli/Configuration/Secrets/IProcessRunner.cs` — switch to `IReadOnlyList<string>` args, async
-- `src/Ngraphiphy.Cli/Configuration/Secrets/SystemProcessRunner.cs` — async stdout/stderr drain, ArgumentList
-- `src/Ngraphiphy.Cli/Configuration/Secrets/PassSecretProvider.cs` — async, ArgumentList
-- `src/Ngraphiphy.Cli/Configuration/CliHostExtensions.cs` — register both providers, wire logger to SecretResolver, await async secret resolve
-- `src/Ngraphiphy.Cli/Commands/*.cs` — replace `MarkupLine` with `MarkupLineInterpolated` for user-controlled values
-- `src/Ngraphiphy/Cluster/NativeLibraryResolver.cs` — remove hardcoded personal paths, make `_registered` thread-safe
-- `src/Ngraphiphy.Storage/Providers/Memgraph/MemgraphStore.cs` — narrow catch to "already exists"
-- `src/Ngraphiphy.Storage/Providers/Neo4j/BoltStoreBase.cs` — inline depth as literal in Cypher
-- `src/Ngraphiphy/Dedup/EntityDeduplicator.cs` — replace `nodes.First(n => n.Id == ...)` with dictionary lookups
-- `src/Ngraphiphy/Validation/ExtractionValidator.cs` — split into "errors" vs "warnings", add `Video`
-- `src/Ngraphiphy/Cache/ExtractionCache.cs` — overload `FileHash` accepting pre-read content
-- `src/Ngraphiphy.Pipeline/RepositoryAnalysis.cs` — parallelize extraction, single read per file, emit validator warnings
+- `src/Graphiphy.Storage/Models/SnapshotId.cs` — fix hash byte-length bug, also pass in the source-content reading
+- `src/Graphiphy.Cli/Configuration/Secrets/SecretResolver.cs` — broaden catch, accept logger delegate
+- `src/Graphiphy.Cli/Configuration/Secrets/IProcessRunner.cs` — switch to `IReadOnlyList<string>` args, async
+- `src/Graphiphy.Cli/Configuration/Secrets/SystemProcessRunner.cs` — async stdout/stderr drain, ArgumentList
+- `src/Graphiphy.Cli/Configuration/Secrets/PassSecretProvider.cs` — async, ArgumentList
+- `src/Graphiphy.Cli/Configuration/CliHostExtensions.cs` — register both providers, wire logger to SecretResolver, await async secret resolve
+- `src/Graphiphy.Cli/Commands/*.cs` — replace `MarkupLine` with `MarkupLineInterpolated` for user-controlled values
+- `src/Graphiphy/Cluster/NativeLibraryResolver.cs` — remove hardcoded personal paths, make `_registered` thread-safe
+- `src/Graphiphy.Storage/Providers/Memgraph/MemgraphStore.cs` — narrow catch to "already exists"
+- `src/Graphiphy.Storage/Providers/Neo4j/BoltStoreBase.cs` — inline depth as literal in Cypher
+- `src/Graphiphy/Dedup/EntityDeduplicator.cs` — replace `nodes.First(n => n.Id == ...)` with dictionary lookups
+- `src/Graphiphy/Validation/ExtractionValidator.cs` — split into "errors" vs "warnings", add `Video`
+- `src/Graphiphy/Cache/ExtractionCache.cs` — overload `FileHash` accepting pre-read content
+- `src/Graphiphy.Pipeline/RepositoryAnalysis.cs` — parallelize extraction, single read per file, emit validator warnings
 
 **Tests (created or extended):**
-- `tests/Ngraphiphy.Storage.Tests/SnapshotIdTests.cs`
-- `tests/Ngraphiphy.Cli.Tests/Configuration/SecretResolverTests.cs` (extend)
-- `tests/Ngraphiphy.Cli.Tests/Configuration/PassSecretProviderTests.cs` (extend)
-- `tests/Ngraphiphy.Cli.Tests/Configuration/SystemProcessRunnerTests.cs`
-- `tests/Ngraphiphy.Storage.Tests/MemgraphStoreTests.cs` (extend if exists, else create)
-- `tests/Ngraphiphy.Tests/Dedup/EntityDeduplicatorPerfTests.cs`
-- `tests/Ngraphiphy.Tests/Validation/ExtractionValidatorTests.cs`
+- `tests/Graphiphy.Storage.Tests/SnapshotIdTests.cs`
+- `tests/Graphiphy.Cli.Tests/Configuration/SecretResolverTests.cs` (extend)
+- `tests/Graphiphy.Cli.Tests/Configuration/PassSecretProviderTests.cs` (extend)
+- `tests/Graphiphy.Cli.Tests/Configuration/SystemProcessRunnerTests.cs`
+- `tests/Graphiphy.Storage.Tests/MemgraphStoreTests.cs` (extend if exists, else create)
+- `tests/Graphiphy.Tests/Dedup/EntityDeduplicatorPerfTests.cs`
+- `tests/Graphiphy.Tests/Validation/ExtractionValidatorTests.cs`
 
 ---
 
 ## Task 1: Fix `SnapshotId.ComputeContentHash` byte-length bug (Critical #1)
 
 **Files:**
-- Modify: `src/Ngraphiphy.Storage/Models/SnapshotId.cs:34-39`
-- Test: `tests/Ngraphiphy.Storage.Tests/SnapshotIdTests.cs` (create)
+- Modify: `src/Graphiphy.Storage/Models/SnapshotId.cs:34-39`
+- Test: `tests/Graphiphy.Storage.Tests/SnapshotIdTests.cs` (create)
 
 - [ ] **Step 1: Write the failing test**
 
-Create `tests/Ngraphiphy.Storage.Tests/SnapshotIdTests.cs`:
+Create `tests/Graphiphy.Storage.Tests/SnapshotIdTests.cs`:
 
 ```csharp
-using Ngraphiphy.Storage.Models;
+using Graphiphy.Storage.Models;
 
-namespace Ngraphiphy.Storage.Tests;
+namespace Graphiphy.Storage.Tests;
 
 public class SnapshotIdTests
 {
@@ -62,7 +62,7 @@ public class SnapshotIdTests
         // Two temp dirs whose paths share an ASCII prefix but diverge in non-ASCII bytes.
         // With the old bug, only the first `path.Length` chars of UTF-8 bytes would be hashed,
         // truncating the non-ASCII suffix and producing identical hashes.
-        var baseDir = Path.Combine(Path.GetTempPath(), "ngraphiphy-snapshot-test-" + Guid.NewGuid());
+        var baseDir = Path.Combine(Path.GetTempPath(), "graphiphy-snapshot-test-" + Guid.NewGuid());
         var dirA = Path.Combine(baseDir, "проект-a"); // Cyrillic
         var dirB = Path.Combine(baseDir, "проект-b");
         Directory.CreateDirectory(dirA);
@@ -88,13 +88,13 @@ public class SnapshotIdTests
 - [ ] **Step 2: Run test to verify it fails**
 
 ```bash
-dotnet test tests/Ngraphiphy.Storage.Tests/ --filter "FullyQualifiedName~SnapshotIdTests"
+dotnet test tests/Graphiphy.Storage.Tests/ --filter "FullyQualifiedName~SnapshotIdTests"
 ```
 Expected: FAIL — hashes collide because `file.Length` (char count) truncates the UTF-8 byte array.
 
 - [ ] **Step 3: Apply the fix**
 
-Replace `src/Ngraphiphy.Storage/Models/SnapshotId.cs:34-39`:
+Replace `src/Graphiphy.Storage/Models/SnapshotId.cs:34-39`:
 
 ```csharp
 foreach (var file in files)
@@ -109,14 +109,14 @@ foreach (var file in files)
 - [ ] **Step 4: Run test to verify it passes**
 
 ```bash
-dotnet test tests/Ngraphiphy.Storage.Tests/ --filter "FullyQualifiedName~SnapshotIdTests"
+dotnet test tests/Graphiphy.Storage.Tests/ --filter "FullyQualifiedName~SnapshotIdTests"
 ```
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy.Storage/Models/SnapshotId.cs tests/Ngraphiphy.Storage.Tests/SnapshotIdTests.cs
+git add src/Graphiphy.Storage/Models/SnapshotId.cs tests/Graphiphy.Storage.Tests/SnapshotIdTests.cs
 git commit -m "fix(storage): hash full UTF-8 byte length in SnapshotId.ComputeContentHash"
 ```
 
@@ -125,12 +125,12 @@ git commit -m "fix(storage): hash full UTF-8 byte length in SnapshotId.ComputeCo
 ## Task 2: Broaden `SecretResolver` catch to include `Win32Exception` (Critical #2)
 
 **Files:**
-- Modify: `src/Ngraphiphy.Cli/Configuration/Secrets/SecretResolver.cs:39`
-- Test: `tests/Ngraphiphy.Cli.Tests/Configuration/SecretResolverTests.cs` (extend)
+- Modify: `src/Graphiphy.Cli/Configuration/Secrets/SecretResolver.cs:39`
+- Test: `tests/Graphiphy.Cli.Tests/Configuration/SecretResolverTests.cs` (extend)
 
 - [ ] **Step 1: Write the failing test**
 
-Append to `tests/Ngraphiphy.Cli.Tests/Configuration/SecretResolverTests.cs`:
+Append to `tests/Graphiphy.Cli.Tests/Configuration/SecretResolverTests.cs`:
 
 ```csharp
 [Test]
@@ -163,13 +163,13 @@ If `ThrowingProvider` already exists, reuse it; otherwise add it as shown.
 - [ ] **Step 2: Run test, verify it fails**
 
 ```bash
-dotnet test tests/Ngraphiphy.Cli.Tests/ --filter "FullyQualifiedName~SecretResolverTests.ResolveAndOverlay_ProviderThrowsWin32Exception"
+dotnet test tests/Graphiphy.Cli.Tests/ --filter "FullyQualifiedName~SecretResolverTests.ResolveAndOverlay_ProviderThrowsWin32Exception"
 ```
 Expected: FAIL — `Win32Exception` escapes the existing `catch (InvalidOperationException)`.
 
 - [ ] **Step 3: Apply the fix**
 
-In `src/Ngraphiphy.Cli/Configuration/Secrets/SecretResolver.cs`, replace the catch clause at line 39:
+In `src/Graphiphy.Cli/Configuration/Secrets/SecretResolver.cs`, replace the catch clause at line 39:
 
 ```csharp
 catch (Exception ex) when (
@@ -188,14 +188,14 @@ catch (Exception ex) when (
 - [ ] **Step 4: Run test, verify it passes**
 
 ```bash
-dotnet test tests/Ngraphiphy.Cli.Tests/ --filter "FullyQualifiedName~SecretResolverTests"
+dotnet test tests/Graphiphy.Cli.Tests/ --filter "FullyQualifiedName~SecretResolverTests"
 ```
 Expected: PASS (all SecretResolver tests).
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy.Cli/Configuration/Secrets/SecretResolver.cs tests/Ngraphiphy.Cli.Tests/Configuration/SecretResolverTests.cs
+git add src/Graphiphy.Cli/Configuration/Secrets/SecretResolver.cs tests/Graphiphy.Cli.Tests/Configuration/SecretResolverTests.cs
 git commit -m "fix(cli): non-fatal handling for Win32Exception during secret resolution"
 ```
 
@@ -204,23 +204,23 @@ git commit -m "fix(cli): non-fatal handling for Win32Exception during secret res
 ## Task 3: Replace `MarkupLine` with `MarkupLineInterpolated` at user-data sites (Critical #3)
 
 **Files (modify in-place):**
-- `src/Ngraphiphy.Cli/Commands/ReportCommand.cs:42, 51`
-- `src/Ngraphiphy.Cli/Commands/QueryCommand.cs:96, 113, 124`
-- `src/Ngraphiphy.Cli/Commands/PushCommand.cs:138, 158, 235, 239, 244, 255`
-- `src/Ngraphiphy.Cli/Commands/AnalyzeCommand.cs:56`
-- `src/Ngraphiphy.Cli/Configuration/Secrets/SecretResolver.cs:29, 43` (already done in Task 2 for line 43)
+- `src/Graphiphy.Cli/Commands/ReportCommand.cs:42, 51`
+- `src/Graphiphy.Cli/Commands/QueryCommand.cs:96, 113, 124`
+- `src/Graphiphy.Cli/Commands/PushCommand.cs:138, 158, 235, 239, 244, 255`
+- `src/Graphiphy.Cli/Commands/AnalyzeCommand.cs:56`
+- `src/Graphiphy.Cli/Configuration/Secrets/SecretResolver.cs:29, 43` (already done in Task 2 for line 43)
 
 Rule: any `AnsiConsole.MarkupLine($"...{userValue}...")` where `userValue` could contain `[` or `]` must be `AnsiConsole.MarkupLineInterpolated(...)`. Constant strings (no interpolation) stay as `MarkupLine`.
 
 - [ ] **Step 1: Write a regression test**
 
-Create `tests/Ngraphiphy.Cli.Tests/Configuration/SecretResolverMarkupTests.cs`:
+Create `tests/Graphiphy.Cli.Tests/Configuration/SecretResolverMarkupTests.cs`:
 
 ```csharp
 using Microsoft.Extensions.Configuration;
-using Ngraphiphy.Cli.Configuration.Secrets;
+using Graphiphy.Cli.Configuration.Secrets;
 
-namespace Ngraphiphy.Cli.Tests.Configuration;
+namespace Graphiphy.Cli.Tests.Configuration;
 
 public class SecretResolverMarkupTests
 {
@@ -252,7 +252,7 @@ public class SecretResolverMarkupTests
 - [ ] **Step 2: Run, observe failure**
 
 ```bash
-dotnet test tests/Ngraphiphy.Cli.Tests/ --filter "SecretResolverMarkupTests"
+dotnet test tests/Graphiphy.Cli.Tests/ --filter "SecretResolverMarkupTests"
 ```
 Expected: FAIL with `Spectre.Console.Exceptions.InvalidMarkupException` or similar.
 
@@ -276,14 +276,14 @@ AnsiConsole.MarkupLineInterpolated($"[yellow]Warning: No secret provider registe
 - [ ] **Step 4: Run tests, verify pass**
 
 ```bash
-dotnet test tests/Ngraphiphy.Cli.Tests/
+dotnet test tests/Graphiphy.Cli.Tests/
 ```
 Expected: all green.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy.Cli tests/Ngraphiphy.Cli.Tests/Configuration/SecretResolverMarkupTests.cs
+git add src/Graphiphy.Cli tests/Graphiphy.Cli.Tests/Configuration/SecretResolverMarkupTests.cs
 git commit -m "fix(cli): escape interpolated values in AnsiConsole.MarkupLine call sites"
 ```
 
@@ -294,18 +294,18 @@ git commit -m "fix(cli): escape interpolated values in AnsiConsole.MarkupLine ca
 This task bundles arg-injection (#5) and stdout/stderr deadlock (#6) because both require changing the `IProcessRunner` signature.
 
 **Files:**
-- Modify: `src/Ngraphiphy.Cli/Configuration/Secrets/IProcessRunner.cs`
-- Modify: `src/Ngraphiphy.Cli/Configuration/Secrets/SystemProcessRunner.cs`
-- Modify: `src/Ngraphiphy.Cli/Configuration/Secrets/PassSecretProvider.cs`
-- Modify: `src/Ngraphiphy.Cli/Configuration/Secrets/ISecretProvider.cs` (make `Resolve` async)
-- Modify: `src/Ngraphiphy.Cli/Configuration/Secrets/EnvSecretProvider.cs`
-- Modify: `src/Ngraphiphy.Cli/Configuration/Secrets/SecretResolver.cs` (await the call)
-- Modify: `src/Ngraphiphy.Cli/Configuration/CliHostExtensions.cs` (`.GetAwaiter().GetResult()` at the sync seam)
-- Test: extend `tests/Ngraphiphy.Cli.Tests/Configuration/PassSecretProviderTests.cs` and `EnvSecretProviderTests.cs`
+- Modify: `src/Graphiphy.Cli/Configuration/Secrets/IProcessRunner.cs`
+- Modify: `src/Graphiphy.Cli/Configuration/Secrets/SystemProcessRunner.cs`
+- Modify: `src/Graphiphy.Cli/Configuration/Secrets/PassSecretProvider.cs`
+- Modify: `src/Graphiphy.Cli/Configuration/Secrets/ISecretProvider.cs` (make `Resolve` async)
+- Modify: `src/Graphiphy.Cli/Configuration/Secrets/EnvSecretProvider.cs`
+- Modify: `src/Graphiphy.Cli/Configuration/Secrets/SecretResolver.cs` (await the call)
+- Modify: `src/Graphiphy.Cli/Configuration/CliHostExtensions.cs` (`.GetAwaiter().GetResult()` at the sync seam)
+- Test: extend `tests/Graphiphy.Cli.Tests/Configuration/PassSecretProviderTests.cs` and `EnvSecretProviderTests.cs`
 
 - [ ] **Step 1: Write the failing test**
 
-Append to `tests/Ngraphiphy.Cli.Tests/Configuration/PassSecretProviderTests.cs`:
+Append to `tests/Graphiphy.Cli.Tests/Configuration/PassSecretProviderTests.cs`:
 
 ```csharp
 [Test]
@@ -340,16 +340,16 @@ Also update existing `FakeRunner` in the same file to implement the new signatur
 - [ ] **Step 2: Run, observe compile failure (test won't build)**
 
 ```bash
-dotnet build tests/Ngraphiphy.Cli.Tests/
+dotnet build tests/Graphiphy.Cli.Tests/
 ```
 Expected: compile errors on `IProcessRunner.Run`/`Resolve` signature.
 
 - [ ] **Step 3: Update `IProcessRunner`**
 
-Replace contents of `src/Ngraphiphy.Cli/Configuration/Secrets/IProcessRunner.cs`:
+Replace contents of `src/Graphiphy.Cli/Configuration/Secrets/IProcessRunner.cs`:
 
 ```csharp
-namespace Ngraphiphy.Cli.Configuration.Secrets;
+namespace Graphiphy.Cli.Configuration.Secrets;
 
 internal interface IProcessRunner
 {
@@ -362,12 +362,12 @@ internal interface IProcessRunner
 
 - [ ] **Step 4: Update `SystemProcessRunner`**
 
-Replace contents of `src/Ngraphiphy.Cli/Configuration/Secrets/SystemProcessRunner.cs`:
+Replace contents of `src/Graphiphy.Cli/Configuration/Secrets/SystemProcessRunner.cs`:
 
 ```csharp
 using System.Diagnostics;
 
-namespace Ngraphiphy.Cli.Configuration.Secrets;
+namespace Graphiphy.Cli.Configuration.Secrets;
 
 internal sealed class SystemProcessRunner : IProcessRunner
 {
@@ -402,10 +402,10 @@ internal sealed class SystemProcessRunner : IProcessRunner
 
 - [ ] **Step 5: Update `ISecretProvider` and providers**
 
-`src/Ngraphiphy.Cli/Configuration/Secrets/ISecretProvider.cs`:
+`src/Graphiphy.Cli/Configuration/Secrets/ISecretProvider.cs`:
 
 ```csharp
-namespace Ngraphiphy.Cli.Configuration.Secrets;
+namespace Graphiphy.Cli.Configuration.Secrets;
 
 public interface ISecretProvider
 {
@@ -446,7 +446,7 @@ public Task<string> ResolveAsync(string path, CancellationToken ct = default)
 
 - [ ] **Step 6: Update `SecretResolver` to await the call**
 
-In `src/Ngraphiphy.Cli/Configuration/Secrets/SecretResolver.cs`, change the signature and the call:
+In `src/Graphiphy.Cli/Configuration/Secrets/SecretResolver.cs`, change the signature and the call:
 
 ```csharp
 public static async Task ResolveAndOverlayAsync(
@@ -463,7 +463,7 @@ public static async Task ResolveAndOverlayAsync(
 
 - [ ] **Step 7: Update `CliHostExtensions` call site**
 
-In `src/Ngraphiphy.Cli/Configuration/CliHostExtensions.cs:39`:
+In `src/Graphiphy.Cli/Configuration/CliHostExtensions.cs:39`:
 
 ```csharp
 SecretResolver.ResolveAndOverlayAsync(builder.Configuration, snapshot, providers)
@@ -482,7 +482,7 @@ Expected: all green.
 - [ ] **Step 9: Commit**
 
 ```bash
-git add src/Ngraphiphy.Cli tests/Ngraphiphy.Cli.Tests
+git add src/Graphiphy.Cli tests/Graphiphy.Cli.Tests
 git commit -m "refactor(cli): async IProcessRunner with ArgumentList to fix arg-injection and stdout/stderr deadlock"
 ```
 
@@ -491,7 +491,7 @@ git commit -m "refactor(cli): async IProcessRunner with ArgumentList to fix arg-
 ## Task 5: Remove hardcoded personal paths from `NativeLibraryResolver` (Important #4)
 
 **Files:**
-- Modify: `src/Ngraphiphy/Cluster/NativeLibraryResolver.cs:31-33`
+- Modify: `src/Graphiphy/Cluster/NativeLibraryResolver.cs:31-33`
 
 - [ ] **Step 1: Apply the edit**
 
@@ -513,14 +513,14 @@ var locations = new[]
 - [ ] **Step 2: Build + run clustering test that exercises the resolver**
 
 ```bash
-dotnet test tests/Ngraphiphy.Tests/ --filter "FullyQualifiedName~Leiden"
+dotnet test tests/Graphiphy.Tests/ --filter "FullyQualifiedName~Leiden"
 ```
 Expected: PASS (build output still ships the .so alongside the binary).
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/Ngraphiphy/Cluster/NativeLibraryResolver.cs
+git add src/Graphiphy/Cluster/NativeLibraryResolver.cs
 git commit -m "fix(cluster): remove hardcoded developer paths from NativeLibraryResolver"
 ```
 
@@ -529,7 +529,7 @@ git commit -m "fix(cluster): remove hardcoded developer paths from NativeLibrary
 ## Task 6: Narrow `MemgraphStore.CreateAsync` catch to "already exists" (Important #7)
 
 **Files:**
-- Modify: `src/Ngraphiphy.Storage/Providers/Memgraph/MemgraphStore.cs:38-41`
+- Modify: `src/Graphiphy.Storage/Providers/Memgraph/MemgraphStore.cs:38-41`
 
 - [ ] **Step 1: Apply the edit**
 
@@ -549,14 +549,14 @@ catch (Exception ex) when (
 - [ ] **Step 2: Build**
 
 ```bash
-dotnet build src/Ngraphiphy.Storage/
+dotnet build src/Graphiphy.Storage/
 ```
 Expected: success.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/Ngraphiphy.Storage/Providers/Memgraph/MemgraphStore.cs
+git add src/Graphiphy.Storage/Providers/Memgraph/MemgraphStore.cs
 git commit -m "fix(storage): narrow MemgraphStore.CreateAsync catch to 'already exists'"
 ```
 
@@ -567,7 +567,7 @@ git commit -m "fix(storage): narrow MemgraphStore.CreateAsync catch to 'already 
 Cypher disallows parameterized upper bounds in variable-length patterns on most server versions. Inline the depth as an integer literal — safe because `depth` is an `int`, not a string, so there is no injection risk.
 
 **Files:**
-- Modify: `src/Ngraphiphy.Storage/Providers/Neo4j/BoltStoreBase.cs:177-184`
+- Modify: `src/Graphiphy.Storage/Providers/Neo4j/BoltStoreBase.cs:177-184`
 
 - [ ] **Step 1: Apply the edit**
 
@@ -591,14 +591,14 @@ var cursor = await tx.RunAsync(
 - [ ] **Step 2: Build**
 
 ```bash
-dotnet build src/Ngraphiphy.Storage/
+dotnet build src/Graphiphy.Storage/
 ```
 Expected: success.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/Ngraphiphy.Storage/Providers/Neo4j/BoltStoreBase.cs
+git add src/Graphiphy.Storage/Providers/Neo4j/BoltStoreBase.cs
 git commit -m "fix(storage): inline depth literal in Neo4j GetNeighborsAsync Cypher"
 ```
 
@@ -607,18 +607,18 @@ git commit -m "fix(storage): inline depth literal in Neo4j GetNeighborsAsync Cyp
 ## Task 8: Replace O(n²) `nodes.First` calls in `EntityDeduplicator` (Important #9)
 
 **Files:**
-- Modify: `src/Ngraphiphy/Dedup/EntityDeduplicator.cs:65-104`
-- Test: `tests/Ngraphiphy.Tests/Dedup/EntityDeduplicatorPerfTests.cs` (create — behavioral, not benchmark)
+- Modify: `src/Graphiphy/Dedup/EntityDeduplicator.cs:65-104`
+- Test: `tests/Graphiphy.Tests/Dedup/EntityDeduplicatorPerfTests.cs` (create — behavioral, not benchmark)
 
 - [ ] **Step 1: Write the behavioral test**
 
-Create `tests/Ngraphiphy.Tests/Dedup/EntityDeduplicatorPerfTests.cs`:
+Create `tests/Graphiphy.Tests/Dedup/EntityDeduplicatorPerfTests.cs`:
 
 ```csharp
-using Ngraphiphy.Dedup;
-using Ngraphiphy.Models;
+using Graphiphy.Dedup;
+using Graphiphy.Models;
 
-namespace Ngraphiphy.Tests.Dedup;
+namespace Graphiphy.Tests.Dedup;
 
 public class EntityDeduplicatorPerfTests
 {
@@ -650,7 +650,7 @@ public class EntityDeduplicatorPerfTests
 - [ ] **Step 2: Run on current code, verify passes (we are not relying on this test to fail — it pins the post-fix performance)**
 
 ```bash
-dotnet test tests/Ngraphiphy.Tests/ --filter "EntityDeduplicatorPerfTests"
+dotnet test tests/Graphiphy.Tests/ --filter "EntityDeduplicatorPerfTests"
 ```
 If it already passes, the regression guard is in place. If it fails, that's also confirmation the bug matters.
 
@@ -677,14 +677,14 @@ var memberNodes = members.Select(id => nodesById[id]).ToList();
 - [ ] **Step 4: Run tests**
 
 ```bash
-dotnet test tests/Ngraphiphy.Tests/
+dotnet test tests/Graphiphy.Tests/
 ```
 Expected: all green, including the perf guard.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy/Dedup/EntityDeduplicator.cs tests/Ngraphiphy.Tests/Dedup/EntityDeduplicatorPerfTests.cs
+git add src/Graphiphy/Dedup/EntityDeduplicator.cs tests/Graphiphy.Tests/Dedup/EntityDeduplicatorPerfTests.cs
 git commit -m "perf(dedup): index nodes by id to remove O(n^2) lookups in EntityDeduplicator"
 ```
 
@@ -693,7 +693,7 @@ git commit -m "perf(dedup): index nodes by id to remove O(n^2) lookups in Entity
 ## Task 9: Register `envProvider` in DI with keyed registration (Important #10)
 
 **Files:**
-- Modify: `src/Ngraphiphy.Cli/Configuration/CliHostExtensions.cs:41-42`
+- Modify: `src/Graphiphy.Cli/Configuration/CliHostExtensions.cs:41-42`
 
 - [ ] **Step 1: Apply the edit**
 
@@ -717,7 +717,7 @@ Expected: success.
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/Ngraphiphy.Cli/Configuration/CliHostExtensions.cs
+git add src/Graphiphy.Cli/Configuration/CliHostExtensions.cs
 git commit -m "feat(cli): register env secret provider via keyed DI"
 ```
 
@@ -728,19 +728,19 @@ git commit -m "feat(cli): register env secret provider via keyed DI"
 `FileType.Video` (and any future enum values not in `ValidFileTypes`) should produce a warning but not fail validation. Same for any "soft" constraint we choose to relax. Errors keep their current semantics (cause `AssertValid` to throw).
 
 **Files:**
-- Modify: `src/Ngraphiphy/Validation/ExtractionValidator.cs`
-- Modify: `src/Ngraphiphy.Pipeline/RepositoryAnalysis.cs` (route warnings through `onProgress`)
-- Test: `tests/Ngraphiphy.Tests/Validation/ExtractionValidatorTests.cs` (create or extend)
+- Modify: `src/Graphiphy/Validation/ExtractionValidator.cs`
+- Modify: `src/Graphiphy.Pipeline/RepositoryAnalysis.cs` (route warnings through `onProgress`)
+- Test: `tests/Graphiphy.Tests/Validation/ExtractionValidatorTests.cs` (create or extend)
 
 - [ ] **Step 1: Write failing tests**
 
-Create `tests/Ngraphiphy.Tests/Validation/ExtractionValidatorTests.cs`:
+Create `tests/Graphiphy.Tests/Validation/ExtractionValidatorTests.cs`:
 
 ```csharp
-using Ngraphiphy.Models;
-using Ngraphiphy.Validation;
+using Graphiphy.Models;
+using Graphiphy.Validation;
 
-namespace Ngraphiphy.Tests.Validation;
+namespace Graphiphy.Tests.Validation;
 
 public class ExtractionValidatorTests
 {
@@ -798,18 +798,18 @@ public class ExtractionValidatorTests
 - [ ] **Step 2: Run, observe compile failure**
 
 ```bash
-dotnet build tests/Ngraphiphy.Tests/
+dotnet build tests/Graphiphy.Tests/
 ```
 Expected: errors — `Validate` returns `List<string>`, not a record with `Errors`/`Warnings`.
 
 - [ ] **Step 3: Refactor `ExtractionValidator`**
 
-Replace `src/Ngraphiphy/Validation/ExtractionValidator.cs`:
+Replace `src/Graphiphy/Validation/ExtractionValidator.cs`:
 
 ```csharp
-using Ngraphiphy.Models;
+using Graphiphy.Models;
 
-namespace Ngraphiphy.Validation;
+namespace Graphiphy.Validation;
 
 public static class ExtractionValidator
 {
@@ -909,7 +909,7 @@ For each call site, adapt to the new `Result` shape. The `AssertValid` call site
 
 - [ ] **Step 5: Wire warnings through `RepositoryAnalysis.RunAsync`**
 
-In `src/Ngraphiphy.Pipeline/RepositoryAnalysis.cs`, after each `extraction = extractor.Extract(...)` call (around line 53), insert:
+In `src/Graphiphy.Pipeline/RepositoryAnalysis.cs`, after each `extraction = extractor.Extract(...)` call (around line 53), insert:
 
 ```csharp
 var validation = ExtractionValidator.Validate(extraction);
@@ -933,7 +933,7 @@ Expected: all green.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/Ngraphiphy/Validation src/Ngraphiphy.Pipeline tests/Ngraphiphy.Tests/Validation
+git add src/Graphiphy/Validation src/Graphiphy.Pipeline tests/Graphiphy.Tests/Validation
 git commit -m "feat(validation): warn on unsupported file types (e.g. video) instead of erroring"
 ```
 
@@ -942,7 +942,7 @@ git commit -m "feat(validation): warn on unsupported file types (e.g. video) ins
 ## Task 11: Make `NativeLibraryResolver._registered` thread-safe (Minor)
 
 **Files:**
-- Modify: `src/Ngraphiphy/Cluster/NativeLibraryResolver.cs:8-14`
+- Modify: `src/Graphiphy/Cluster/NativeLibraryResolver.cs:8-14`
 
 - [ ] **Step 1: Apply the edit**
 
@@ -961,14 +961,14 @@ public static void Register()
 - [ ] **Step 2: Build, run clustering tests**
 
 ```bash
-dotnet test tests/Ngraphiphy.Tests/ --filter "FullyQualifiedName~Leiden"
+dotnet test tests/Graphiphy.Tests/ --filter "FullyQualifiedName~Leiden"
 ```
 Expected: PASS.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/Ngraphiphy/Cluster/NativeLibraryResolver.cs
+git add src/Graphiphy/Cluster/NativeLibraryResolver.cs
 git commit -m "fix(cluster): use Interlocked for NativeLibraryResolver registration guard"
 ```
 
@@ -977,8 +977,8 @@ git commit -m "fix(cluster): use Interlocked for NativeLibraryResolver registrat
 ## Task 12: Decouple `SecretResolver` from `AnsiConsole` via logger delegate (Minor)
 
 **Files:**
-- Modify: `src/Ngraphiphy.Cli/Configuration/Secrets/SecretResolver.cs`
-- Modify: `src/Ngraphiphy.Cli/Configuration/CliHostExtensions.cs:39`
+- Modify: `src/Graphiphy.Cli/Configuration/Secrets/SecretResolver.cs`
+- Modify: `src/Graphiphy.Cli/Configuration/CliHostExtensions.cs:39`
 
 - [ ] **Step 1: Add `Action<string>? warn` parameter**
 
@@ -1013,14 +1013,14 @@ SecretResolver.ResolveAndOverlayAsync(
 - [ ] **Step 3: Tests**
 
 ```bash
-dotnet test tests/Ngraphiphy.Cli.Tests/
+dotnet test tests/Graphiphy.Cli.Tests/
 ```
 Expected: PASS (existing `ResolveAndOverlay` tests pass a `null` logger and validate behavior).
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/Ngraphiphy.Cli/Configuration
+git add src/Graphiphy.Cli/Configuration
 git commit -m "refactor(cli): inject warning sink into SecretResolver instead of using AnsiConsole directly"
 ```
 
@@ -1031,8 +1031,8 @@ git commit -m "refactor(cli): inject warning sink into SecretResolver instead of
 Avoid reading every file twice.
 
 **Files:**
-- Modify: `src/Ngraphiphy/Cache/ExtractionCache.cs` — add an overload `FileHash(string absolutePath, string rootPath, byte[] content)`
-- Modify: `src/Ngraphiphy.Pipeline/RepositoryAnalysis.cs:42-56`
+- Modify: `src/Graphiphy/Cache/ExtractionCache.cs` — add an overload `FileHash(string absolutePath, string rootPath, byte[] content)`
+- Modify: `src/Graphiphy.Pipeline/RepositoryAnalysis.cs:42-56`
 
 - [ ] **Step 1: Add the overload**
 
@@ -1071,7 +1071,7 @@ Expected: all green.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/Ngraphiphy/Cache src/Ngraphiphy.Pipeline
+git add src/Graphiphy/Cache src/Graphiphy.Pipeline
 git commit -m "perf(pipeline): read each file once per extraction loop iteration"
 ```
 
@@ -1082,7 +1082,7 @@ git commit -m "perf(pipeline): read each file once per extraction loop iteration
 Run after Task 13 (single-read) and Task 10 (warning routing) so the loop body is small.
 
 **Files:**
-- Modify: `src/Ngraphiphy.Pipeline/RepositoryAnalysis.cs:41-56`
+- Modify: `src/Graphiphy.Pipeline/RepositoryAnalysis.cs:41-56`
 
 - [ ] **Step 1: Refactor with `Parallel.ForEachAsync`**
 
@@ -1135,7 +1135,7 @@ Expected: all green.
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/Ngraphiphy.Pipeline/RepositoryAnalysis.cs
+git add src/Graphiphy.Pipeline/RepositoryAnalysis.cs
 git commit -m "perf(pipeline): parallelize file extraction across cores"
 ```
 
@@ -1146,15 +1146,15 @@ git commit -m "perf(pipeline): parallelize file extraction across cores"
 This is the largest of the minor patterns. Defer if scope is tight.
 
 **Files:**
-- Move `src/Ngraphiphy.Pipeline/GraphTools.cs` → `src/Ngraphiphy/Analysis/GraphTools.cs`
-- Update namespace from `Ngraphiphy.Pipeline` to `Ngraphiphy.Analysis`
-- Update `Ngraphiphy.Storage.csproj` to remove the `<ProjectReference>` to `Ngraphiphy.Pipeline.csproj` (if present)
+- Move `src/Graphiphy.Pipeline/GraphTools.cs` → `src/Graphiphy/Analysis/GraphTools.cs`
+- Update namespace from `Graphiphy.Pipeline` to `Graphiphy.Analysis`
+- Update `Graphiphy.Storage.csproj` to remove the `<ProjectReference>` to `Graphiphy.Pipeline.csproj` (if present)
 - Update all callers' `using` directives
 
 - [ ] **Step 1: Run grep**
 
 ```bash
-grep -rn "Ngraphiphy.Pipeline.GraphTools\|using Ngraphiphy.Pipeline" src tests
+grep -rn "Graphiphy.Pipeline.GraphTools\|using Graphiphy.Pipeline" src tests
 ```
 
 - [ ] **Step 2: Move file, rename namespace, fix callers**
@@ -1172,7 +1172,7 @@ Expected: all green.
 
 ```bash
 git add -A
-git commit -m "refactor: move GraphTools to Ngraphiphy.Analysis to drop Storage->Pipeline edge"
+git commit -m "refactor: move GraphTools to Graphiphy.Analysis to drop Storage->Pipeline edge"
 ```
 
 ---

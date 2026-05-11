@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add persistent graph storage (Neo4j/Memgraph) with vector embeddings (Cloudflare Workers AI) and GraphRAG support via a new `Ngraphiphy.Storage` project and `ngraphiphy-cli push` command.
+**Goal:** Add persistent graph storage (Neo4j/Memgraph) with vector embeddings (Cloudflare Workers AI) and GraphRAG support via a new `Graphiphy.Storage` project and `graphiphy-cli push` command.
 
-**Architecture:** New `Ngraphiphy.Storage` project follows the provider pattern from `Ngraphiphy.Llm`: marker interface + sealed record configs + switch-on-type factory + unified interface. Neo4j and Memgraph share the Bolt protocol driver but override vector-search Cypher. Embeddings are abstracted separately via `IEmbeddingProvider` (Cloudflare API via OpenAI SDK). Snapshots are keyed by git commit hash (via LibGit2Sharp) for idempotency.
+**Architecture:** New `Graphiphy.Storage` project follows the provider pattern from `Graphiphy.Llm`: marker interface + sealed record configs + switch-on-type factory + unified interface. Neo4j and Memgraph share the Bolt protocol driver but override vector-search Cypher. Embeddings are abstracted separately via `IEmbeddingProvider` (Cloudflare API via OpenAI SDK). Snapshots are keyed by git commit hash (via LibGit2Sharp) for idempotency.
 
 **Tech Stack:** Neo4j.Driver 5.x, LibGit2Sharp 0.30.x, OpenAI 2.x, Spectre.Console.Cli, TUnit 1.43.41
 
@@ -12,35 +12,35 @@
 
 ## File Structure
 
-**New project:** `src/Ngraphiphy.Storage/`
+**New project:** `src/Graphiphy.Storage/`
 - Core: `IGraphStoreConfig.cs`, `IGraphStore.cs`, `GraphStoreFactory.cs`
 - Models: `SnapshotId.cs`, `SnapshotInfo.cs`, `CommunitySummary.cs`
 - Providers: `Providers/Neo4j/`, `Providers/Memgraph/` (shared base `BoltStoreBase.cs`)
 - Embedding: `Embedding/IEmbeddingProvider.cs`, `Embedding/CloudflareEmbeddingConfig.cs`, `Embedding/CloudflareEmbeddingProvider.cs`
 
-**New CLI command:** `src/Ngraphiphy.Cli/Commands/PushCommand.cs` (follows pattern of AnalyzeCommand, ReportCommand, etc.)
+**New CLI command:** `src/Graphiphy.Cli/Commands/PushCommand.cs` (follows pattern of AnalyzeCommand, ReportCommand, etc.)
 
-**Modifications:** `src/Ngraphiphy.Cli/Program.cs` (add push command), `Ngraphiphy.sln` (add Storage project)
+**Modifications:** `src/Graphiphy.Cli/Program.cs` (add push command), `Graphiphy.sln` (add Storage project)
 
-**Tests:** `tests/Ngraphiphy.Storage.Tests/` with unit tests + integration tests (skipped without live DB)
+**Tests:** `tests/Graphiphy.Storage.Tests/` with unit tests + integration tests (skipped without live DB)
 
 ---
 
-## Task 1: Create Ngraphiphy.Storage Project & Dependencies
+## Task 1: Create Graphiphy.Storage Project & Dependencies
 
 **Files:**
-- Create: `src/Ngraphiphy.Storage/Ngraphiphy.Storage.csproj`
-- Modify: `Ngraphiphy.sln`
+- Create: `src/Graphiphy.Storage/Graphiphy.Storage.csproj`
+- Modify: `Graphiphy.sln`
 
 - [ ] **Step 1: Create project file**
 
 ```bash
 cd /home/timm/ngraphify
-mkdir -p src/Ngraphiphy.Storage
-cd src/Ngraphiphy.Storage
+mkdir -p src/Graphiphy.Storage
+cd src/Graphiphy.Storage
 ```
 
-Create `Ngraphiphy.Storage.csproj`:
+Create `Graphiphy.Storage.csproj`:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -58,8 +58,8 @@ Create `Ngraphiphy.Storage.csproj`:
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Ngraphiphy/Ngraphiphy.csproj" />
-    <ProjectReference Include="../Ngraphiphy.Pipeline/Ngraphiphy.Pipeline.csproj" />
+    <ProjectReference Include="../Graphiphy/Graphiphy.csproj" />
+    <ProjectReference Include="../Graphiphy.Pipeline/Graphiphy.Pipeline.csproj" />
   </ItemGroup>
 </Project>
 ```
@@ -68,7 +68,7 @@ Create `Ngraphiphy.Storage.csproj`:
 
 Run:
 ```bash
-dotnet sln /home/timm/ngraphify/Ngraphiphy.sln add src/Ngraphiphy.Storage/Ngraphiphy.Storage.csproj
+dotnet sln /home/timm/ngraphify/Graphiphy.sln add src/Graphiphy.Storage/Graphiphy.Storage.csproj
 ```
 
 Expected: Solution file updated with Storage project reference.
@@ -77,7 +77,7 @@ Expected: Solution file updated with Storage project reference.
 
 ```bash
 cd /home/timm/ngraphify
-dotnet build src/Ngraphiphy.Storage/ -v minimal 2>&1 | tail -5
+dotnet build src/Graphiphy.Storage/ -v minimal 2>&1 | tail -5
 ```
 
 Expected: Build succeeds (no code yet, just structure).
@@ -85,8 +85,8 @@ Expected: Build succeeds (no code yet, just structure).
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/Ngraphiphy.Storage/Ngraphiphy.Storage.csproj Ngraphiphy.sln
-git commit -m "feat: create Ngraphiphy.Storage project with Neo4j, LibGit2Sharp, OpenAI packages"
+git add src/Graphiphy.Storage/Graphiphy.Storage.csproj Graphiphy.sln
+git commit -m "feat: create Graphiphy.Storage project with Neo4j, LibGit2Sharp, OpenAI packages"
 ```
 
 ---
@@ -94,30 +94,30 @@ git commit -m "feat: create Ngraphiphy.Storage project with Neo4j, LibGit2Sharp,
 ## Task 2: Create Core Interfaces & Models
 
 **Files:**
-- Create: `src/Ngraphiphy.Storage/IGraphStoreConfig.cs`
-- Create: `src/Ngraphiphy.Storage/IGraphStore.cs`
-- Create: `src/Ngraphiphy.Storage/Models/SnapshotId.cs`
-- Create: `src/Ngraphiphy.Storage/Models/SnapshotInfo.cs`
-- Create: `src/Ngraphiphy.Storage/Models/CommunitySummary.cs`
-- Test: `tests/Ngraphiphy.Storage.Tests/SnapshotIdTests.cs`
+- Create: `src/Graphiphy.Storage/IGraphStoreConfig.cs`
+- Create: `src/Graphiphy.Storage/IGraphStore.cs`
+- Create: `src/Graphiphy.Storage/Models/SnapshotId.cs`
+- Create: `src/Graphiphy.Storage/Models/SnapshotInfo.cs`
+- Create: `src/Graphiphy.Storage/Models/CommunitySummary.cs`
+- Test: `tests/Graphiphy.Storage.Tests/SnapshotIdTests.cs`
 
 - [ ] **Step 1: Create IGraphStoreConfig marker interface**
 
-`src/Ngraphiphy.Storage/IGraphStoreConfig.cs`:
+`src/Graphiphy.Storage/IGraphStoreConfig.cs`:
 ```csharp
-namespace Ngraphiphy.Storage;
+namespace Graphiphy.Storage;
 
 public interface IGraphStoreConfig { }
 ```
 
 - [ ] **Step 2: Create IGraphStore interface**
 
-`src/Ngraphiphy.Storage/IGraphStore.cs`:
+`src/Graphiphy.Storage/IGraphStore.cs`:
 ```csharp
-using Ngraphiphy.Models;
-using Ngraphiphy.Pipeline;
+using Graphiphy.Models;
+using Graphiphy.Pipeline;
 
-namespace Ngraphiphy.Storage;
+namespace Graphiphy.Storage;
 
 public interface IGraphStore : IAsyncDisposable
 {
@@ -137,11 +137,11 @@ public interface IGraphStore : IAsyncDisposable
 
 - [ ] **Step 3: Create SnapshotId model**
 
-`src/Ngraphiphy.Storage/Models/SnapshotId.cs`:
+`src/Graphiphy.Storage/Models/SnapshotId.cs`:
 ```csharp
 using LibGit2Sharp;
 
-namespace Ngraphiphy.Storage.Models;
+namespace Graphiphy.Storage.Models;
 
 public sealed record SnapshotId(string RootPath, string CommitHash)
 {
@@ -186,9 +186,9 @@ public sealed record SnapshotId(string RootPath, string CommitHash)
 
 - [ ] **Step 4: Create SnapshotInfo model**
 
-`src/Ngraphiphy.Storage/Models/SnapshotInfo.cs`:
+`src/Graphiphy.Storage/Models/SnapshotInfo.cs`:
 ```csharp
-namespace Ngraphiphy.Storage.Models;
+namespace Graphiphy.Storage.Models;
 
 public sealed record SnapshotInfo(
     SnapshotId Id,
@@ -200,9 +200,9 @@ public sealed record SnapshotInfo(
 
 - [ ] **Step 5: Create CommunitySummary model**
 
-`src/Ngraphiphy.Storage/Models/CommunitySummary.cs`:
+`src/Graphiphy.Storage/Models/CommunitySummary.cs`:
 ```csharp
-namespace Ngraphiphy.Storage.Models;
+namespace Graphiphy.Storage.Models;
 
 public sealed record CommunitySummary(
     int CommunityId,
@@ -212,18 +212,18 @@ public sealed record CommunitySummary(
 
 - [ ] **Step 6: Write test for SnapshotId resolution**
 
-`tests/Ngraphiphy.Storage.Tests/SnapshotIdTests.cs`:
+`tests/Graphiphy.Storage.Tests/SnapshotIdTests.cs`:
 ```csharp
-using Ngraphiphy.Storage.Models;
+using Graphiphy.Storage.Models;
 
-namespace Ngraphiphy.Storage.Tests;
+namespace Graphiphy.Storage.Tests;
 
 public class SnapshotIdTests
 {
     [Test]
     public async Task Resolve_InGitRepo_ReturnsCommitHash()
     {
-        var tempDir = Path.Combine(Path.GetTempPath(), $"ngraphiphy_snap_{Guid.NewGuid().ToString("N")[..8]}");
+        var tempDir = Path.Combine(Path.GetTempPath(), $"graphiphy_snap_{Guid.NewGuid().ToString("N")[..8]}");
         Directory.CreateDirectory(tempDir);
         try
         {
@@ -248,7 +248,7 @@ public class SnapshotIdTests
     [Test]
     public async Task Resolve_NotGitRepo_ReturnsContentHash()
     {
-        var tempDir = Path.Combine(Path.GetTempPath(), $"ngraphiphy_snap_{Guid.NewGuid().ToString("N")[..8]}");
+        var tempDir = Path.Combine(Path.GetTempPath(), $"graphiphy_snap_{Guid.NewGuid().ToString("N")[..8]}");
         Directory.CreateDirectory(tempDir);
         try
         {
@@ -270,7 +270,7 @@ public class SnapshotIdTests
 
 ```bash
 cd /home/timm/ngraphify
-dotnet run --project tests/Ngraphiphy.Storage.Tests/ 2>&1 | grep -E "passed|failed|Passed"
+dotnet run --project tests/Graphiphy.Storage.Tests/ 2>&1 | grep -E "passed|failed|Passed"
 ```
 
 Expected: 2 tests pass.
@@ -278,10 +278,10 @@ Expected: 2 tests pass.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add src/Ngraphiphy.Storage/IGraphStoreConfig.cs \
-         src/Ngraphiphy.Storage/IGraphStore.cs \
-         src/Ngraphiphy.Storage/Models/*.cs \
-         tests/Ngraphiphy.Storage.Tests/SnapshotIdTests.cs
+git add src/Graphiphy.Storage/IGraphStoreConfig.cs \
+         src/Graphiphy.Storage/IGraphStore.cs \
+         src/Graphiphy.Storage/Models/*.cs \
+         tests/Graphiphy.Storage.Tests/SnapshotIdTests.cs
 git commit -m "feat: add IGraphStore interface and snapshot models
 
 - IGraphStoreConfig marker interface (follows IAgentConfig pattern)
@@ -296,16 +296,16 @@ git commit -m "feat: add IGraphStore interface and snapshot models
 ## Task 3: Create Neo4j Provider
 
 **Files:**
-- Create: `src/Ngraphiphy.Storage/Providers/Neo4j/Neo4jConfig.cs`
-- Create: `src/Ngraphiphy.Storage/Providers/Neo4j/BoltStoreBase.cs`
-- Create: `src/Ngraphiphy.Storage/Providers/Neo4j/Neo4jStore.cs`
-- Test: `tests/Ngraphiphy.Storage.Tests/Neo4jStoreTests.cs`
+- Create: `src/Graphiphy.Storage/Providers/Neo4j/Neo4jConfig.cs`
+- Create: `src/Graphiphy.Storage/Providers/Neo4j/BoltStoreBase.cs`
+- Create: `src/Graphiphy.Storage/Providers/Neo4j/Neo4jStore.cs`
+- Test: `tests/Graphiphy.Storage.Tests/Neo4jStoreTests.cs`
 
 - [ ] **Step 1: Create Neo4jConfig**
 
-`src/Ngraphiphy.Storage/Providers/Neo4j/Neo4jConfig.cs`:
+`src/Graphiphy.Storage/Providers/Neo4j/Neo4jConfig.cs`:
 ```csharp
-namespace Ngraphiphy.Storage.Providers.Neo4j;
+namespace Graphiphy.Storage.Providers.Neo4j;
 
 public sealed record Neo4jConfig(
     string Uri = "bolt://localhost:7687",
@@ -315,14 +315,14 @@ public sealed record Neo4jConfig(
 
 - [ ] **Step 2: Create BoltStoreBase (shared between Neo4j and Memgraph)**
 
-`src/Ngraphiphy.Storage/Providers/Neo4j/BoltStoreBase.cs`:
+`src/Graphiphy.Storage/Providers/Neo4j/BoltStoreBase.cs`:
 ```csharp
 using Neo4j.Driver;
-using Ngraphiphy.Models;
-using Ngraphiphy.Pipeline;
-using Ngraphiphy.Storage.Models;
+using Graphiphy.Models;
+using Graphiphy.Pipeline;
+using Graphiphy.Storage.Models;
 
-namespace Ngraphiphy.Storage.Providers.Neo4j;
+namespace Graphiphy.Storage.Providers.Neo4j;
 
 public abstract class BoltStoreBase : IGraphStore
 {
@@ -603,13 +603,13 @@ public abstract class BoltStoreBase : IGraphStore
 
 - [ ] **Step 3: Create Neo4jStore (vector search for Neo4j 5.x)**
 
-`src/Ngraphiphy.Storage/Providers/Neo4j/Neo4jStore.cs`:
+`src/Graphiphy.Storage/Providers/Neo4j/Neo4jStore.cs`:
 ```csharp
 using Neo4j.Driver;
-using Ngraphiphy.Models;
-using Ngraphiphy.Storage.Models;
+using Graphiphy.Models;
+using Graphiphy.Storage.Models;
 
-namespace Ngraphiphy.Storage.Providers.Neo4j;
+namespace Graphiphy.Storage.Providers.Neo4j;
 
 public sealed class Neo4jStore : BoltStoreBase
 {
@@ -726,13 +726,13 @@ public sealed class Neo4jStore : BoltStoreBase
 
 - [ ] **Step 4: Write Neo4jStoreTests (marked to skip without live DB)**
 
-`tests/Ngraphiphy.Storage.Tests/Neo4jStoreTests.cs`:
+`tests/Graphiphy.Storage.Tests/Neo4jStoreTests.cs`:
 ```csharp
-using Ngraphiphy.Storage.Providers.Neo4j;
-using Ngraphiphy.Storage.Models;
-using Ngraphiphy.Pipeline;
+using Graphiphy.Storage.Providers.Neo4j;
+using Graphiphy.Storage.Models;
+using Graphiphy.Pipeline;
 
-namespace Ngraphiphy.Storage.Tests;
+namespace Graphiphy.Storage.Tests;
 
 [Skip("Requires Neo4j instance on bolt://localhost:7687")]
 public class Neo4jStoreTests
@@ -757,7 +757,7 @@ public class Neo4jStoreTests
     public async Task SaveSnapshot_CreatesNodesAndEdges()
     {
         // Create a minimal RepositoryAnalysis
-        var dir = Path.Combine(Path.GetTempPath(), $"ngraphiphy_neo4j_{Guid.NewGuid().ToString("N")[..8]}");
+        var dir = Path.Combine(Path.GetTempPath(), $"graphiphy_neo4j_{Guid.NewGuid().ToString("N")[..8]}");
         Directory.CreateDirectory(dir);
         try
         {
@@ -791,8 +791,8 @@ public class Neo4jStoreTests
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy.Storage/Providers/Neo4j/*.cs \
-         tests/Ngraphiphy.Storage.Tests/Neo4jStoreTests.cs
+git add src/Graphiphy.Storage/Providers/Neo4j/*.cs \
+         tests/Graphiphy.Storage.Tests/Neo4jStoreTests.cs
 git commit -m "feat: implement Neo4j provider with vector indexing
 
 - BoltStoreBase: shared Bolt protocol logic (Neo4j/Memgraph)
@@ -807,15 +807,15 @@ git commit -m "feat: implement Neo4j provider with vector indexing
 ## Task 4: Create Memgraph Provider
 
 **Files:**
-- Create: `src/Ngraphiphy.Storage/Providers/Memgraph/MemgraphConfig.cs`
-- Create: `src/Ngraphiphy.Storage/Providers/Memgraph/MemgraphStore.cs`
-- Test: `tests/Ngraphiphy.Storage.Tests/MemgraphStoreTests.cs`
+- Create: `src/Graphiphy.Storage/Providers/Memgraph/MemgraphConfig.cs`
+- Create: `src/Graphiphy.Storage/Providers/Memgraph/MemgraphStore.cs`
+- Test: `tests/Graphiphy.Storage.Tests/MemgraphStoreTests.cs`
 
 - [ ] **Step 1: Create MemgraphConfig**
 
-`src/Ngraphiphy.Storage/Providers/Memgraph/MemgraphConfig.cs`:
+`src/Graphiphy.Storage/Providers/Memgraph/MemgraphConfig.cs`:
 ```csharp
-namespace Ngraphiphy.Storage.Providers.Memgraph;
+namespace Graphiphy.Storage.Providers.Memgraph;
 
 public sealed record MemgraphConfig(
     string Host = "localhost",
@@ -829,14 +829,14 @@ public sealed record MemgraphConfig(
 
 - [ ] **Step 2: Create MemgraphStore (vector search via mg.vector)**
 
-`src/Ngraphiphy.Storage/Providers/Memgraph/MemgraphStore.cs`:
+`src/Graphiphy.Storage/Providers/Memgraph/MemgraphStore.cs`:
 ```csharp
 using Neo4j.Driver;
-using Ngraphiphy.Models;
-using Ngraphiphy.Storage.Models;
-using Ngraphiphy.Storage.Providers.Neo4j;
+using Graphiphy.Models;
+using Graphiphy.Storage.Models;
+using Graphiphy.Storage.Providers.Neo4j;
 
-namespace Ngraphiphy.Storage.Providers.Memgraph;
+namespace Graphiphy.Storage.Providers.Memgraph;
 
 public sealed class MemgraphStore : BoltStoreBase
 {
@@ -956,13 +956,13 @@ public sealed class MemgraphStore : BoltStoreBase
 
 - [ ] **Step 3: Write MemgraphStoreTests**
 
-`tests/Ngraphiphy.Storage.Tests/MemgraphStoreTests.cs`:
+`tests/Graphiphy.Storage.Tests/MemgraphStoreTests.cs`:
 ```csharp
-using Ngraphiphy.Storage.Providers.Memgraph;
-using Ngraphiphy.Storage.Models;
-using Ngraphiphy.Pipeline;
+using Graphiphy.Storage.Providers.Memgraph;
+using Graphiphy.Storage.Models;
+using Graphiphy.Pipeline;
 
-namespace Ngraphiphy.Storage.Tests;
+namespace Graphiphy.Storage.Tests;
 
 [Skip("Requires Memgraph instance on localhost:7687")]
 public class MemgraphStoreTests
@@ -986,7 +986,7 @@ public class MemgraphStoreTests
     [Test]
     public async Task SaveSnapshot_CreatesNodesAndEdges()
     {
-        var dir = Path.Combine(Path.GetTempPath(), $"ngraphiphy_mem_{Guid.NewGuid().ToString("N")[..8]}");
+        var dir = Path.Combine(Path.GetTempPath(), $"graphiphy_mem_{Guid.NewGuid().ToString("N")[..8]}");
         Directory.CreateDirectory(dir);
         try
         {
@@ -1010,8 +1010,8 @@ public class MemgraphStoreTests
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/Ngraphiphy.Storage/Providers/Memgraph/*.cs \
-         tests/Ngraphiphy.Storage.Tests/MemgraphStoreTests.cs
+git add src/Graphiphy.Storage/Providers/Memgraph/*.cs \
+         tests/Graphiphy.Storage.Tests/MemgraphStoreTests.cs
 git commit -m "feat: implement Memgraph provider with vector search
 
 - MemgraphConfig: Bolt connection to Memgraph (localhost:7687)
@@ -1025,25 +1025,25 @@ git commit -m "feat: implement Memgraph provider with vector search
 ## Task 5: Create Embedding Abstractions
 
 **Files:**
-- Create: `src/Ngraphiphy.Storage/Embedding/IEmbeddingProviderConfig.cs`
-- Create: `src/Ngraphiphy.Storage/Embedding/IEmbeddingProvider.cs`
-- Create: `src/Ngraphiphy.Storage/Embedding/CloudflareEmbeddingConfig.cs`
-- Create: `src/Ngraphiphy.Storage/Embedding/CloudflareEmbeddingProvider.cs`
-- Create: `src/Ngraphiphy.Storage/Embedding/EmbeddingProviderFactory.cs`
-- Test: `tests/Ngraphiphy.Storage.Tests/CloudflareEmbeddingProviderTests.cs`
+- Create: `src/Graphiphy.Storage/Embedding/IEmbeddingProviderConfig.cs`
+- Create: `src/Graphiphy.Storage/Embedding/IEmbeddingProvider.cs`
+- Create: `src/Graphiphy.Storage/Embedding/CloudflareEmbeddingConfig.cs`
+- Create: `src/Graphiphy.Storage/Embedding/CloudflareEmbeddingProvider.cs`
+- Create: `src/Graphiphy.Storage/Embedding/EmbeddingProviderFactory.cs`
+- Test: `tests/Graphiphy.Storage.Tests/CloudflareEmbeddingProviderTests.cs`
 
 - [ ] **Step 1: Create IEmbeddingProviderConfig and IEmbeddingProvider interfaces**
 
-`src/Ngraphiphy.Storage/Embedding/IEmbeddingProviderConfig.cs`:
+`src/Graphiphy.Storage/Embedding/IEmbeddingProviderConfig.cs`:
 ```csharp
-namespace Ngraphiphy.Storage.Embedding;
+namespace Graphiphy.Storage.Embedding;
 
 public interface IEmbeddingProviderConfig { }
 ```
 
-`src/Ngraphiphy.Storage/Embedding/IEmbeddingProvider.cs`:
+`src/Graphiphy.Storage/Embedding/IEmbeddingProvider.cs`:
 ```csharp
-namespace Ngraphiphy.Storage.Embedding;
+namespace Graphiphy.Storage.Embedding;
 
 public interface IEmbeddingProvider
 {
@@ -1054,9 +1054,9 @@ public interface IEmbeddingProvider
 
 - [ ] **Step 2: Create CloudflareEmbeddingConfig**
 
-`src/Ngraphiphy.Storage/Embedding/CloudflareEmbeddingConfig.cs`:
+`src/Graphiphy.Storage/Embedding/CloudflareEmbeddingConfig.cs`:
 ```csharp
-namespace Ngraphiphy.Storage.Embedding;
+namespace Graphiphy.Storage.Embedding;
 
 public sealed record CloudflareEmbeddingConfig(
     string AccountId,
@@ -1075,11 +1075,11 @@ public sealed record CloudflareEmbeddingConfig(
 
 - [ ] **Step 3: Create CloudflareEmbeddingProvider**
 
-`src/Ngraphiphy.Storage/Embedding/CloudflareEmbeddingProvider.cs`:
+`src/Graphiphy.Storage/Embedding/CloudflareEmbeddingProvider.cs`:
 ```csharp
 using OpenAI;
 
-namespace Ngraphiphy.Storage.Embedding;
+namespace Graphiphy.Storage.Embedding;
 
 public sealed class CloudflareEmbeddingProvider : IEmbeddingProvider
 {
@@ -1110,9 +1110,9 @@ public sealed class CloudflareEmbeddingProvider : IEmbeddingProvider
 
 - [ ] **Step 4: Create EmbeddingProviderFactory**
 
-`src/Ngraphiphy.Storage/Embedding/EmbeddingProviderFactory.cs`:
+`src/Graphiphy.Storage/Embedding/EmbeddingProviderFactory.cs`:
 ```csharp
-namespace Ngraphiphy.Storage.Embedding;
+namespace Graphiphy.Storage.Embedding;
 
 public static class EmbeddingProviderFactory
 {
@@ -1126,11 +1126,11 @@ public static class EmbeddingProviderFactory
 
 - [ ] **Step 5: Write CloudflareEmbeddingProviderTests (mocked HTTP)**
 
-`tests/Ngraphiphy.Storage.Tests/CloudflareEmbeddingProviderTests.cs`:
+`tests/Graphiphy.Storage.Tests/CloudflareEmbeddingProviderTests.cs`:
 ```csharp
-using Ngraphiphy.Storage.Embedding;
+using Graphiphy.Storage.Embedding;
 
-namespace Ngraphiphy.Storage.Tests;
+namespace Graphiphy.Storage.Tests;
 
 public class CloudflareEmbeddingProviderTests
 {
@@ -1184,7 +1184,7 @@ public class CloudflareEmbeddingProviderTests
 
 ```bash
 cd /home/timm/ngraphify
-dotnet run --project tests/Ngraphiphy.Storage.Tests/ 2>&1 | grep -E "Dimensions|passed|failed"
+dotnet run --project tests/Graphiphy.Storage.Tests/ 2>&1 | grep -E "Dimensions|passed|failed"
 ```
 
 Expected: 2 non-skipped tests pass (model tests), 1 integration test skipped.
@@ -1192,8 +1192,8 @@ Expected: 2 non-skipped tests pass (model tests), 1 integration test skipped.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/Ngraphiphy.Storage/Embedding/*.cs \
-         tests/Ngraphiphy.Storage.Tests/CloudflareEmbeddingProviderTests.cs
+git add src/Graphiphy.Storage/Embedding/*.cs \
+         tests/Graphiphy.Storage.Tests/CloudflareEmbeddingProviderTests.cs
 git commit -m "feat: implement Cloudflare Workers AI embedding provider
 
 - IEmbeddingProviderConfig and IEmbeddingProvider abstractions
@@ -1209,16 +1209,16 @@ git commit -m "feat: implement Cloudflare Workers AI embedding provider
 ## Task 6: Create GraphStoreFactory
 
 **Files:**
-- Create: `src/Ngraphiphy.Storage/GraphStoreFactory.cs`
+- Create: `src/Graphiphy.Storage/GraphStoreFactory.cs`
 
 - [ ] **Step 1: Create GraphStoreFactory**
 
-`src/Ngraphiphy.Storage/GraphStoreFactory.cs`:
+`src/Graphiphy.Storage/GraphStoreFactory.cs`:
 ```csharp
-using Ngraphiphy.Storage.Providers.Neo4j;
-using Ngraphiphy.Storage.Providers.Memgraph;
+using Graphiphy.Storage.Providers.Neo4j;
+using Graphiphy.Storage.Providers.Memgraph;
 
-namespace Ngraphiphy.Storage;
+namespace Graphiphy.Storage;
 
 public static class GraphStoreFactory
 {
@@ -1240,10 +1240,10 @@ public static class GraphStoreFactory
 - [ ] **Step 2: Commit**
 
 ```bash
-git add src/Ngraphiphy.Storage/GraphStoreFactory.cs
+git add src/Graphiphy.Storage/GraphStoreFactory.cs
 git commit -m "feat: add GraphStoreFactory for provider dispatch
 
-Follows IAgentConfig pattern from Ngraphiphy.Llm"
+Follows IAgentConfig pattern from Graphiphy.Llm"
 ```
 
 ---
@@ -1251,26 +1251,26 @@ Follows IAgentConfig pattern from Ngraphiphy.Llm"
 ## Task 7: Create PushCommand
 
 **Files:**
-- Create: `src/Ngraphiphy.Cli/Commands/PushCommand.cs`
-- Modify: `src/Ngraphiphy.Cli/Program.cs`
+- Create: `src/Graphiphy.Cli/Commands/PushCommand.cs`
+- Modify: `src/Graphiphy.Cli/Program.cs`
 
 - [ ] **Step 1: Create PushCommand**
 
-`src/Ngraphiphy.Cli/Commands/PushCommand.cs`:
+`src/Graphiphy.Cli/Commands/PushCommand.cs`:
 ```csharp
 using System.ComponentModel;
-using Ngraphiphy.Cli.Mcp;
-using Ngraphiphy.Llm;
-using Ngraphiphy.Pipeline;
-using Ngraphiphy.Storage;
-using Ngraphiphy.Storage.Embedding;
-using Ngraphiphy.Storage.Models;
-using Ngraphiphy.Storage.Providers.Memgraph;
-using Ngraphiphy.Storage.Providers.Neo4j;
+using Graphiphy.Cli.Mcp;
+using Graphiphy.Llm;
+using Graphiphy.Pipeline;
+using Graphiphy.Storage;
+using Graphiphy.Storage.Embedding;
+using Graphiphy.Storage.Models;
+using Graphiphy.Storage.Providers.Memgraph;
+using Graphiphy.Storage.Providers.Neo4j;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-namespace Ngraphiphy.Cli.Commands;
+namespace Graphiphy.Cli.Commands;
 
 public sealed class PushSettings : CommandSettings
 {
@@ -1339,7 +1339,7 @@ public sealed class PushSettings : CommandSettings
     public bool Force { get; init; }
 
     [CommandOption("--cache <dir>")]
-    [Description("Cache directory. Default: <path>/.ngraphiphy-cache")]
+    [Description("Cache directory. Default: <path>/.graphiphy-cache")]
     public string? CacheDir { get; init; }
 }
 
@@ -1349,9 +1349,9 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
         CommandContext context, PushSettings settings, CancellationToken cancellationToken)
     {
         // 1. Resolve snapshot ID
-        Console.Error.WriteLine("[ngraphiphy] Resolving snapshot ID...");
+        Console.Error.WriteLine("[graphiphy] Resolving snapshot ID...");
         var snapshotId = SnapshotId.Resolve(settings.Path);
-        Console.Error.WriteLine($"[ngraphiphy] Snapshot: {snapshotId.Id}");
+        Console.Error.WriteLine($"[graphiphy] Snapshot: {snapshotId.Id}");
 
         // 2. Check if snapshot already exists
         IGraphStoreConfig storeConfig = settings.Backend.ToLowerInvariant() switch
@@ -1373,7 +1373,7 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
         var exists = await store.SnapshotExistsAsync(snapshotId, cancellationToken);
         if (exists && !settings.Force)
         {
-            AnsiConsole.MarkupLine($"[yellow][ngraphiphy] Snapshot already exists, skipping.[/]");
+            AnsiConsole.MarkupLine($"[yellow][graphiphy] Snapshot already exists, skipping.[/]");
             return 0;
         }
 
@@ -1391,9 +1391,9 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
             return 1;
 
         // 4. Save snapshot
-        AnsiConsole.MarkupLine("[blue][ngraphiphy] Saving snapshot...[/]");
+        AnsiConsole.MarkupLine("[blue][graphiphy] Saving snapshot...[/]");
         await store.SaveSnapshotAsync(analysis, snapshotId, cancellationToken);
-        AnsiConsole.MarkupLine($"[green][ngraphiphy] Snapshot saved: {analysis.Graph.VertexCount} nodes, {analysis.Graph.EdgeCount} edges[/]");
+        AnsiConsole.MarkupLine($"[green][graphiphy] Snapshot saved: {analysis.Graph.VertexCount} nodes, {analysis.Graph.EdgeCount} edges[/]");
 
         // 5. Embed nodes (optional)
         if (settings.Embed)
@@ -1408,13 +1408,13 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
             var embedConfig = new CloudflareEmbeddingConfig(settings.CloudflareAccount, cfToken, settings.CloudflareModel);
             var embedder = new CloudflareEmbeddingProvider(embedConfig);
 
-            AnsiConsole.MarkupLine("[blue][ngraphiphy] Embedding nodes...[/]");
+            AnsiConsole.MarkupLine("[blue][graphiphy] Embedding nodes...[/]");
             await AnsiConsole.Status().Spinner(Spinner.Known.Dots)
                 .StartAsync("Embedding...", async ctx =>
                 {
                     await store.EmbedNodesAsync(snapshotId, embedder, cancellationToken);
                 });
-            AnsiConsole.MarkupLine("[green][ngraphiphy] Nodes embedded[/]");
+            AnsiConsole.MarkupLine("[green][graphiphy] Nodes embedded[/]");
         }
 
         // 6. Generate community summaries (optional)
@@ -1435,7 +1435,7 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
                     Model: settings.Model ?? "claude-sonnet-4-6"),
             };
 
-            AnsiConsole.MarkupLine("[blue][ngraphiphy] Generating community summaries...[/]");
+            AnsiConsole.MarkupLine("[blue][graphiphy] Generating community summaries...[/]");
             await using var agent = await GraphAgentFactory.CreateAsync(llmConfig, analysis.Graph, cancellationToken);
             await using var session = await agent.CreateSessionAsync(cancellationToken);
 
@@ -1463,10 +1463,10 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
             }
 
             await store.SaveCommunitySummariesAsync(snapshotId, summaries, cancellationToken);
-            AnsiConsole.MarkupLine($"[green][ngraphiphy] Saved {summaries.Count} community summaries[/]");
+            AnsiConsole.MarkupLine($"[green][graphiphy] Saved {summaries.Count} community summaries[/]");
         }
 
-        AnsiConsole.MarkupLine("[green][ngraphiphy] Push complete[/]");
+        AnsiConsole.MarkupLine("[green][graphiphy] Push complete[/]");
         return 0;
     }
 
@@ -1482,16 +1482,16 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
 
 - [ ] **Step 2: Update Program.cs**
 
-Modify `src/Ngraphiphy.Cli/Program.cs` to add the push command:
+Modify `src/Graphiphy.Cli/Program.cs` to add the push command:
 
 ```csharp
-using Ngraphiphy.Cli.Commands;
+using Graphiphy.Cli.Commands;
 using Spectre.Console.Cli;
 
 var app = new CommandApp();
 app.Configure(config =>
 {
-    config.SetApplicationName("ngraphiphy");
+    config.SetApplicationName("graphiphy");
     config.AddCommand<AnalyzeCommand>("analyze")
           .WithDescription("Analyze a repository and print graph statistics.");
     config.AddCommand<ReportCommand>("report")
@@ -1510,7 +1510,7 @@ return app.Run(args);
 
 ```bash
 cd /home/timm/ngraphify
-dotnet build src/Ngraphiphy.Cli/ -v minimal 2>&1 | tail -5
+dotnet build src/Graphiphy.Cli/ -v minimal 2>&1 | tail -5
 ```
 
 Expected: Build succeeds.
@@ -1518,7 +1518,7 @@ Expected: Build succeeds.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/Ngraphiphy.Cli/Commands/PushCommand.cs src/Ngraphiphy.Cli/Program.cs
+git add src/Graphiphy.Cli/Commands/PushCommand.cs src/Graphiphy.Cli/Program.cs
 git commit -m "feat: add push CLI command for graph persistence
 
 - Resolve snapshot ID via git commit or content hash
@@ -1534,11 +1534,11 @@ git commit -m "feat: add push CLI command for graph persistence
 ## Task 8: Test Everything
 
 **Files:**
-- Create: `tests/Ngraphiphy.Storage.Tests/Ngraphiphy.Storage.Tests.csproj`
+- Create: `tests/Graphiphy.Storage.Tests/Graphiphy.Storage.Tests.csproj`
 
 - [ ] **Step 1: Create test project file**
 
-`tests/Ngraphiphy.Storage.Tests/Ngraphiphy.Storage.Tests.csproj`:
+`tests/Graphiphy.Storage.Tests/Graphiphy.Storage.Tests.csproj`:
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -1551,7 +1551,7 @@ git commit -m "feat: add push CLI command for graph persistence
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/Ngraphiphy.Storage/Ngraphiphy.Storage.csproj" />
+    <ProjectReference Include="../../src/Graphiphy.Storage/Graphiphy.Storage.csproj" />
   </ItemGroup>
 </Project>
 ```
@@ -1559,14 +1559,14 @@ git commit -m "feat: add push CLI command for graph persistence
 - [ ] **Step 2: Add test project to solution**
 
 ```bash
-dotnet sln /home/timm/ngraphify/Ngraphiphy.sln add tests/Ngraphiphy.Storage.Tests/Ngraphiphy.Storage.Tests.csproj
+dotnet sln /home/timm/ngraphify/Graphiphy.sln add tests/Graphiphy.Storage.Tests/Graphiphy.Storage.Tests.csproj
 ```
 
 - [ ] **Step 3: Run all unit tests**
 
 ```bash
 cd /home/timm/ngraphify
-dotnet run --project tests/Ngraphiphy.Storage.Tests/ 2>&1 | tail -15
+dotnet run --project tests/Graphiphy.Storage.Tests/ 2>&1 | tail -15
 ```
 
 Expected: All unit tests pass, integration tests skipped.
@@ -1574,7 +1574,7 @@ Expected: All unit tests pass, integration tests skipped.
 - [ ] **Step 4: Smoke test the CLI**
 
 ```bash
-dotnet run --project src/Ngraphiphy.Cli/ -- push --help 2>&1 | head -20
+dotnet run --project src/Graphiphy.Cli/ -- push --help 2>&1 | head -20
 ```
 
 Expected: Push command help text displayed.
@@ -1582,8 +1582,8 @@ Expected: Push command help text displayed.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add tests/Ngraphiphy.Storage.Tests/Ngraphiphy.Storage.Tests.csproj Ngraphiphy.sln
-git commit -m "test: create Ngraphiphy.Storage.Tests project with TUnit
+git add tests/Graphiphy.Storage.Tests/Graphiphy.Storage.Tests.csproj Graphiphy.sln
+git commit -m "test: create Graphiphy.Storage.Tests project with TUnit
 
 All unit tests pass; integration tests skipped without live DB instance"
 ```

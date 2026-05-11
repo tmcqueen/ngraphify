@@ -1,10 +1,10 @@
-# Ngraphiphy Phase 2 (v2): MAF LLM Backends, Pipeline, CLI, and MCP Server
+# Graphiphy Phase 2 (v2): MAF LLM Backends, Pipeline, CLI, and MCP Server
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace Semantic Kernel with Microsoft Agent Framework v1.5.0, add provider-specific configs for OpenAI/Anthropic/Ollama/Copilot/A2A, implement the full pipeline library, Spectre.Console CLI commands, and a ModelContextProtocol MCP stdio server.
 
-**Architecture:** `Ngraphiphy.Llm` (already scaffolded with SK) gets SK replaced with MAF; `IGraphAgent` becomes session-aware via a `GraphSession` wrapper; `GraphPlugin` uses plain methods with `[Description]` attributes registered via `AIFunctionFactory.Create()`. `Ngraphiphy.Pipeline` (new library) holds the full Detect→Extract→Dedup→Cluster→Report pipeline. `Ngraphiphy.Cli` gets its stub commands implemented and gains an MCP stdio server via `ModelContextProtocol` 1.3.0.
+**Architecture:** `Graphiphy.Llm` (already scaffolded with SK) gets SK replaced with MAF; `IGraphAgent` becomes session-aware via a `GraphSession` wrapper; `GraphPlugin` uses plain methods with `[Description]` attributes registered via `AIFunctionFactory.Create()`. `Graphiphy.Pipeline` (new library) holds the full Detect→Extract→Dedup→Cluster→Report pipeline. `Graphiphy.Cli` gets its stub commands implemented and gains an MCP stdio server via `ModelContextProtocol` 1.3.0.
 
 **Tech Stack:**
 - Microsoft Agent Framework 1.5.0 — `Microsoft.Agents.AI`, `Microsoft.Agents.AI.OpenAI` (stable); `Microsoft.Agents.AI.Anthropic`, `.A2A`, `.GitHub.Copilot` (preview)
@@ -17,9 +17,9 @@
 
 **Before starting Task 1: clean up dead worktrees from aborted prior work**
 ```bash
-cd /home/timm/ngraphiphy
-git worktree remove /home/timm/ngraphiphy-p2t3 --force 2>/dev/null; true
-git worktree remove /home/timm/ngraphiphy-p2t6 --force 2>/dev/null; true
+cd /home/timm/graphiphy
+git worktree remove /home/timm/graphiphy-p2t3 --force 2>/dev/null; true
+git worktree remove /home/timm/graphiphy-p2t6 --force 2>/dev/null; true
 git branch -D p2/task3-kernel-factory p2/task6-pipeline 2>/dev/null; true
 ```
 
@@ -29,8 +29,8 @@ git branch -D p2/task3-kernel-factory p2/task6-pipeline 2>/dev/null; true
 
 ```
 src/
-  Ngraphiphy.Llm/                         ← MODIFY throughout Tasks 1-3
-    Ngraphiphy.Llm.csproj                 ← replace SK 1.75.0 with MAF packages
+  Graphiphy.Llm/                         ← MODIFY throughout Tasks 1-3
+    Graphiphy.Llm.csproj                 ← replace SK 1.75.0 with MAF packages
     IGraphAgent.cs                        ← rewrite: session-aware interface
     GraphSession.cs                       ← NEW: wraps AgentSession
     GraphPlugin.cs                        ← rewrite: plain methods + [Description], no SK attrs
@@ -43,12 +43,12 @@ src/
     MafGraphAgent.cs                      ← NEW: IGraphAgent impl wrapping AIAgent
     GraphAgentFactory.cs                  ← NEW: async factory, 5 providers
 
-  Ngraphiphy.Pipeline/                    ← NEW library (Task 4)
-    Ngraphiphy.Pipeline.csproj
+  Graphiphy.Pipeline/                    ← NEW library (Task 4)
+    Graphiphy.Pipeline.csproj
     RepositoryAnalysis.cs
     GraphTools.cs
 
-  Ngraphiphy.Cli/                         ← MODIFY: implement stub commands (Tasks 5-7)
+  Graphiphy.Cli/                         ← MODIFY: implement stub commands (Tasks 5-7)
     Commands/
       AnalyzeCommand.cs
       ReportCommand.cs
@@ -59,11 +59,11 @@ src/
       GraphMcpServer.cs                   ← NEW
 
 tests/
-  Ngraphiphy.Llm.Tests/
+  Graphiphy.Llm.Tests/
     GraphPluginTests.cs                   ← rewrite: plain method calls, no SK
     AgentConfigTests.cs                   ← NEW
     GraphAgentFactoryTests.cs             ← NEW
-  Ngraphiphy.Cli.Tests/
+  Graphiphy.Cli.Tests/
     Pipeline/RepositoryAnalysisTests.cs   ← NEW
     Commands/AnalyzeCommandTests.cs       ← NEW
     Mcp/GraphToolsTests.cs                ← NEW
@@ -75,44 +75,44 @@ docs/
 
 ---
 
-## Task 1: Replace Ngraphiphy.Llm — swap SK for MAF, update IGraphAgent
+## Task 1: Replace Graphiphy.Llm — swap SK for MAF, update IGraphAgent
 
-**Context:** Main branch has `src/Ngraphiphy.Llm/` with SK 1.75.0. This task replaces csproj packages, rewrites `IGraphAgent` to be session-aware, adds `GraphSession`, rewrites `GraphPlugin` with plain methods, and rewrites `GraphPluginTests`. Provider configs and the agent implementation come in Tasks 2 and 3.
+**Context:** Main branch has `src/Graphiphy.Llm/` with SK 1.75.0. This task replaces csproj packages, rewrites `IGraphAgent` to be session-aware, adds `GraphSession`, rewrites `GraphPlugin` with plain methods, and rewrites `GraphPluginTests`. Provider configs and the agent implementation come in Tasks 2 and 3.
 
 **Files:**
-- Modify: `src/Ngraphiphy.Llm/Ngraphiphy.Llm.csproj`
-- Rewrite: `src/Ngraphiphy.Llm/IGraphAgent.cs`
-- Create: `src/Ngraphiphy.Llm/GraphSession.cs`
-- Rewrite: `src/Ngraphiphy.Llm/GraphPlugin.cs`
-- Rewrite: `tests/Ngraphiphy.Llm.Tests/GraphPluginTests.cs`
+- Modify: `src/Graphiphy.Llm/Graphiphy.Llm.csproj`
+- Rewrite: `src/Graphiphy.Llm/IGraphAgent.cs`
+- Create: `src/Graphiphy.Llm/GraphSession.cs`
+- Rewrite: `src/Graphiphy.Llm/GraphPlugin.cs`
+- Rewrite: `tests/Graphiphy.Llm.Tests/GraphPluginTests.cs`
 
-**How to run tests:** `dotnet run --project tests/Ngraphiphy.Llm.Tests/`
+**How to run tests:** `dotnet run --project tests/Graphiphy.Llm.Tests/`
 
 - [ ] **Step 1: Clean up dead worktrees**
 
 ```bash
-cd /home/timm/ngraphiphy
-git worktree remove /home/timm/ngraphiphy-p2t3 --force 2>/dev/null; true
-git worktree remove /home/timm/ngraphiphy-p2t6 --force 2>/dev/null; true
+cd /home/timm/graphiphy
+git worktree remove /home/timm/graphiphy-p2t3 --force 2>/dev/null; true
+git worktree remove /home/timm/graphiphy-p2t6 --force 2>/dev/null; true
 git branch -D p2/task3-kernel-factory p2/task6-pipeline 2>/dev/null; true
 ```
 
 Expected: No errors (or "not found" messages are fine).
 
-- [ ] **Step 2: Replace Ngraphiphy.Llm.csproj**
+- [ ] **Step 2: Replace Graphiphy.Llm.csproj**
 
 ```xml
-<!-- src/Ngraphiphy.Llm/Ngraphiphy.Llm.csproj -->
+<!-- src/Graphiphy.Llm/Graphiphy.Llm.csproj -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Ngraphiphy.Llm</RootNamespace>
+    <RootNamespace>Graphiphy.Llm</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ngraphiphy\Ngraphiphy.csproj" />
+    <ProjectReference Include="..\Graphiphy\Graphiphy.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -127,26 +127,26 @@ Expected: No errors (or "not found" messages are fine).
 
 Then add the three preview packages (this writes the exact resolved version into the csproj):
 ```bash
-cd /home/timm/ngraphiphy
-dotnet add src/Ngraphiphy.Llm/Ngraphiphy.Llm.csproj package Microsoft.Agents.AI.Anthropic --prerelease
-dotnet add src/Ngraphiphy.Llm/Ngraphiphy.Llm.csproj package Microsoft.Agents.AI.A2A --prerelease
-dotnet add src/Ngraphiphy.Llm/Ngraphiphy.Llm.csproj package Microsoft.Agents.AI.GitHub.Copilot --prerelease
+cd /home/timm/graphiphy
+dotnet add src/Graphiphy.Llm/Graphiphy.Llm.csproj package Microsoft.Agents.AI.Anthropic --prerelease
+dotnet add src/Graphiphy.Llm/Graphiphy.Llm.csproj package Microsoft.Agents.AI.A2A --prerelease
+dotnet add src/Graphiphy.Llm/Graphiphy.Llm.csproj package Microsoft.Agents.AI.GitHub.Copilot --prerelease
 ```
 
 Verify build:
 ```bash
-dotnet build src/Ngraphiphy.Llm/
+dotnet build src/Graphiphy.Llm/
 ```
 Expected: Build succeeded.
 
 - [ ] **Step 3: Rewrite IGraphAgent.cs**
 
 ```csharp
-// src/Ngraphiphy.Llm/IGraphAgent.cs
-using Ngraphiphy.Models;
+// src/Graphiphy.Llm/IGraphAgent.cs
+using Graphiphy.Models;
 using QuikGraph;
 
-namespace Ngraphiphy.Llm;
+namespace Graphiphy.Llm;
 
 /// <summary>
 /// Session-aware LLM agent that answers questions about a repository knowledge graph.
@@ -173,10 +173,10 @@ public interface IGraphAgent : IAsyncDisposable
 - [ ] **Step 4: Create GraphSession.cs**
 
 ```csharp
-// src/Ngraphiphy.Llm/GraphSession.cs
+// src/Graphiphy.Llm/GraphSession.cs
 using Microsoft.Agents.AI;
 
-namespace Ngraphiphy.Llm;
+namespace Graphiphy.Llm;
 
 /// <summary>
 /// Represents a single conversation with an <see cref="IGraphAgent"/>.
@@ -196,14 +196,14 @@ public sealed class GraphSession : IAsyncDisposable
 - [ ] **Step 5: Rewrite GraphPlugin.cs**
 
 ```csharp
-// src/Ngraphiphy.Llm/GraphPlugin.cs
+// src/Graphiphy.Llm/GraphPlugin.cs
 using System.ComponentModel;
 using System.Text.Json;
-using Ngraphiphy.Analysis;
-using Ngraphiphy.Models;
+using Graphiphy.Analysis;
+using Graphiphy.Models;
 using QuikGraph;
 
-namespace Ngraphiphy.Llm;
+namespace Graphiphy.Llm;
 
 /// <summary>
 /// Graph query methods registered as AITool functions via AIFunctionFactory.Create().
@@ -274,17 +274,17 @@ public sealed class GraphPlugin
 - [ ] **Step 6: Rewrite GraphPluginTests.cs**
 
 ```csharp
-// tests/Ngraphiphy.Llm.Tests/GraphPluginTests.cs
-using Ngraphiphy.Build;
-using Ngraphiphy.Llm;
+// tests/Graphiphy.Llm.Tests/GraphPluginTests.cs
+using Graphiphy.Build;
+using Graphiphy.Llm;
 using QuikGraph;
-using ExtractionModel = Ngraphiphy.Models.Extraction;
+using ExtractionModel = Graphiphy.Models.Extraction;
 
-namespace Ngraphiphy.Llm.Tests;
+namespace Graphiphy.Llm.Tests;
 
 public class GraphPluginTests
 {
-    private static BidirectionalGraph<Ngraphiphy.Models.Node, TaggedEdge<Ngraphiphy.Models.Node, Ngraphiphy.Models.Edge>> MakeGraph()
+    private static BidirectionalGraph<Graphiphy.Models.Node, TaggedEdge<Graphiphy.Models.Node, Graphiphy.Models.Edge>> MakeGraph()
     {
         var ext = new ExtractionModel
         {
@@ -345,16 +345,16 @@ public class GraphPluginTests
 - [ ] **Step 7: Run tests**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Llm.Tests/
+dotnet run --project tests/Graphiphy.Llm.Tests/
 ```
 Expected: 4 tests pass.
 
 - [ ] **Step 8: Commit**
 
 ```bash
-cd /home/timm/ngraphiphy
-git add src/Ngraphiphy.Llm/ tests/Ngraphiphy.Llm.Tests/GraphPluginTests.cs
-git commit -m "feat: replace Semantic Kernel with Microsoft Agent Framework in Ngraphiphy.Llm"
+cd /home/timm/graphiphy
+git add src/Graphiphy.Llm/ tests/Graphiphy.Llm.Tests/GraphPluginTests.cs
+git commit -m "feat: replace Semantic Kernel with Microsoft Agent Framework in Graphiphy.Llm"
 ```
 
 ---
@@ -362,21 +362,21 @@ git commit -m "feat: replace Semantic Kernel with Microsoft Agent Framework in N
 ## Task 2: Provider config types
 
 **Files:**
-- Create: `src/Ngraphiphy.Llm/IAgentConfig.cs`
-- Create: `src/Ngraphiphy.Llm/OpenAiConfig.cs`
-- Create: `src/Ngraphiphy.Llm/AnthropicConfig.cs`
-- Create: `src/Ngraphiphy.Llm/OllamaConfig.cs`
-- Create: `src/Ngraphiphy.Llm/CopilotConfig.cs`
-- Create: `src/Ngraphiphy.Llm/A2AConfig.cs`
-- Create: `tests/Ngraphiphy.Llm.Tests/AgentConfigTests.cs`
+- Create: `src/Graphiphy.Llm/IAgentConfig.cs`
+- Create: `src/Graphiphy.Llm/OpenAiConfig.cs`
+- Create: `src/Graphiphy.Llm/AnthropicConfig.cs`
+- Create: `src/Graphiphy.Llm/OllamaConfig.cs`
+- Create: `src/Graphiphy.Llm/CopilotConfig.cs`
+- Create: `src/Graphiphy.Llm/A2AConfig.cs`
+- Create: `tests/Graphiphy.Llm.Tests/AgentConfigTests.cs`
 
 - [ ] **Step 1: Write failing tests**
 
 ```csharp
-// tests/Ngraphiphy.Llm.Tests/AgentConfigTests.cs
-using Ngraphiphy.Llm;
+// tests/Graphiphy.Llm.Tests/AgentConfigTests.cs
+using Graphiphy.Llm;
 
-namespace Ngraphiphy.Llm.Tests;
+namespace Graphiphy.Llm.Tests;
 
 public class AgentConfigTests
 {
@@ -431,22 +431,22 @@ public class AgentConfigTests
 }
 ```
 
-Run: `dotnet run --project tests/Ngraphiphy.Llm.Tests/`
+Run: `dotnet run --project tests/Graphiphy.Llm.Tests/`
 Expected: Build error — types not found.
 
 - [ ] **Step 2: Implement all config files**
 
 ```csharp
-// src/Ngraphiphy.Llm/IAgentConfig.cs
-namespace Ngraphiphy.Llm;
+// src/Graphiphy.Llm/IAgentConfig.cs
+namespace Graphiphy.Llm;
 
 /// <summary>Marker interface for LLM provider configuration records.</summary>
 public interface IAgentConfig { }
 ```
 
 ```csharp
-// src/Ngraphiphy.Llm/OpenAiConfig.cs
-namespace Ngraphiphy.Llm;
+// src/Graphiphy.Llm/OpenAiConfig.cs
+namespace Graphiphy.Llm;
 
 /// <param name="ApiKey">OpenAI API key (sk-...).</param>
 /// <param name="Model">Model name, e.g. "gpt-4o".</param>
@@ -456,8 +456,8 @@ public sealed record OpenAiConfig(
 ```
 
 ```csharp
-// src/Ngraphiphy.Llm/AnthropicConfig.cs
-namespace Ngraphiphy.Llm;
+// src/Graphiphy.Llm/AnthropicConfig.cs
+namespace Graphiphy.Llm;
 
 /// <param name="ApiKey">Anthropic API key (sk-ant-...).</param>
 /// <param name="Model">Model name, e.g. "claude-sonnet-4-6".</param>
@@ -469,8 +469,8 @@ public sealed record AnthropicConfig(
 ```
 
 ```csharp
-// src/Ngraphiphy.Llm/OllamaConfig.cs
-namespace Ngraphiphy.Llm;
+// src/Graphiphy.Llm/OllamaConfig.cs
+namespace Graphiphy.Llm;
 
 /// <param name="Model">Model name, e.g. "llama3.2".</param>
 /// <param name="Endpoint">Ollama base URI (without /v1).</param>
@@ -480,8 +480,8 @@ public sealed record OllamaConfig(
 ```
 
 ```csharp
-// src/Ngraphiphy.Llm/CopilotConfig.cs
-namespace Ngraphiphy.Llm;
+// src/Graphiphy.Llm/CopilotConfig.cs
+namespace Graphiphy.Llm;
 
 /// <summary>
 /// GitHub Copilot provider. Requires GitHub CLI auth (<c>gh auth login</c>)
@@ -491,8 +491,8 @@ public sealed record CopilotConfig() : IAgentConfig;
 ```
 
 ```csharp
-// src/Ngraphiphy.Llm/A2AConfig.cs
-namespace Ngraphiphy.Llm;
+// src/Graphiphy.Llm/A2AConfig.cs
+namespace Graphiphy.Llm;
 
 /// <param name="AgentUrl">Base URL of the remote A2A agent (resolves its agent card).</param>
 /// <param name="ApiKey">Optional bearer token for authentication.</param>
@@ -504,18 +504,18 @@ public sealed record A2AConfig(
 - [ ] **Step 3: Run tests**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Llm.Tests/
+dotnet run --project tests/Graphiphy.Llm.Tests/
 ```
 Expected: 10 tests pass (4 GraphPlugin + 6 AgentConfig).
 
 - [ ] **Step 4: Commit**
 
 ```bash
-cd /home/timm/ngraphiphy
-git add src/Ngraphiphy.Llm/IAgentConfig.cs src/Ngraphiphy.Llm/OpenAiConfig.cs \
-    src/Ngraphiphy.Llm/AnthropicConfig.cs src/Ngraphiphy.Llm/OllamaConfig.cs \
-    src/Ngraphiphy.Llm/CopilotConfig.cs src/Ngraphiphy.Llm/A2AConfig.cs \
-    tests/Ngraphiphy.Llm.Tests/AgentConfigTests.cs
+cd /home/timm/graphiphy
+git add src/Graphiphy.Llm/IAgentConfig.cs src/Graphiphy.Llm/OpenAiConfig.cs \
+    src/Graphiphy.Llm/AnthropicConfig.cs src/Graphiphy.Llm/OllamaConfig.cs \
+    src/Graphiphy.Llm/CopilotConfig.cs src/Graphiphy.Llm/A2AConfig.cs \
+    tests/Graphiphy.Llm.Tests/AgentConfigTests.cs
 git commit -m "feat: add provider-specific config types for MAF agent factory"
 ```
 
@@ -524,9 +524,9 @@ git commit -m "feat: add provider-specific config types for MAF agent factory"
 ## Task 3: MafGraphAgent and GraphAgentFactory
 
 **Files:**
-- Create: `src/Ngraphiphy.Llm/MafGraphAgent.cs`
-- Create: `src/Ngraphiphy.Llm/GraphAgentFactory.cs`
-- Create: `tests/Ngraphiphy.Llm.Tests/GraphAgentFactoryTests.cs`
+- Create: `src/Graphiphy.Llm/MafGraphAgent.cs`
+- Create: `src/Graphiphy.Llm/GraphAgentFactory.cs`
+- Create: `tests/Graphiphy.Llm.Tests/GraphAgentFactoryTests.cs`
 
 **MAF API facts (from local clone at `.external/agent-framework`):**
 - `AIAgent.CreateSessionAsync()` → `AgentSession`
@@ -545,16 +545,16 @@ git commit -m "feat: add provider-specific config types for MAF agent factory"
 - [ ] **Step 1: Write failing tests**
 
 ```csharp
-// tests/Ngraphiphy.Llm.Tests/GraphAgentFactoryTests.cs
-using Ngraphiphy.Build;
-using Ngraphiphy.Llm;
+// tests/Graphiphy.Llm.Tests/GraphAgentFactoryTests.cs
+using Graphiphy.Build;
+using Graphiphy.Llm;
 using QuikGraph;
 
-namespace Ngraphiphy.Llm.Tests;
+namespace Graphiphy.Llm.Tests;
 
 public class GraphAgentFactoryTests
 {
-    private static BidirectionalGraph<Ngraphiphy.Models.Node, TaggedEdge<Ngraphiphy.Models.Node, Ngraphiphy.Models.Edge>>
+    private static BidirectionalGraph<Graphiphy.Models.Node, TaggedEdge<Graphiphy.Models.Node, Graphiphy.Models.Edge>>
         EmptyGraph() => GraphBuilder.Build([]);
 
     [Test]
@@ -596,17 +596,17 @@ public class GraphAgentFactoryTests
 }
 ```
 
-Run: `dotnet run --project tests/Ngraphiphy.Llm.Tests/`
+Run: `dotnet run --project tests/Graphiphy.Llm.Tests/`
 Expected: Build error — GraphAgentFactory, MafGraphAgent not found.
 
 - [ ] **Step 2: Implement MafGraphAgent.cs**
 
 ```csharp
-// src/Ngraphiphy.Llm/MafGraphAgent.cs
+// src/Graphiphy.Llm/MafGraphAgent.cs
 using Microsoft.Agents.AI;
 using System.Runtime.CompilerServices;
 
-namespace Ngraphiphy.Llm;
+namespace Graphiphy.Llm;
 
 public sealed class MafGraphAgent : IGraphAgent
 {
@@ -650,19 +650,19 @@ public sealed class MafGraphAgent : IGraphAgent
 - [ ] **Step 3: Implement GraphAgentFactory.cs**
 
 ```csharp
-// src/Ngraphiphy.Llm/GraphAgentFactory.cs
+// src/Graphiphy.Llm/GraphAgentFactory.cs
 using A2A;
 using Anthropic;
 using GitHub.Copilot.SDK;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
-using Ngraphiphy.Models;
+using Graphiphy.Models;
 using OllamaSharp;
 using OpenAI;
 using OpenAI.Chat;
 using QuikGraph;
 
-namespace Ngraphiphy.Llm;
+namespace Graphiphy.Llm;
 
 public static class GraphAgentFactory
 {
@@ -759,21 +759,21 @@ public static class GraphAgentFactory
 **If compilation fails:** The most likely issues are:
 1. `ClientOptions` not found → try `using Anthropic.Core;` or check the Anthropic package for the correct options class name
 2. `OllamaApiClient.AsAIAgent` not found → the extension might require `using Microsoft.Agents.AI;` or the Ollama client might need `.AsChatClient()` first: `client.AsChatClient().AsAIAgent(...)`
-3. `A2ACardResolver` constructor signature → check `/home/timm/ngraphiphy/.external/agent-framework/dotnet/src/Microsoft.Agents.AI.A2A/Extensions/A2ACardResolverExtensions.cs`
+3. `A2ACardResolver` constructor signature → check `/home/timm/graphiphy/.external/agent-framework/dotnet/src/Microsoft.Agents.AI.A2A/Extensions/A2ACardResolverExtensions.cs`
 
 - [ ] **Step 4: Run tests**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Llm.Tests/
+dotnet run --project tests/Graphiphy.Llm.Tests/
 ```
 Expected: 14 tests pass (4 GraphPlugin + 6 AgentConfig + 4 GraphAgentFactory).
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /home/timm/ngraphiphy
-git add src/Ngraphiphy.Llm/MafGraphAgent.cs src/Ngraphiphy.Llm/GraphAgentFactory.cs \
-    tests/Ngraphiphy.Llm.Tests/GraphAgentFactoryTests.cs
+cd /home/timm/graphiphy
+git add src/Graphiphy.Llm/MafGraphAgent.cs src/Graphiphy.Llm/GraphAgentFactory.cs \
+    tests/Graphiphy.Llm.Tests/GraphAgentFactoryTests.cs
 git commit -m "feat: add MafGraphAgent and GraphAgentFactory with 5-provider support"
 ```
 
@@ -782,13 +782,13 @@ git commit -m "feat: add MafGraphAgent and GraphAgentFactory with 5-provider sup
 ## Task 4: RepositoryAnalysis pipeline and GraphTools
 
 **Files:**
-- Create: `src/Ngraphiphy.Pipeline/Ngraphiphy.Pipeline.csproj`
-- Create: `src/Ngraphiphy.Pipeline/RepositoryAnalysis.cs`
-- Create: `src/Ngraphiphy.Pipeline/GraphTools.cs`
-- Modify: `src/Ngraphiphy.Cli/Ngraphiphy.Cli.csproj`
-- Modify: `tests/Ngraphiphy.Cli.Tests/Ngraphiphy.Cli.Tests.csproj`
-- Modify: `Ngraphiphy.sln`
-- Create: `tests/Ngraphiphy.Cli.Tests/Pipeline/RepositoryAnalysisTests.cs`
+- Create: `src/Graphiphy.Pipeline/Graphiphy.Pipeline.csproj`
+- Create: `src/Graphiphy.Pipeline/RepositoryAnalysis.cs`
+- Create: `src/Graphiphy.Pipeline/GraphTools.cs`
+- Modify: `src/Graphiphy.Cli/Graphiphy.Cli.csproj`
+- Modify: `tests/Graphiphy.Cli.Tests/Graphiphy.Cli.Tests.csproj`
+- Modify: `Graphiphy.sln`
+- Create: `tests/Graphiphy.Cli.Tests/Pipeline/RepositoryAnalysisTests.cs`
 
 **Key API facts (verified against actual source):**
 - `FileDetector.Detect(string rootDir)` → `List<DetectedFile>` (property: `AbsolutePath`)
@@ -799,52 +799,52 @@ git commit -m "feat: add MafGraphAgent and GraphAgentFactory with 5-provider sup
 - `GraphData { Nodes = List<Node>, Edges = List<Edge> }`
 - `LeidenClustering.FindCommunities(nNodes, IEnumerable<(int,int)> edges, PartitionType, seed)` → `CommunityResult` with `Membership: int[]`; `Node.Community: int?`
 - `ReportGenerator.Generate(graph)` → `string`
-- **Namespace alias required:** `using ExtractionModel = Ngraphiphy.Models.Extraction;` because `Ngraphiphy.Extraction` is a namespace AND `Ngraphiphy.Models.Extraction` is a class
+- **Namespace alias required:** `using ExtractionModel = Graphiphy.Models.Extraction;` because `Graphiphy.Extraction` is a namespace AND `Graphiphy.Models.Extraction` is a class
 
-**How to run tests:** `dotnet run --project tests/Ngraphiphy.Cli.Tests/`
+**How to run tests:** `dotnet run --project tests/Graphiphy.Cli.Tests/`
 
-- [ ] **Step 1: Create Ngraphiphy.Pipeline.csproj and add to solution**
+- [ ] **Step 1: Create Graphiphy.Pipeline.csproj and add to solution**
 
 ```xml
-<!-- src/Ngraphiphy.Pipeline/Ngraphiphy.Pipeline.csproj -->
+<!-- src/Graphiphy.Pipeline/Graphiphy.Pipeline.csproj -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Ngraphiphy.Pipeline</RootNamespace>
+    <RootNamespace>Graphiphy.Pipeline</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ngraphiphy\Ngraphiphy.csproj" />
+    <ProjectReference Include="..\Graphiphy\Graphiphy.csproj" />
   </ItemGroup>
 </Project>
 ```
 
 ```bash
-cd /home/timm/ngraphiphy
-dotnet sln Ngraphiphy.sln add src/Ngraphiphy.Pipeline/Ngraphiphy.Pipeline.csproj
+cd /home/timm/graphiphy
+dotnet sln Graphiphy.sln add src/Graphiphy.Pipeline/Graphiphy.Pipeline.csproj
 ```
 
 - [ ] **Step 2: Add Pipeline reference to CLI and test csprojs**
 
-Read `src/Ngraphiphy.Cli/Ngraphiphy.Cli.csproj`. Add inside the ProjectReferences ItemGroup:
+Read `src/Graphiphy.Cli/Graphiphy.Cli.csproj`. Add inside the ProjectReferences ItemGroup:
 ```xml
-<ProjectReference Include="..\Ngraphiphy.Pipeline\Ngraphiphy.Pipeline.csproj" />
+<ProjectReference Include="..\Graphiphy.Pipeline\Graphiphy.Pipeline.csproj" />
 ```
 
-Read `tests/Ngraphiphy.Cli.Tests/Ngraphiphy.Cli.Tests.csproj`. Add:
+Read `tests/Graphiphy.Cli.Tests/Graphiphy.Cli.Tests.csproj`. Add:
 ```xml
-<ProjectReference Include="..\..\src\Ngraphiphy.Pipeline\Ngraphiphy.Pipeline.csproj" />
+<ProjectReference Include="..\..\src\Graphiphy.Pipeline\Graphiphy.Pipeline.csproj" />
 ```
 
 - [ ] **Step 3: Write failing tests**
 
 ```csharp
-// tests/Ngraphiphy.Cli.Tests/Pipeline/RepositoryAnalysisTests.cs
-using Ngraphiphy.Pipeline;
+// tests/Graphiphy.Cli.Tests/Pipeline/RepositoryAnalysisTests.cs
+using Graphiphy.Pipeline;
 
-namespace Ngraphiphy.Cli.Tests.Pipeline;
+namespace Graphiphy.Cli.Tests.Pipeline;
 
 public class RepositoryAnalysisTests
 {
@@ -887,7 +887,7 @@ public class RepositoryAnalysisTests
     public async Task RunAsync_UsesCache_SecondCallProducesSameCount()
     {
         var dir = CreateTempDir();
-        var cacheDir = Path.Combine(dir, ".ngraphiphy-cache");
+        var cacheDir = Path.Combine(dir, ".graphiphy-cache");
         File.WriteAllText(Path.Combine(dir, "b.py"), "class B: pass");
         var r1 = await RepositoryAnalysis.RunAsync(dir, cacheDir: cacheDir);
         var r2 = await RepositoryAnalysis.RunAsync(dir, cacheDir: cacheDir);
@@ -896,32 +896,32 @@ public class RepositoryAnalysisTests
 
     private static string CreateTempDir()
     {
-        var path = Path.Combine(Path.GetTempPath(), "ngraphiphy_test_" + Guid.NewGuid().ToString("N")[..8]);
+        var path = Path.Combine(Path.GetTempPath(), "graphiphy_test_" + Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(path);
         return path;
     }
 }
 ```
 
-Run: `dotnet run --project tests/Ngraphiphy.Cli.Tests/`
+Run: `dotnet run --project tests/Graphiphy.Cli.Tests/`
 Expected: Build error — RepositoryAnalysis not found.
 
 - [ ] **Step 4: Implement RepositoryAnalysis.cs**
 
 ```csharp
-// src/Ngraphiphy.Pipeline/RepositoryAnalysis.cs
-using Ngraphiphy.Build;
-using Ngraphiphy.Cache;
-using Ngraphiphy.Cluster;
-using Ngraphiphy.Dedup;
-using Ngraphiphy.Detection;
-using Ngraphiphy.Extraction;
-using Ngraphiphy.Models;
-using Ngraphiphy.Report;
+// src/Graphiphy.Pipeline/RepositoryAnalysis.cs
+using Graphiphy.Build;
+using Graphiphy.Cache;
+using Graphiphy.Cluster;
+using Graphiphy.Dedup;
+using Graphiphy.Detection;
+using Graphiphy.Extraction;
+using Graphiphy.Models;
+using Graphiphy.Report;
 using QuikGraph;
-using ExtractionModel = Ngraphiphy.Models.Extraction;
+using ExtractionModel = Graphiphy.Models.Extraction;
 
-namespace Ngraphiphy.Pipeline;
+namespace Graphiphy.Pipeline;
 
 public sealed class RepositoryAnalysis
 {
@@ -942,7 +942,7 @@ public sealed class RepositoryAnalysis
         Action<string>? onProgress = null,
         CancellationToken ct = default)
     {
-        cacheDir ??= Path.Combine(rootPath, ".ngraphiphy-cache");
+        cacheDir ??= Path.Combine(rootPath, ".graphiphy-cache");
         var cache = new ExtractionCache(cacheDir);
         var registry = LanguageRegistry.CreateDefault();
 
@@ -1005,17 +1005,17 @@ public sealed class RepositoryAnalysis
 - [ ] **Step 5: Implement GraphTools.cs**
 
 ```csharp
-// src/Ngraphiphy.Pipeline/GraphTools.cs
+// src/Graphiphy.Pipeline/GraphTools.cs
 using System.Text.Json;
-using Ngraphiphy.Analysis;
-using Ngraphiphy.Models;
+using Graphiphy.Analysis;
+using Graphiphy.Models;
 using QuikGraph;
 
-namespace Ngraphiphy.Pipeline;
+namespace Graphiphy.Pipeline;
 
 /// <summary>
 /// Pure graph query logic with no MCP/HTTP dependency.
-/// Used by MCP wrapper in Ngraphiphy.Cli and by tests in Ngraphiphy.Cli.Tests.
+/// Used by MCP wrapper in Graphiphy.Cli and by tests in Graphiphy.Cli.Tests.
 /// </summary>
 public sealed class GraphTools
 {
@@ -1079,19 +1079,19 @@ public sealed class GraphTools
 - [ ] **Step 6: Run tests**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Cli.Tests/
-dotnet run --project tests/Ngraphiphy.Tests/
+dotnet run --project tests/Graphiphy.Cli.Tests/
+dotnet run --project tests/Graphiphy.Tests/
 ```
 Expected: 4 pipeline tests pass; 116 core tests still pass.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-cd /home/timm/ngraphiphy
-git add src/Ngraphiphy.Pipeline/ tests/Ngraphiphy.Cli.Tests/Pipeline/ \
-    src/Ngraphiphy.Cli/Ngraphiphy.Cli.csproj \
-    tests/Ngraphiphy.Cli.Tests/Ngraphiphy.Cli.Tests.csproj Ngraphiphy.sln
-git commit -m "feat: add RepositoryAnalysis pipeline and GraphTools in Ngraphiphy.Pipeline"
+cd /home/timm/graphiphy
+git add src/Graphiphy.Pipeline/ tests/Graphiphy.Cli.Tests/Pipeline/ \
+    src/Graphiphy.Cli/Graphiphy.Cli.csproj \
+    tests/Graphiphy.Cli.Tests/Graphiphy.Cli.Tests.csproj Graphiphy.sln
+git commit -m "feat: add RepositoryAnalysis pipeline and GraphTools in Graphiphy.Pipeline"
 ```
 
 ---
@@ -1099,18 +1099,18 @@ git commit -m "feat: add RepositoryAnalysis pipeline and GraphTools in Ngraphiph
 ## Task 5: AnalyzeCommand
 
 **Files:**
-- Modify: `src/Ngraphiphy.Cli/Commands/AnalyzeCommand.cs`
-- Create: `tests/Ngraphiphy.Cli.Tests/Commands/AnalyzeCommandTests.cs`
+- Modify: `src/Graphiphy.Cli/Commands/AnalyzeCommand.cs`
+- Create: `tests/Graphiphy.Cli.Tests/Commands/AnalyzeCommandTests.cs`
 
 **Spectre 0.55.0 API:** `AsyncCommand<T>.ExecuteAsync` signature is `protected override Task<int> ExecuteAsync(CommandContext context, TSettings settings, CancellationToken cancellationToken)`.
 
 - [ ] **Step 1: Write tests (they test RepositoryAnalysis, not Spectre plumbing)**
 
 ```csharp
-// tests/Ngraphiphy.Cli.Tests/Commands/AnalyzeCommandTests.cs
-using Ngraphiphy.Pipeline;
+// tests/Graphiphy.Cli.Tests/Commands/AnalyzeCommandTests.cs
+using Graphiphy.Pipeline;
 
-namespace Ngraphiphy.Cli.Tests.Commands;
+namespace Graphiphy.Cli.Tests.Commands;
 
 public class AnalyzeCommandTests
 {
@@ -1144,27 +1144,27 @@ public class AnalyzeCommandTests
 
     private static string CreateTempDir()
     {
-        var path = Path.Combine(Path.GetTempPath(), "ngraphiphy_analyze_" + Guid.NewGuid().ToString("N")[..8]);
+        var path = Path.Combine(Path.GetTempPath(), "graphiphy_analyze_" + Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(path);
         return path;
     }
 }
 ```
 
-Run: `dotnet run --project tests/Ngraphiphy.Cli.Tests/`
+Run: `dotnet run --project tests/Graphiphy.Cli.Tests/`
 Expected: All 3 tests pass (they use RepositoryAnalysis from Task 4).
 
 - [ ] **Step 2: Implement AnalyzeCommand.cs**
 
 ```csharp
-// src/Ngraphiphy.Cli/Commands/AnalyzeCommand.cs
+// src/Graphiphy.Cli/Commands/AnalyzeCommand.cs
 using System.ComponentModel;
-using Ngraphiphy.Analysis;
-using Ngraphiphy.Pipeline;
+using Graphiphy.Analysis;
+using Graphiphy.Pipeline;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-namespace Ngraphiphy.Cli.Commands;
+namespace Graphiphy.Cli.Commands;
 
 public sealed class AnalyzeSettings : CommandSettings
 {
@@ -1177,7 +1177,7 @@ public sealed class AnalyzeSettings : CommandSettings
     public string? OutputFile { get; init; }
 
     [CommandOption("--cache <dir>")]
-    [Description("Cache directory. Default: <path>/.ngraphiphy-cache")]
+    [Description("Cache directory. Default: <path>/.graphiphy-cache")]
     public string? CacheDir { get; init; }
 }
 
@@ -1224,16 +1224,16 @@ public sealed class AnalyzeCommand : AsyncCommand<AnalyzeSettings>
 - [ ] **Step 3: Smoke-test analyze**
 
 ```bash
-dotnet run --project src/Ngraphiphy.Cli/ -- analyze src/Ngraphiphy/
+dotnet run --project src/Graphiphy.Cli/ -- analyze src/Graphiphy/
 ```
-Expected: Table with file/node/edge counts for the Ngraphiphy source.
+Expected: Table with file/node/edge counts for the Graphiphy source.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-cd /home/timm/ngraphiphy
-git add src/Ngraphiphy.Cli/Commands/AnalyzeCommand.cs \
-    tests/Ngraphiphy.Cli.Tests/Commands/AnalyzeCommandTests.cs
+cd /home/timm/graphiphy
+git add src/Graphiphy.Cli/Commands/AnalyzeCommand.cs \
+    tests/Graphiphy.Cli.Tests/Commands/AnalyzeCommandTests.cs
 git commit -m "feat: implement analyze command with progress spinner and summary table"
 ```
 
@@ -1242,27 +1242,27 @@ git commit -m "feat: implement analyze command with progress spinner and summary
 ## Task 6: ReportCommand and QueryCommand
 
 **Files:**
-- Modify: `src/Ngraphiphy.Cli/Commands/ReportCommand.cs`
-- Modify: `src/Ngraphiphy.Cli/Commands/QueryCommand.cs`
-- Modify: `src/Ngraphiphy.Cli/Ngraphiphy.Cli.csproj` (add Ngraphiphy.Llm ref if missing)
+- Modify: `src/Graphiphy.Cli/Commands/ReportCommand.cs`
+- Modify: `src/Graphiphy.Cli/Commands/QueryCommand.cs`
+- Modify: `src/Graphiphy.Cli/Graphiphy.Cli.csproj` (add Graphiphy.Llm ref if missing)
 
-- [ ] **Step 1: Ensure Ngraphiphy.Cli.csproj references Ngraphiphy.Llm**
+- [ ] **Step 1: Ensure Graphiphy.Cli.csproj references Graphiphy.Llm**
 
-Read `src/Ngraphiphy.Cli/Ngraphiphy.Cli.csproj`. If `Ngraphiphy.Llm.csproj` is not in the ProjectReferences, add:
+Read `src/Graphiphy.Cli/Graphiphy.Cli.csproj`. If `Graphiphy.Llm.csproj` is not in the ProjectReferences, add:
 ```xml
-<ProjectReference Include="..\Ngraphiphy.Llm\Ngraphiphy.Llm.csproj" />
+<ProjectReference Include="..\Graphiphy.Llm\Graphiphy.Llm.csproj" />
 ```
 
 - [ ] **Step 2: Implement ReportCommand.cs**
 
 ```csharp
-// src/Ngraphiphy.Cli/Commands/ReportCommand.cs
+// src/Graphiphy.Cli/Commands/ReportCommand.cs
 using System.ComponentModel;
-using Ngraphiphy.Pipeline;
+using Graphiphy.Pipeline;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-namespace Ngraphiphy.Cli.Commands;
+namespace Graphiphy.Cli.Commands;
 
 public sealed class ReportSettings : CommandSettings
 {
@@ -1312,14 +1312,14 @@ public sealed class ReportCommand : AsyncCommand<ReportSettings>
 - [ ] **Step 3: Implement QueryCommand.cs**
 
 ```csharp
-// src/Ngraphiphy.Cli/Commands/QueryCommand.cs
+// src/Graphiphy.Cli/Commands/QueryCommand.cs
 using System.ComponentModel;
-using Ngraphiphy.Llm;
-using Ngraphiphy.Pipeline;
+using Graphiphy.Llm;
+using Graphiphy.Pipeline;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-namespace Ngraphiphy.Cli.Commands;
+namespace Graphiphy.Cli.Commands;
 
 public sealed class QuerySettings : CommandSettings
 {
@@ -1406,19 +1406,19 @@ public sealed class QueryCommand : AsyncCommand<QuerySettings>
 - [ ] **Step 4: Verify help and smoke-test report**
 
 ```bash
-dotnet run --project src/Ngraphiphy.Cli/ -- report --help
-dotnet run --project src/Ngraphiphy.Cli/ -- query --help
-dotnet run --project src/Ngraphiphy.Cli/ -- report src/Ngraphiphy/
+dotnet run --project src/Graphiphy.Cli/ -- report --help
+dotnet run --project src/Graphiphy.Cli/ -- query --help
+dotnet run --project src/Graphiphy.Cli/ -- report src/Graphiphy/
 ```
 Expected: Help shown for both; report prints with `# Graph Report` header.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /home/timm/ngraphiphy
-git add src/Ngraphiphy.Cli/Commands/ReportCommand.cs \
-    src/Ngraphiphy.Cli/Commands/QueryCommand.cs \
-    src/Ngraphiphy.Cli/Ngraphiphy.Cli.csproj
+cd /home/timm/graphiphy
+git add src/Graphiphy.Cli/Commands/ReportCommand.cs \
+    src/Graphiphy.Cli/Commands/QueryCommand.cs \
+    src/Graphiphy.Cli/Graphiphy.Cli.csproj
 git commit -m "feat: implement report and query commands"
 ```
 
@@ -1427,26 +1427,26 @@ git commit -m "feat: implement report and query commands"
 ## Task 7: GraphTools tests, MCP server, and ServeCommand
 
 **Files:**
-- Create: `tests/Ngraphiphy.Cli.Tests/Mcp/GraphToolsTests.cs`
-- Create: `src/Ngraphiphy.Cli/Mcp/McpGraphToolsWrapper.cs`
-- Create: `src/Ngraphiphy.Cli/Mcp/GraphMcpServer.cs`
-- Modify: `src/Ngraphiphy.Cli/Commands/ServeCommand.cs`
+- Create: `tests/Graphiphy.Cli.Tests/Mcp/GraphToolsTests.cs`
+- Create: `src/Graphiphy.Cli/Mcp/McpGraphToolsWrapper.cs`
+- Create: `src/Graphiphy.Cli/Mcp/GraphMcpServer.cs`
+- Modify: `src/Graphiphy.Cli/Commands/ServeCommand.cs`
 
-`ModelContextProtocol` 1.3.0 is already in `Ngraphiphy.Cli.csproj`. `[McpServerToolType]` and `[McpServerTool]` are in `ModelContextProtocol.Server`. `AddMcpServer().WithStdioServerTransport().WithTools<T>()` sets up the host.
+`ModelContextProtocol` 1.3.0 is already in `Graphiphy.Cli.csproj`. `[McpServerToolType]` and `[McpServerTool]` are in `ModelContextProtocol.Server`. `AddMcpServer().WithStdioServerTransport().WithTools<T>()` sets up the host.
 
 - [ ] **Step 1: Write GraphTools tests**
 
 ```csharp
-// tests/Ngraphiphy.Cli.Tests/Mcp/GraphToolsTests.cs
-using Ngraphiphy.Pipeline;
+// tests/Graphiphy.Cli.Tests/Mcp/GraphToolsTests.cs
+using Graphiphy.Pipeline;
 
-namespace Ngraphiphy.Cli.Tests.Mcp;
+namespace Graphiphy.Cli.Tests.Mcp;
 
 public class GraphToolsTests
 {
     private static async Task<GraphTools> MakeToolsAsync()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "ngraphiphy_mcp_" + Guid.NewGuid().ToString("N")[..8]);
+        var dir = Path.Combine(Path.GetTempPath(), "graphiphy_mcp_" + Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(dir);
         File.WriteAllText(Path.Combine(dir, "app.py"), """
             class Server:
@@ -1496,7 +1496,7 @@ public class GraphToolsTests
     [Test]
     public async Task GetGodNodes_EmptyGraph_ReturnsEmptyArray()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "ngraphiphy_mcp_empty_" + Guid.NewGuid().ToString("N")[..8]);
+        var dir = Path.Combine(Path.GetTempPath(), "graphiphy_mcp_empty_" + Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(dir);
         var tools = new GraphTools(await RepositoryAnalysis.RunAsync(dir));
         await Assert.That(tools.GetGodNodes()).IsEqualTo("[]");
@@ -1504,18 +1504,18 @@ public class GraphToolsTests
 }
 ```
 
-Run: `dotnet run --project tests/Ngraphiphy.Cli.Tests/`
+Run: `dotnet run --project tests/Graphiphy.Cli.Tests/`
 Expected: All 5 tests pass (GraphTools implemented in Task 4).
 
 - [ ] **Step 2: Create McpGraphToolsWrapper.cs**
 
 ```csharp
-// src/Ngraphiphy.Cli/Mcp/McpGraphToolsWrapper.cs
+// src/Graphiphy.Cli/Mcp/McpGraphToolsWrapper.cs
 using System.ComponentModel;
 using ModelContextProtocol.Server;
-using Ngraphiphy.Pipeline;
+using Graphiphy.Pipeline;
 
-namespace Ngraphiphy.Cli.Mcp;
+namespace Graphiphy.Cli.Mcp;
 
 [McpServerToolType]
 internal sealed class McpGraphToolsWrapper(GraphTools tools)
@@ -1550,13 +1550,13 @@ internal sealed class McpGraphToolsWrapper(GraphTools tools)
 - [ ] **Step 3: Create GraphMcpServer.cs**
 
 ```csharp
-// src/Ngraphiphy.Cli/Mcp/GraphMcpServer.cs
+// src/Graphiphy.Cli/Mcp/GraphMcpServer.cs
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ModelContextProtocol.Server;
-using Ngraphiphy.Pipeline;
+using Graphiphy.Pipeline;
 
-namespace Ngraphiphy.Cli.Mcp;
+namespace Graphiphy.Cli.Mcp;
 
 public static class GraphMcpServer
 {
@@ -1580,13 +1580,13 @@ public static class GraphMcpServer
 - [ ] **Step 4: Implement ServeCommand.cs**
 
 ```csharp
-// src/Ngraphiphy.Cli/Commands/ServeCommand.cs
+// src/Graphiphy.Cli/Commands/ServeCommand.cs
 using System.ComponentModel;
-using Ngraphiphy.Cli.Mcp;
-using Ngraphiphy.Pipeline;
+using Graphiphy.Cli.Mcp;
+using Graphiphy.Pipeline;
 using Spectre.Console.Cli;
 
-namespace Ngraphiphy.Cli.Commands;
+namespace Graphiphy.Cli.Commands;
 
 public sealed class ServeSettings : CommandSettings
 {
@@ -1595,7 +1595,7 @@ public sealed class ServeSettings : CommandSettings
     public string Path { get; init; } = Directory.GetCurrentDirectory();
 
     [CommandOption("--cache <dir>")]
-    [Description("Cache directory. Default: <path>/.ngraphiphy-cache")]
+    [Description("Cache directory. Default: <path>/.graphiphy-cache")]
     public string? CacheDir { get; init; }
 }
 
@@ -1605,24 +1605,24 @@ public sealed class ServeCommand : AsyncCommand<ServeSettings>
         CommandContext context, ServeSettings settings, CancellationToken cancellationToken)
     {
         // stdout is the MCP channel — all diagnostics go to stderr
-        Console.Error.WriteLine($"[ngraphiphy] Analyzing {settings.Path}...");
+        Console.Error.WriteLine($"[graphiphy] Analyzing {settings.Path}...");
         RepositoryAnalysis analysis;
         try
         {
             analysis = await RepositoryAnalysis.RunAsync(
                 settings.Path, cacheDir: settings.CacheDir,
-                onProgress: msg => Console.Error.WriteLine($"[ngraphiphy] {msg}"),
+                onProgress: msg => Console.Error.WriteLine($"[graphiphy] {msg}"),
                 ct: cancellationToken);
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"[ngraphiphy] Analysis failed: {ex.Message}");
+            Console.Error.WriteLine($"[graphiphy] Analysis failed: {ex.Message}");
             return 1;
         }
 
         Console.Error.WriteLine(
-            $"[ngraphiphy] Ready — {analysis.Graph.VertexCount} nodes, {analysis.Graph.EdgeCount} edges.");
-        Console.Error.WriteLine("[ngraphiphy] Starting MCP server on stdio...");
+            $"[graphiphy] Ready — {analysis.Graph.VertexCount} nodes, {analysis.Graph.EdgeCount} edges.");
+        Console.Error.WriteLine("[graphiphy] Starting MCP server on stdio...");
         await GraphMcpServer.RunAsync(analysis, cancellationToken);
         return 0;
     }
@@ -1632,26 +1632,26 @@ public sealed class ServeCommand : AsyncCommand<ServeSettings>
 - [ ] **Step 5: Verify build and help**
 
 ```bash
-dotnet build src/Ngraphiphy.Cli/
-dotnet run --project src/Ngraphiphy.Cli/ -- serve --help
+dotnet build src/Graphiphy.Cli/
+dotnet run --project src/Graphiphy.Cli/ -- serve --help
 ```
 Expected: Build succeeded; help shows `[path]` and `--cache`.
 
 - [ ] **Step 6: Run all test suites**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Tests/
-dotnet run --project tests/Ngraphiphy.Llm.Tests/
-dotnet run --project tests/Ngraphiphy.Cli.Tests/
+dotnet run --project tests/Graphiphy.Tests/
+dotnet run --project tests/Graphiphy.Llm.Tests/
+dotnet run --project tests/Graphiphy.Cli.Tests/
 ```
 Expected: All pass.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-cd /home/timm/ngraphiphy
-git add tests/Ngraphiphy.Cli.Tests/Mcp/GraphToolsTests.cs \
-    src/Ngraphiphy.Cli/Mcp/ src/Ngraphiphy.Cli/Commands/ServeCommand.cs
+cd /home/timm/graphiphy
+git add tests/Graphiphy.Cli.Tests/Mcp/GraphToolsTests.cs \
+    src/Graphiphy.Cli/Mcp/ src/Graphiphy.Cli/Commands/ServeCommand.cs
 git commit -m "feat: implement MCP server and serve command using ModelContextProtocol stdio transport"
 ```
 
@@ -1660,23 +1660,23 @@ git commit -m "feat: implement MCP server and serve command using ModelContextPr
 ## Task 8: MCP docs and final integration
 
 **Files:**
-- Create: `tests/Ngraphiphy.Cli.Tests/Mcp/McpToolDescriptionTests.cs`
+- Create: `tests/Graphiphy.Cli.Tests/Mcp/McpToolDescriptionTests.cs`
 - Create: `docs/mcp-config.md`
 
 - [ ] **Step 1: Write MCP smoke test**
 
 ```csharp
-// tests/Ngraphiphy.Cli.Tests/Mcp/McpToolDescriptionTests.cs
-using Ngraphiphy.Pipeline;
+// tests/Graphiphy.Cli.Tests/Mcp/McpToolDescriptionTests.cs
+using Graphiphy.Pipeline;
 
-namespace Ngraphiphy.Cli.Tests.Mcp;
+namespace Graphiphy.Cli.Tests.Mcp;
 
 public class McpToolDescriptionTests
 {
     [Test]
     public async Task AllToolMethods_ReturnNonEmpty()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "ngraphiphy_mcp2_" + Guid.NewGuid().ToString("N")[..8]);
+        var dir = Path.Combine(Path.GetTempPath(), "graphiphy_mcp2_" + Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(dir);
         File.WriteAllText(Path.Combine(dir, "x.py"), "class X:\n    def y(self): pass\n");
         var tools = new GraphTools(await RepositoryAnalysis.RunAsync(dir));
@@ -1694,18 +1694,18 @@ public class McpToolDescriptionTests
 }
 ```
 
-Run: `dotnet run --project tests/Ngraphiphy.Cli.Tests/`
+Run: `dotnet run --project tests/Graphiphy.Cli.Tests/`
 Expected: All tests pass.
 
 - [ ] **Step 2: Create docs/mcp-config.md**
 
 ```markdown
-# Using Ngraphiphy as an MCP Server with Claude Desktop
+# Using Graphiphy as an MCP Server with Claude Desktop
 
 ## Build
 
 ```bash
-dotnet publish src/Ngraphiphy.Cli/ -c Release -o ./dist
+dotnet publish src/Graphiphy.Cli/ -c Release -o ./dist
 ```
 
 ## Claude Desktop Configuration
@@ -1715,8 +1715,8 @@ Add to `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "ngraphiphy": {
-      "command": "/absolute/path/to/dist/ngraphiphy",
+    "graphiphy": {
+      "command": "/absolute/path/to/dist/graphiphy",
       "args": ["serve", "/absolute/path/to/your/repo"]
     }
   }
@@ -1748,17 +1748,17 @@ Add to `claude_desktop_config.json`:
 - [ ] **Step 3: Final end-to-end smoke test**
 
 ```bash
-dotnet run --project src/Ngraphiphy.Cli/ -- analyze src/Ngraphiphy/
-dotnet run --project src/Ngraphiphy.Cli/ -- report src/Ngraphiphy/ --out /tmp/ngraphiphy-report.md
-head -3 /tmp/ngraphiphy-report.md
+dotnet run --project src/Graphiphy.Cli/ -- analyze src/Graphiphy/
+dotnet run --project src/Graphiphy.Cli/ -- report src/Graphiphy/ --out /tmp/graphiphy-report.md
+head -3 /tmp/graphiphy-report.md
 ```
-Expected: Table with node/edge counts; `/tmp/ngraphiphy-report.md` starts with `# Graph Report`.
+Expected: Table with node/edge counts; `/tmp/graphiphy-report.md` starts with `# Graph Report`.
 
 - [ ] **Step 4: Final commit**
 
 ```bash
-cd /home/timm/ngraphiphy
-git add tests/Ngraphiphy.Cli.Tests/Mcp/McpToolDescriptionTests.cs docs/mcp-config.md
+cd /home/timm/graphiphy
+git add tests/Graphiphy.Cli.Tests/Mcp/McpToolDescriptionTests.cs docs/mcp-config.md
 git commit -m "docs: add MCP config docs and final smoke test"
 ```
 
@@ -1768,10 +1768,10 @@ git commit -m "docs: add MCP config docs and final smoke test"
 
 | Task | Delivers |
 |------|----------|
-| 1 | Replace SK with MAF in Ngraphiphy.Llm; session-aware IGraphAgent + GraphSession; plain-method GraphPlugin |
+| 1 | Replace SK with MAF in Graphiphy.Llm; session-aware IGraphAgent + GraphSession; plain-method GraphPlugin |
 | 2 | Provider configs: OpenAiConfig, AnthropicConfig, OllamaConfig, CopilotConfig, A2AConfig |
 | 3 | MafGraphAgent + async GraphAgentFactory (OpenAI, Anthropic, Ollama, Copilot, A2A) |
-| 4 | Ngraphiphy.Pipeline library: RepositoryAnalysis + GraphTools |
+| 4 | Graphiphy.Pipeline library: RepositoryAnalysis + GraphTools |
 | 5 | AnalyzeCommand (spinner + summary table) |
 | 6 | ReportCommand + QueryCommand (IAgentConfig-based provider selection) |
 | 7 | GraphTools tests + McpGraphToolsWrapper + GraphMcpServer + ServeCommand |

@@ -10,9 +10,9 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/tests/Ngraphiphy.Tests/bin/Debug/net10.0/Ngraphiphy.Tests.dll",
+            "program": "${workspaceFolder}/tests/Graphiphy.Tests/bin/Debug/net10.0/Graphiphy.Tests.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/tests/Ngraphiphy.Tests",
+            "cwd": "${workspaceFolder}/tests/Graphiphy.Tests",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "stopAtEntry": false

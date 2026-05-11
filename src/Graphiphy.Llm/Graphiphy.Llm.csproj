@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Graphiphy.Llm</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Graphiphy\Graphiphy.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- MAF stable releases -->
+    <PackageReference Include="Microsoft.Agents.AI" Version="1.5.0" />
+    <PackageReference Include="Microsoft.Agents.AI.A2A" Version="1.5.0-preview.260507.1" />
+    <PackageReference Include="Microsoft.Agents.AI.Anthropic" Version="1.5.0-preview.260507.1" />
+    <PackageReference Include="Microsoft.Agents.AI.GitHub.Copilot" Version="1.5.0-preview.260507.1" />
+    <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="1.5.0" />
+    <!-- Ollama: OllamaApiClient implements IChatClient, AsAIAgent() comes from Microsoft.Agents.AI -->
+    <PackageReference Include="OllamaSharp" Version="5.4.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.7" />
+  </ItemGroup>
+</Project>

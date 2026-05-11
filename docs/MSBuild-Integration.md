@@ -1,48 +1,48 @@
-# Ngraphiphy MSBuild Integration
+# Graphiphy MSBuild Integration
 
 Automatically analyze your codebase during the build process using MSBuild targets.
 
 ## Repo-Level Integration (Dogfooding)
 
-The Ngraphiphy repository uses `Directory.Build.targets` at the root to analyze itself before each build.
+The Graphiphy repository uses `Directory.Build.targets` at the root to analyze itself before each build.
 
 ### How It Works
 
-- Runs `ngraphiphy analyze` before the build starts
+- Runs `graphiphy analyze` before the build starts
 - Only analyzes when source files change (incremental builds)
-- Runs exactly once per build via the core `Ngraphiphy` project
-- Cache stored in `.ngraphiphy-cache/` (git-ignored)
+- Runs exactly once per build via the core `Graphiphy` project
+- Cache stored in `.graphiphy-cache/` (git-ignored)
 
 ### Configuration
 
 **Opt out per project:**
 ```xml
 <PropertyGroup>
-  <NgraphiphyEnabled>false</NgraphiphyEnabled>
+  <GraphiphyEnabled>false</GraphiphyEnabled>
 </PropertyGroup>
 ```
 
 ## Distributable Package
 
-Install the `Ngraphiphy.MSBuild` NuGet package in any .NET project to enable analysis.
+Install the `Graphiphy.MSBuild` NuGet package in any .NET project to enable analysis.
 
 ### Installation
 
 ```bash
-dotnet add package Ngraphiphy.MSBuild
+dotnet add package Graphiphy.MSBuild
 ```
 
 Or via NuGet Package Manager:
 ```
-Install-Package Ngraphiphy.MSBuild
+Install-Package Graphiphy.MSBuild
 ```
 
 ### Prerequisites
 
-The `ngraphiphy-cli` tool must be available:
+The `graphiphy-cli` tool must be available:
 
 ```bash
-dotnet tool install -g Ngraphiphy.Cli
+dotnet tool install -g Graphiphy.Cli
 ```
 
 Or for local tool restore, add to `dotnet-tools.json`:
@@ -51,7 +51,7 @@ Or for local tool restore, add to `dotnet-tools.json`:
   "version": 1,
   "isRoot": true,
   "tools": {
-    "Ngraphiphy.Cli": {
+    "Graphiphy.Cli": {
       "version": "latest"
     }
   }
@@ -60,23 +60,23 @@ Or for local tool restore, add to `dotnet-tools.json`:
 
 ### How It Works
 
-- Runs `dotnet tool run ngraphiphy-cli analyze` before each build
+- Runs `dotnet tool run graphiphy-cli analyze` before each build
 - Only analyzes when source files change
-- Cache stored in `.ngraphiphy-cache/` (should be git-ignored)
+- Cache stored in `.graphiphy-cache/` (should be git-ignored)
 
 ### Configuration
 
 **Opt out per project:**
 ```xml
 <PropertyGroup>
-  <NgraphiphyEnabled>false</NgraphiphyEnabled>
+  <GraphiphyEnabled>false</GraphiphyEnabled>
 </PropertyGroup>
 ```
 
 **Override cache directory:**
 ```xml
 <PropertyGroup>
-  <NgraphiphyCacheDir>$(MSBuildProjectDirectory)/.ngraphiphy-cache</NgraphiphyCacheDir>
+  <GraphiphyCacheDir>$(MSBuildProjectDirectory)/.graphiphy-cache</GraphiphyCacheDir>
 </PropertyGroup>
 ```
 
@@ -84,7 +84,7 @@ Or for local tool restore, add to `dotnet-tools.json`:
 
 ### Target Behavior
 
-- **Target:** `NgraphiphyAnalyze`
+- **Target:** `GraphiphyAnalyze`
 - **Runs:** Before `Build` target
 - **Incremental:** Skipped if source files haven't changed since last run
 - **Concurrency:** Safe with parallel builds (stamp file prevents race conditions)
@@ -93,41 +93,41 @@ Or for local tool restore, add to `dotnet-tools.json`:
 ### Preventing Nested Runs
 
 The implementation prevents analysis from recursively spawning:
-1. Only the core `Ngraphiphy` project triggers analysis in the repo
+1. Only the core `Graphiphy` project triggers analysis in the repo
 2. External projects using the NuGet package always trigger analysis
-3. The `NGRAPHIPHY_ANALYZING` environment variable prevents recursive invocations
-4. The `Ngraphiphy.Cli` and `Ngraphiphy.MSBuild` projects are explicitly excluded
+3. The `GRAPHIPHY_ANALYZING` environment variable prevents recursive invocations
+4. The `Graphiphy.Cli` and `Graphiphy.MSBuild` projects are explicitly excluded
 
 ### Cache Location
 
-- **Repo:** `.ngraphiphy-cache/` at root
-- **NuGet:** `.ngraphiphy-cache/` in project directory (configurable)
+- **Repo:** `.graphiphy-cache/` at root
+- **NuGet:** `.graphiphy-cache/` in project directory (configurable)
 
 Add to `.gitignore`:
 ```
-.ngraphiphy-cache/
+.graphiphy-cache/
 ```
 
 ## Troubleshooting
 
 **Analysis not running:**
 - Check that source files have been modified since last build
-- Verify `.ngraphiphy-cache/.msbuild-stamp` exists
-- Delete stamp file to force re-analysis: `rm .ngraphiphy-cache/.msbuild-stamp`
+- Verify `.graphiphy-cache/.msbuild-stamp` exists
+- Delete stamp file to force re-analysis: `rm .graphiphy-cache/.msbuild-stamp`
 
 **Build failures:**
 - Analysis failures don't block builds (see `ContinueOnError="true"`)
-- Check `ngraphiphy-cli` is installed: `dotnet tool list -g`
-- Verify `ngraphiphy-cli` can analyze: `dotnet tool run ngraphiphy-cli analyze .`
+- Check `graphiphy-cli` is installed: `dotnet tool list -g`
+- Verify `graphiphy-cli` can analyze: `dotnet tool run graphiphy-cli analyze .`
 
 **Performance issues:**
 - Analysis runs asynchronously in background; initial runs may take time
 - Cache is reused between builds—subsequent runs should be faster
-- For large repos, set `<NgraphiphyEnabled>false</NgraphiphyEnabled>` if analysis is too slow
+- For large repos, set `<GraphiphyEnabled>false</GraphiphyEnabled>` if analysis is too slow
 
 ## What Gets Analyzed
 
-Ngraphiphy analyzes:
+Graphiphy analyzes:
 - Source code in 9 languages (C#, Java, Python, JavaScript, TypeScript, Go, Rust, C++, C)
 - Respects `.gitignore` files at any depth
 - Blocks sensitive files (private keys, credentials)

@@ -1,6 +1,6 @@
-# Ngraphiphy Usage Guide
+# Graphiphy Usage Guide
 
-Complete reference for Ngraphiphy commands, LLM provider setup, MCP integration, and common workflows.
+Complete reference for Graphiphy commands, LLM provider setup, MCP integration, and common workflows.
 
 ## Table of Contents
 
@@ -22,7 +22,7 @@ Extract and analyze a repository, returning statistics.
 **Syntax:**
 
 ```bash
-ngraphiphy-cli analyze <path> [--out <file>] [--cache <dir>]
+graphiphy-cli analyze <path> [--out <file>] [--cache <dir>]
 ```
 
 **Arguments:**
@@ -32,7 +32,7 @@ ngraphiphy-cli analyze <path> [--out <file>] [--cache <dir>]
 **Options:**
 
 - `--out, -o <file>` — Write Markdown report to file
-- `--cache <dir>` — Cache directory (default: `<path>/.ngraphiphy-cache`)
+- `--cache <dir>` — Cache directory (default: `<path>/.graphiphy-cache`)
 
 **Output:**
 
@@ -46,13 +46,13 @@ Table with metrics:
 
 ```bash
 # Basic analysis
-ngraphiphy-cli analyze ~/my-project
+graphiphy-cli analyze ~/my-project
 
 # Save report to file
-ngraphiphy-cli analyze ~/my-project --out report.md
+graphiphy-cli analyze ~/my-project --out report.md
 
 # Use custom cache location
-ngraphiphy-cli analyze ~/my-project --cache /tmp/cache
+graphiphy-cli analyze ~/my-project --cache /tmp/cache
 ```
 
 **Exit Code:**
@@ -67,7 +67,7 @@ Generate a detailed Markdown analysis report.
 **Syntax:**
 
 ```bash
-ngraphiphy-cli report <path> [--out <file>] [--cache <dir>]
+graphiphy-cli report <path> [--out <file>] [--cache <dir>]
 ```
 
 **Arguments:**
@@ -77,7 +77,7 @@ ngraphiphy-cli report <path> [--out <file>] [--cache <dir>]
 **Options:**
 
 - `--out, -o <file>` — Write to file (prints to stdout if omitted)
-- `--cache <dir>` — Cache directory (default: `<path>/.ngraphiphy-cache`)
+- `--cache <dir>` — Cache directory (default: `<path>/.graphiphy-cache`)
 
 **Output Format:**
 
@@ -92,17 +92,17 @@ The generated report includes:
 
 ```bash
 # Print report to terminal
-ngraphiphy-cli report ~/my-project | less
+graphiphy-cli report ~/my-project | less
 
 # Save to file and open in editor
-ngraphiphy-cli report ~/my-project --out analysis.md
+graphiphy-cli report ~/my-project --out analysis.md
 code analysis.md
 
 # Use with other tools
-ngraphiphy-cli report ~/my-project | grep -A5 "Top Entities"
+graphiphy-cli report ~/my-project | grep -A5 "Top Entities"
 
 # Generate and immediately view
-ngraphiphy-cli report . --out /tmp/report.md && cat /tmp/report.md
+graphiphy-cli report . --out /tmp/report.md && cat /tmp/report.md
 ```
 
 **Report Sections:**
@@ -147,7 +147,7 @@ Ask an LLM a question about the codebase using the knowledge graph.
 **Syntax:**
 
 ```bash
-ngraphiphy-cli query <path> <question> [--provider <name>] [--cache <dir>]
+graphiphy-cli query <path> <question> [--provider <name>] [--cache <dir>]
 ```
 
 **Arguments:**
@@ -160,25 +160,25 @@ ngraphiphy-cli query <path> <question> [--provider <name>] [--cache <dir>]
 - `--provider <name>` — Named provider from `appsettings.json` (default: value of `Llm.Provider`)
   - Uses the `Providers` dictionary in `appsettings.json`
   - Example providers: `Anthropic`, `OpenAI`, `Ollama`, `GitHubCopilot`, `A2A`
-- `--cache <dir>` — Cache directory (default: `<path>/.ngraphiphy-cache`)
+- `--cache <dir>` — Cache directory (default: `<path>/.graphiphy-cache`)
 
 **Examples:**
 
 ```bash
 # Use configured Anthropic provider (default via Llm.Provider)
-ngraphiphy-cli query . "What is the main entry point of this application?"
+graphiphy-cli query . "What is the main entry point of this application?"
 
 # Switch to OpenAI provider
-ngraphiphy-cli query . "List all database operations" --provider OpenAI
+graphiphy-cli query . "List all database operations" --provider OpenAI
 
 # Use local Ollama
-ngraphiphy-cli query . "Find potential circular dependencies" --provider Ollama
+graphiphy-cli query . "Find potential circular dependencies" --provider Ollama
 
 # GitHub Copilot
-ngraphiphy-cli query . "Identify security issues" --provider GitHubCopilot
+graphiphy-cli query . "Identify security issues" --provider GitHubCopilot
 
 # Remote A2A agent
-ngraphiphy-cli query . "Summarize this codebase" --provider A2A
+graphiphy-cli query . "Summarize this codebase" --provider A2A
 ```
 
 **Output:**
@@ -212,7 +212,7 @@ Push a repository graph snapshot to a graph database (Neo4j or Memgraph).
 **Syntax:**
 
 ```bash
-ngraphiphy-cli push <path> [options]
+graphiphy-cli push <path> [options]
 ```
 
 **Arguments:**
@@ -232,10 +232,10 @@ ngraphiphy-cli push <path> [options]
 
 ```bash
 # Push to Neo4j with embeddings using CloudflareAI provider
-ngraphiphy-cli push /path/to/repo --embed
+graphiphy-cli push /path/to/repo --embed
 
 # Use a specific embedding provider defined in appsettings.json
-ngraphiphy-cli push /path/to/repo --embed --embed-provider OpenAI
+graphiphy-cli push /path/to/repo --embed --embed-provider OpenAI
 ```
 
 ### serve
@@ -245,7 +245,7 @@ Start an MCP (Model Context Protocol) server on stdio for use with Claude, Curso
 **Syntax:**
 
 ```bash
-ngraphiphy-cli serve [path] [--cache <dir>]
+graphiphy-cli serve [path] [--cache <dir>]
 ```
 
 **Arguments:**
@@ -254,7 +254,7 @@ ngraphiphy-cli serve [path] [--cache <dir>]
 
 **Options:**
 
-- `--cache <dir>` — Cache directory (default: `<path>/.ngraphiphy-cache`)
+- `--cache <dir>` — Cache directory (default: `<path>/.graphiphy-cache`)
 
 **Protocol:**
 
@@ -266,26 +266,26 @@ ngraphiphy-cli serve [path] [--cache <dir>]
 
 ```bash
 # Start server for current repo
-ngraphiphy-cli serve
+graphiphy-cli serve
 
 # Start server for specific repo
-ngraphiphy-cli serve /path/to/repo
+graphiphy-cli serve /path/to/repo
 
 # Start with custom cache
-ngraphiphy-cli serve /path/to/repo --cache /tmp/cache
+graphiphy-cli serve /path/to/repo --cache /tmp/cache
 
 # Start and log diagnostics to file
-ngraphiphy-cli serve /path/to/repo 2> server.log
+graphiphy-cli serve /path/to/repo 2> server.log
 ```
 
 **Startup Messages (stderr):**
 
 ```
-[ngraphiphy] Analyzing /path/to/repo...
-[ngraphiphy] Extracting C# files...
-[ngraphiphy] Building graph...
-[ngraphiphy] Ready — 156 nodes, 284 edges.
-[ngraphiphy] Starting MCP server on stdio...
+[graphiphy] Analyzing /path/to/repo...
+[graphiphy] Extracting C# files...
+[graphiphy] Building graph...
+[graphiphy] Ready — 156 nodes, 284 edges.
+[graphiphy] Starting MCP server on stdio...
 ```
 
 **For Integration:**
@@ -349,7 +349,7 @@ To use a custom OpenAI-compatible endpoint (e.g. Groq, Mistral, or self-hosted),
 Then use it:
 
 ```bash
-ngraphiphy-cli query . "Analyze this code" --provider Groq
+graphiphy-cli query . "Analyze this code" --provider Groq
 ```
 
 ### Anthropic (Claude)
@@ -363,10 +363,10 @@ ngraphiphy-cli query . "Analyze this code" --provider Groq
 
 ```bash
 # Uses configured Anthropic provider
-ngraphiphy-cli query . "What are the main services?"
+graphiphy-cli query . "What are the main services?"
 
 # Or explicitly select the provider
-ngraphiphy-cli query . "Summarize the architecture" --provider Anthropic
+graphiphy-cli query . "Summarize the architecture" --provider Anthropic
 ```
 
 **Available Models:**
@@ -403,7 +403,7 @@ ngraphiphy-cli query . "Summarize the architecture" --provider Anthropic
 **Usage:**
 
 ```bash
-ngraphiphy-cli query . "Explain the data flow" --provider OpenAI
+graphiphy-cli query . "Explain the data flow" --provider OpenAI
 ```
 
 **Available Models:**
@@ -451,7 +451,7 @@ ngraphiphy-cli query . "Explain the data flow" --provider OpenAI
 **Usage:**
 
 ```bash
-ngraphiphy-cli query . "What is the main architecture?" --provider Ollama
+graphiphy-cli query . "What is the main architecture?" --provider Ollama
 ```
 
 **Available Models:**
@@ -495,7 +495,7 @@ ngraphiphy-cli query . "What is the main architecture?" --provider Ollama
 **Usage:**
 
 ```bash
-ngraphiphy-cli query . "What services are imported here?" --provider GitHubCopilot
+graphiphy-cli query . "What services are imported here?" --provider GitHubCopilot
 ```
 
 **Model:** Managed by GitHub (typically Claude or GPT)
@@ -533,7 +533,7 @@ ngraphiphy-cli query . "What services are imported here?" --provider GitHubCopil
 
 ```bash
 export A2A_AGENT_URL=https://agent.example.com
-ngraphiphy-cli query . "Analyze this codebase" --provider A2A
+graphiphy-cli query . "Analyze this codebase" --provider A2A
 ```
 
 **Cost:** Managed by your organization/agent provider
@@ -547,7 +547,7 @@ ngraphiphy-cli query . "Analyze this codebase" --provider A2A
 **Build the CLI:**
 
 ```bash
-dotnet publish src/Ngraphiphy.Cli -c Release -o ~/dist
+dotnet publish src/Graphiphy.Cli -c Release -o ~/dist
 ```
 
 **Configuration File Location:**
@@ -556,13 +556,13 @@ dotnet publish src/Ngraphiphy.Cli -c Release -o ~/dist
 - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
 - **Linux:** `~/.config/claude/claude_desktop_config.json`
 
-**Add Ngraphiphy:**
+**Add Graphiphy:**
 
 ```json
 {
   "mcpServers": {
-    "ngraphiphy": {
-      "command": "/absolute/path/to/dist/ngraphiphy-cli",
+    "graphiphy": {
+      "command": "/absolute/path/to/dist/graphiphy-cli",
       "args": ["serve", "/absolute/path/to/your/repo"]
     }
   }
@@ -574,8 +574,8 @@ dotnet publish src/Ngraphiphy.Cli -c Release -o ~/dist
 ```json
 {
   "mcpServers": {
-    "ngraphiphy": {
-      "command": "/home/user/dist/ngraphiphy-cli",
+    "graphiphy": {
+      "command": "/home/user/dist/graphiphy-cli",
       "args": ["serve", "/home/user/projects/my-app"]
     }
   }
@@ -586,7 +586,7 @@ dotnet publish src/Ngraphiphy.Cli -c Release -o ~/dist
 
 1. Restart Claude Desktop
 2. Open a conversation
-3. Click the `@` button — you should see "ngraphiphy" in the tools list
+3. Click the `@` button — you should see "graphiphy" in the tools list
 4. Use a prompt: "What are the top dependencies in this codebase?"
 
 ### Cursor
@@ -603,8 +603,8 @@ dotnet publish src/Ngraphiphy.Cli -c Release -o ~/dist
 {
   "mcp": {
     "servers": {
-      "ngraphiphy": {
-        "command": "/path/to/ngraphiphy-cli",
+      "graphiphy": {
+        "command": "/path/to/graphiphy-cli",
         "args": ["serve", "/path/to/repo"]
       }
     }
@@ -614,10 +614,10 @@ dotnet publish src/Ngraphiphy.Cli -c Release -o ~/dist
 
 ### Other MCP Clients
 
-Any MCP 1.3.0-compatible client can use Ngraphiphy. Start the server:
+Any MCP 1.3.0-compatible client can use Graphiphy. Start the server:
 
 ```bash
-ngraphiphy-cli serve /path/to/repo
+graphiphy-cli serve /path/to/repo
 ```
 
 Then configure your client to connect to the stdio server.
@@ -632,16 +632,16 @@ Understand a new codebase quickly.
 
 ```bash
 # 1. Analyze the repo
-ngraphiphy-cli analyze ~/new-project
+graphiphy-cli analyze ~/new-project
 
 # 2. Generate a detailed report
-ngraphiphy-cli report ~/new-project --out overview.md
+graphiphy-cli report ~/new-project --out overview.md
 cat overview.md
 
 # 3. Ask follow-up questions
 export ANTHROPIC_API_KEY=sk-ant-...
-ngraphiphy-cli query ~/new-project "What is the main architecture?"
-ngraphiphy-cli query ~/new-project "List the core services"
+graphiphy-cli query ~/new-project "What is the main architecture?"
+graphiphy-cli query ~/new-project "List the core services"
 ```
 
 **Time:** ~1-2 minutes for most repos
@@ -654,12 +654,12 @@ Find and understand cross-module dependencies.
 
 ```bash
 # Generate report with surprising connections section
-ngraphiphy-cli report . --out deps.md
+graphiphy-cli report . --out deps.md
 grep -A10 "Surprising Connections" deps.md
 
 # Ask LLM for detailed analysis
-ngraphiphy-cli query . "Are there any circular dependencies?"
-ngraphiphy-cli query . "Which services should be decoupled?"
+graphiphy-cli query . "Are there any circular dependencies?"
+graphiphy-cli query . "Which services should be decoupled?"
 ```
 
 ### Workflow 3: Onboarding New Developers
@@ -670,12 +670,12 @@ Help team members understand the codebase.
 
 ```bash
 # 1. Generate and share report
-ngraphiphy-cli report ~/my-project --out ARCHITECTURE.md
+graphiphy-cli report ~/my-project --out ARCHITECTURE.md
 git add ARCHITECTURE.md
 git commit -m "docs: add auto-generated architecture guide"
 
 # 2. Create a shared MCP server
-ngraphiphy-cli serve ~/my-project &
+graphiphy-cli serve ~/my-project &
 
 # 3. Share server URL with team, add to Claude Desktop
 # Team members can now ask questions about the codebase
@@ -689,7 +689,7 @@ Analyze automatically during development.
 
 ```bash
 # 1. Install NuGet package
-dotnet add package Ngraphiphy.MSBuild
+dotnet add package Graphiphy.MSBuild
 
 # 2. Build as usual
 dotnet build
@@ -698,7 +698,7 @@ dotnet build
 # No additional steps needed
 
 # 4. Periodically review analysis
-ngraphiphy-cli report . --out report.md
+graphiphy-cli report . --out report.md
 ```
 
 ### Workflow 5: Code Review Preparation
@@ -709,11 +709,11 @@ Prepare insights for pull request reviews.
 
 ```bash
 # 1. Analyze the current branch
-ngraphiphy-cli analyze . --out pr-analysis.md
+graphiphy-cli analyze . --out pr-analysis.md
 
 # 2. Ask about specific impacts
-ngraphiphy-cli query . "What other services depend on AuthService?"
-ngraphiphy-cli query . "Are there any new cross-module dependencies in this change?"
+graphiphy-cli query . "What other services depend on AuthService?"
+graphiphy-cli query . "Are there any new cross-module dependencies in this change?"
 
 # 3. Include findings in PR description
 ```
@@ -725,19 +725,19 @@ ngraphiphy-cli query . "Are there any new cross-module dependencies in this chan
 **First run:** Full extraction and analysis using parallel processing across CPU cores
 
 ```bash
-ngraphiphy-cli analyze /path/to/repo  # ~30-60s for 100+ files (parallelized)
+graphiphy-cli analyze /path/to/repo  # ~30-60s for 100+ files (parallelized)
 ```
 
 **Subsequent runs:** Cache reused, much faster
 
 ```bash
-ngraphiphy-cli analyze /path/to/repo  # ~5-10s
+graphiphy-cli analyze /path/to/repo  # ~5-10s
 ```
 
 **Keep cache between runs** (except when you need fresh analysis):
 
 ```bash
-rm -rf .ngraphiphy-cache && ngraphiphy-cli analyze .
+rm -rf .graphiphy-cache && graphiphy-cli analyze .
 ```
 
 **Note:** Each file is read once during extraction, and large repositories benefit significantly from the parallel file processing improvements.
@@ -753,8 +753,8 @@ echo "dist/" >> .gitignore
 echo ".git/" >> .gitignore
 
 # Rerun analysis
-rm -rf .ngraphiphy-cache
-ngraphiphy-cli analyze .
+rm -rf .graphiphy-cache
+graphiphy-cli analyze .
 ```
 
 ### 3. Use Incremental Builds
@@ -781,7 +781,7 @@ dotnet build -m  # Multiple projects, one analysis
 For offline work, use Ollama with local models:
 
 ```bash
-ngraphiphy-cli query . "Summarize classes" --provider Ollama --model llama3.2
+graphiphy-cli query . "Summarize classes" --provider Ollama --model llama3.2
 ```
 
 No network, no API key, instant (or slow, depending on model size).
@@ -791,8 +791,8 @@ No network, no API key, instant (or slow, depending on model size).
 For multiple questions, run them sequentially to reuse cache:
 
 ```bash
-ngraphiphy-cli query . "What services exist?"
-ngraphiphy-cli query . "What are the main dependencies?"
+graphiphy-cli query . "What services exist?"
+graphiphy-cli query . "What are the main dependencies?"
 # Cache persists, second query is faster
 ```
 
@@ -870,15 +870,15 @@ For CI/CD or shared caches:
 
 ```bash
 export CACHE_DIR=/shared/ngraph-cache
-ngraphiphy-cli analyze . --cache $CACHE_DIR
-ngraphiphy-cli report . --cache $CACHE_DIR
+graphiphy-cli analyze . --cache $CACHE_DIR
+graphiphy-cli report . --cache $CACHE_DIR
 ```
 
 ### MSBuild per-Project Override
 
 ```xml
 <PropertyGroup>
-  <NgraphiphyCacheDir>$(MSBuildProjectDirectory)/.ngraphiphy-custom</NgraphiphyCacheDir>
+  <GraphiphyCacheDir>$(MSBuildProjectDirectory)/.graphiphy-custom</GraphiphyCacheDir>
 </PropertyGroup>
 ```
 
@@ -886,7 +886,7 @@ ngraphiphy-cli report . --cache $CACHE_DIR
 
 ```xml
 <PropertyGroup>
-  <NgraphiphyEnabled>false</NgraphiphyEnabled>
+  <GraphiphyEnabled>false</GraphiphyEnabled>
 </PropertyGroup>
 ```
 
@@ -895,9 +895,9 @@ ngraphiphy-cli report . --cache $CACHE_DIR
 ```bash
 # CI/CD: use custom cache
 if [ "$CI" = "true" ]; then
-  ngraphiphy-cli analyze . --cache /tmp/ci-cache
+  graphiphy-cli analyze . --cache /tmp/ci-cache
 else
-  ngraphiphy-cli analyze .
+  graphiphy-cli analyze .
 fi
 ```
 
@@ -909,25 +909,25 @@ Analyze multiple repositories:
 #!/bin/bash
 for repo in ~/projects/*; do
   echo "Analyzing $repo"
-  ngraphiphy-cli analyze "$repo" --out "$repo/analysis.md"
+  graphiphy-cli analyze "$repo" --out "$repo/analysis.md"
 done
 ```
 
 ## Troubleshooting
 
-### "command not found: ngraphiphy-cli"
+### "command not found: graphiphy-cli"
 
 **Check installation:**
 
 ```bash
-dotnet tool list -g | grep Ngraphiphy
+dotnet tool list -g | grep Graphiphy
 ```
 
 **Reinstall:**
 
 ```bash
-dotnet tool uninstall -g Ngraphiphy.Cli
-dotnet tool install -g Ngraphiphy.Cli
+dotnet tool uninstall -g Graphiphy.Cli
+dotnet tool install -g Graphiphy.Cli
 ```
 
 **Check PATH:**
@@ -1003,14 +1003,14 @@ brew install tree-sitter
 Clear cache:
 
 ```bash
-rm -rf .ngraphiphy-cache
-ngraphiphy-cli analyze .  # Rebuilds cache
+rm -rf .graphiphy-cache
+graphiphy-cli analyze .  # Rebuilds cache
 ```
 
 Or use a custom location:
 
 ```bash
-ngraphiphy-cli analyze . --cache /tmp/cache
+graphiphy-cli analyze . --cache /tmp/cache
 ```
 
 ### "MCP Server not connecting in Claude Desktop"
@@ -1027,8 +1027,8 @@ cat ~/Library/Application\ Support/Claude/claude_desktop_config.json
 ```json
 {
   "mcpServers": {
-    "ngraphiphy": {
-      "command": "/absolute/path/to/ngraphiphy-cli",
+    "graphiphy": {
+      "command": "/absolute/path/to/graphiphy-cli",
       "args": ["serve", "/absolute/path/to/repo"]
     }
   }
@@ -1038,7 +1038,7 @@ cat ~/Library/Application\ Support/Claude/claude_desktop_config.json
 **Check command works:**
 
 ```bash
-/absolute/path/to/ngraphiphy-cli serve /absolute/path/to/repo > /dev/null 2>&1
+/absolute/path/to/graphiphy-cli serve /absolute/path/to/repo > /dev/null 2>&1
 echo $?  # Should be 0 or interrupted
 ```
 
@@ -1059,7 +1059,7 @@ Switch the provider to one using a more capable model (e.g., set `Llm:Provider` 
 **Provide context in question:**
 
 ```bash
-ngraphiphy-cli query . "I'm implementing a new feature. What services handle authentication and how are they used?"
+graphiphy-cli query . "I'm implementing a new feature. What services handle authentication and how are they used?"
 ```
 
 ### "Build is slow with MSBuild integration"
@@ -1068,7 +1068,7 @@ ngraphiphy-cli query . "I'm implementing a new feature. What services handle aut
 
 ```xml
 <PropertyGroup>
-  <NgraphiphyEnabled>false</NgraphiphyEnabled>
+  <GraphiphyEnabled>false</GraphiphyEnabled>
 </PropertyGroup>
 ```
 
@@ -1078,7 +1078,7 @@ The integration already runs asynchronously and doesn't block builds. To verify:
 
 ```bash
 dotnet build --verbosity=minimal
-# [ngraphiphy] messages appear in background, build completes independently
+# [graphiphy] messages appear in background, build completes independently
 ```
 
 ### "Can't find Ollama endpoint"
@@ -1099,7 +1099,7 @@ curl http://localhost:11434/api/tags
 **Use custom endpoint:**
 
 ```bash
-ngraphiphy-cli query . "..." --provider Ollama --model llama3.2 \
+graphiphy-cli query . "..." --provider Ollama --model llama3.2 \
   # Note: Currently uses default endpoint; for custom, file a feature request
 ```
 
@@ -1108,14 +1108,14 @@ ngraphiphy-cli query . "..." --provider Ollama --model llama3.2 \
 **Clear cache:**
 
 ```bash
-rm -rf .ngraphiphy-cache
-ngraphiphy-cli analyze .
+rm -rf .graphiphy-cache
+graphiphy-cli analyze .
 ```
 
 **Verify extraction:**
 
 ```bash
-ngraphiphy-cli analyze . | grep "Files detected"
+graphiphy-cli analyze . | grep "Files detected"
 ```
 
 If files detected drops, check `.gitignore` hasn't changed or files weren't moved.

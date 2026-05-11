@@ -1,10 +1,10 @@
-# Ngraphiphy Phase 2: LLM Backends, MCP Server, and CLI
+# Graphiphy Phase 2: LLM Backends, MCP Server, and CLI
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add a Spectre.Console CLI entry point, Microsoft Semantic Kernel–based LLM query agents (Anthropic / OpenAI / Ollama), and a ModelContextProtocol MCP server that exposes the knowledge graph as Claude tools — all wired together so one binary can be used interactively or as an MCP server.
 
-**Architecture:** Three new projects join the solution. `Ngraphiphy.Llm` wraps Semantic Kernel and exposes an `IGraphAgent` interface with provider-specific implementations. `Ngraphiphy.Cli` (console app) owns the Spectre.Console command tree, a `RepositoryAnalysis` pipeline orchestrator, and the MCP server (embedded as a `serve` command using stdio transport). Tests live in matching `*.Tests` projects.
+**Architecture:** Three new projects join the solution. `Graphiphy.Llm` wraps Semantic Kernel and exposes an `IGraphAgent` interface with provider-specific implementations. `Graphiphy.Cli` (console app) owns the Spectre.Console command tree, a `RepositoryAnalysis` pipeline orchestrator, and the MCP server (embedded as a `serve` command using stdio transport). Tests live in matching `*.Tests` projects.
 
 **Tech Stack:**
 - Spectre.Console.Cli 0.49.1 — command-line interface
@@ -22,35 +22,35 @@
 
 ```
 src/
-  Ngraphiphy.Llm/
-    Ngraphiphy.Llm.csproj            → refs Ngraphiphy; adds SK + connectors
+  Graphiphy.Llm/
+    Graphiphy.Llm.csproj            → refs Graphiphy; adds SK + connectors
     IGraphAgent.cs                   → interface: AnswerAsync, SummarizeAsync
     GraphPlugin.cs                   → [KernelFunction] wrappers over GraphAnalyzer + graph
     KernelFactory.cs                 → creates Kernel for each provider
     GraphAgentFactory.cs             → creates IGraphAgent from LlmConfig
 
-  Ngraphiphy.Cli/
-    Ngraphiphy.Cli.csproj            → refs Ngraphiphy + Ngraphiphy.Llm; adds Spectre + MCP
+  Graphiphy.Cli/
+    Graphiphy.Cli.csproj            → refs Graphiphy + Graphiphy.Llm; adds Spectre + MCP
     Program.cs                       → CommandApp entry point
     Pipeline/
       RepositoryAnalysis.cs          → orchestrates Detect→Extract→Build→Dedup→Cluster→Analyze
     Commands/
-      AnalyzeCommand.cs              → ngraphiphy analyze <path> [--out <file>] [--cache <dir>]
-      ReportCommand.cs               → ngraphiphy report <path> [--out <file>]
-      QueryCommand.cs                → ngraphiphy query <path> <question> --provider X --key Y
-      ServeCommand.cs                → ngraphiphy serve --path <dir>  (starts MCP stdio server)
+      AnalyzeCommand.cs              → graphiphy analyze <path> [--out <file>] [--cache <dir>]
+      ReportCommand.cs               → graphiphy report <path> [--out <file>]
+      QueryCommand.cs                → graphiphy query <path> <question> --provider X --key Y
+      ServeCommand.cs                → graphiphy serve --path <dir>  (starts MCP stdio server)
     Mcp/
       GraphMcpServer.cs              → IHost builder wired to stdio, registers all tools
       GraphTools.cs                  → [McpServerTool] methods (get_god_nodes, get_report, etc.)
 
 tests/
-  Ngraphiphy.Llm.Tests/
-    Ngraphiphy.Llm.Tests.csproj
+  Graphiphy.Llm.Tests/
+    Graphiphy.Llm.Tests.csproj
     GraphPluginTests.cs
     GraphAgentFactoryTests.cs
 
-  Ngraphiphy.Cli.Tests/
-    Ngraphiphy.Cli.Tests.csproj
+  Graphiphy.Cli.Tests/
+    Graphiphy.Cli.Tests.csproj
     Pipeline/
       RepositoryAnalysisTests.cs
     Commands/
@@ -63,28 +63,28 @@ tests/
 
 ## Phase A: LLM Backends
 
-### Task 1: Ngraphiphy.Llm Project Scaffold
+### Task 1: Graphiphy.Llm Project Scaffold
 
 **Files:**
-- Create: `src/Ngraphiphy.Llm/Ngraphiphy.Llm.csproj`
-- Create: `src/Ngraphiphy.Llm/IGraphAgent.cs`
-- Create: `tests/Ngraphiphy.Llm.Tests/Ngraphiphy.Llm.Tests.csproj`
-- Modify: `Ngraphiphy.sln` (add both new projects)
+- Create: `src/Graphiphy.Llm/Graphiphy.Llm.csproj`
+- Create: `src/Graphiphy.Llm/IGraphAgent.cs`
+- Create: `tests/Graphiphy.Llm.Tests/Graphiphy.Llm.Tests.csproj`
+- Modify: `Graphiphy.sln` (add both new projects)
 
 - [ ] **Step 1: Create the library csproj**
 
 ```xml
-<!-- src/Ngraphiphy.Llm/Ngraphiphy.Llm.csproj -->
+<!-- src/Graphiphy.Llm/Graphiphy.Llm.csproj -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Ngraphiphy.Llm</RootNamespace>
+    <RootNamespace>Graphiphy.Llm</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ngraphiphy\Ngraphiphy.csproj" />
+    <ProjectReference Include="..\Graphiphy\Graphiphy.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -98,11 +98,11 @@ tests/
 - [ ] **Step 2: Define the IGraphAgent interface**
 
 ```csharp
-// src/Ngraphiphy.Llm/IGraphAgent.cs
-using Ngraphiphy.Models;
+// src/Graphiphy.Llm/IGraphAgent.cs
+using Graphiphy.Models;
 using QuikGraph;
 
-namespace Ngraphiphy.Llm;
+namespace Graphiphy.Llm;
 
 /// <summary>
 /// Answers natural-language questions about an analyzed knowledge graph.
@@ -129,7 +129,7 @@ public interface IGraphAgent
 - [ ] **Step 3: Create the test project csproj**
 
 ```xml
-<!-- tests/Ngraphiphy.Llm.Tests/Ngraphiphy.Llm.Tests.csproj -->
+<!-- tests/Graphiphy.Llm.Tests/Graphiphy.Llm.Tests.csproj -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -143,7 +143,7 @@ public interface IGraphAgent
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Ngraphiphy.Llm\Ngraphiphy.Llm.csproj" />
+    <ProjectReference Include="..\..\src\Graphiphy.Llm\Graphiphy.Llm.csproj" />
   </ItemGroup>
 </Project>
 ```
@@ -151,22 +151,22 @@ public interface IGraphAgent
 - [ ] **Step 4: Add both projects to the solution**
 
 ```bash
-dotnet sln Ngraphiphy.sln add src/Ngraphiphy.Llm/Ngraphiphy.Llm.csproj
-dotnet sln Ngraphiphy.sln add tests/Ngraphiphy.Llm.Tests/Ngraphiphy.Llm.Tests.csproj
+dotnet sln Graphiphy.sln add src/Graphiphy.Llm/Graphiphy.Llm.csproj
+dotnet sln Graphiphy.sln add tests/Graphiphy.Llm.Tests/Graphiphy.Llm.Tests.csproj
 ```
 
 - [ ] **Step 5: Verify both projects build**
 
 ```bash
-dotnet build src/Ngraphiphy.Llm/Ngraphiphy.Llm.csproj
+dotnet build src/Graphiphy.Llm/Graphiphy.Llm.csproj
 ```
 Expected: Build succeeded.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/Ngraphiphy.Llm/ tests/Ngraphiphy.Llm.Tests/ Ngraphiphy.sln
-git commit -m "feat: add Ngraphiphy.Llm project scaffold with IGraphAgent interface"
+git add src/Graphiphy.Llm/ tests/Graphiphy.Llm.Tests/ Graphiphy.sln
+git commit -m "feat: add Graphiphy.Llm project scaffold with IGraphAgent interface"
 ```
 
 ---
@@ -174,20 +174,20 @@ git commit -m "feat: add Ngraphiphy.Llm project scaffold with IGraphAgent interf
 ### Task 2: GraphPlugin — Kernel Functions Over Graph Analysis
 
 **Files:**
-- Create: `src/Ngraphiphy.Llm/GraphPlugin.cs`
-- Create: `tests/Ngraphiphy.Llm.Tests/GraphPluginTests.cs`
+- Create: `src/Graphiphy.Llm/GraphPlugin.cs`
+- Create: `tests/Graphiphy.Llm.Tests/GraphPluginTests.cs`
 
 The `GraphPlugin` is a Semantic Kernel plugin: a class whose methods are decorated with `[KernelFunction]`. The LLM will call these automatically when answering questions. Each method serialises its result as a short JSON string.
 
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Ngraphiphy.Llm.Tests/GraphPluginTests.cs
-using Ngraphiphy.Build;
-using Ngraphiphy.Llm;
-using Ngraphiphy.Models;
+// tests/Graphiphy.Llm.Tests/GraphPluginTests.cs
+using Graphiphy.Build;
+using Graphiphy.Llm;
+using Graphiphy.Models;
 
-namespace Ngraphiphy.Llm.Tests;
+namespace Graphiphy.Llm.Tests;
 
 public class GraphPluginTests
 {
@@ -256,24 +256,24 @@ public class GraphPluginTests
 - [ ] **Step 2: Run tests to confirm they fail**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Llm.Tests/
+dotnet run --project tests/Graphiphy.Llm.Tests/
 ```
 Expected: Build error — GraphPlugin not found.
 
 - [ ] **Step 3: Implement GraphPlugin**
 
 ```csharp
-// src/Ngraphiphy.Llm/GraphPlugin.cs
+// src/Graphiphy.Llm/GraphPlugin.cs
 using System.Text.Json;
 using Microsoft.SemanticKernel;
-using Ngraphiphy.Analysis;
-using Ngraphiphy.Models;
+using Graphiphy.Analysis;
+using Graphiphy.Models;
 using QuikGraph;
 
-namespace Ngraphiphy.Llm;
+namespace Graphiphy.Llm;
 
 /// <summary>
-/// Semantic Kernel plugin that wraps the Ngraphiphy analysis API.
+/// Semantic Kernel plugin that wraps the Graphiphy analysis API.
 /// The LLM may call these functions to explore the knowledge graph.
 /// </summary>
 public sealed class GraphPlugin
@@ -350,14 +350,14 @@ public sealed class GraphPlugin
 - [ ] **Step 4: Run tests to confirm they pass**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Llm.Tests/
+dotnet run --project tests/Graphiphy.Llm.Tests/
 ```
 Expected: 4 tests pass.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy.Llm/GraphPlugin.cs tests/Ngraphiphy.Llm.Tests/GraphPluginTests.cs
+git add src/Graphiphy.Llm/GraphPlugin.cs tests/Graphiphy.Llm.Tests/GraphPluginTests.cs
 git commit -m "feat: add GraphPlugin with SK kernel functions for graph analysis"
 ```
 
@@ -366,20 +366,20 @@ git commit -m "feat: add GraphPlugin with SK kernel functions for graph analysis
 ### Task 3: KernelFactory and SemanticKernelGraphAgent
 
 **Files:**
-- Create: `src/Ngraphiphy.Llm/LlmConfig.cs`
-- Create: `src/Ngraphiphy.Llm/KernelFactory.cs`
-- Create: `src/Ngraphiphy.Llm/SemanticKernelGraphAgent.cs`
-- Create: `tests/Ngraphiphy.Llm.Tests/KernelFactoryTests.cs`
+- Create: `src/Graphiphy.Llm/LlmConfig.cs`
+- Create: `src/Graphiphy.Llm/KernelFactory.cs`
+- Create: `src/Graphiphy.Llm/SemanticKernelGraphAgent.cs`
+- Create: `tests/Graphiphy.Llm.Tests/KernelFactoryTests.cs`
 
 The agent wraps a `ChatCompletionAgent` (SK) with the `GraphPlugin` attached. It answers questions in a single-turn fashion: user message → LLM streams response → return string.
 
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Ngraphiphy.Llm.Tests/KernelFactoryTests.cs
-using Ngraphiphy.Llm;
+// tests/Graphiphy.Llm.Tests/KernelFactoryTests.cs
+using Graphiphy.Llm;
 
-namespace Ngraphiphy.Llm.Tests;
+namespace Graphiphy.Llm.Tests;
 
 public class KernelFactoryTests
 {
@@ -419,15 +419,15 @@ public class KernelFactoryTests
 - [ ] **Step 2: Run to confirm they fail**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Llm.Tests/
+dotnet run --project tests/Graphiphy.Llm.Tests/
 ```
 Expected: Build error — LlmConfig, KernelFactory not found.
 
 - [ ] **Step 3: Implement LlmConfig record**
 
 ```csharp
-// src/Ngraphiphy.Llm/LlmConfig.cs
-namespace Ngraphiphy.Llm;
+// src/Graphiphy.Llm/LlmConfig.cs
+namespace Graphiphy.Llm;
 
 public enum LlmProvider { OpenAi, Anthropic, Ollama }
 
@@ -445,10 +445,10 @@ public sealed record LlmConfig(
 - [ ] **Step 4: Implement KernelFactory**
 
 ```csharp
-// src/Ngraphiphy.Llm/KernelFactory.cs
+// src/Graphiphy.Llm/KernelFactory.cs
 using Microsoft.SemanticKernel;
 
-namespace Ngraphiphy.Llm;
+namespace Graphiphy.Llm;
 
 public static class KernelFactory
 {
@@ -490,14 +490,14 @@ public static class KernelFactory
 - [ ] **Step 5: Implement SemanticKernelGraphAgent**
 
 ```csharp
-// src/Ngraphiphy.Llm/SemanticKernelGraphAgent.cs
+// src/Graphiphy.Llm/SemanticKernelGraphAgent.cs
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Agents;
 using Microsoft.SemanticKernel.ChatCompletion;
-using Ngraphiphy.Models;
+using Graphiphy.Models;
 using QuikGraph;
 
-namespace Ngraphiphy.Llm;
+namespace Graphiphy.Llm;
 
 public sealed class SemanticKernelGraphAgent : IGraphAgent
 {
@@ -549,14 +549,14 @@ public sealed class SemanticKernelGraphAgent : IGraphAgent
 - [ ] **Step 6: Run tests**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Llm.Tests/
+dotnet run --project tests/Graphiphy.Llm.Tests/
 ```
 Expected: All tests pass (KernelFactory tests + GraphPlugin tests = 7 total).
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/Ngraphiphy.Llm/ tests/Ngraphiphy.Llm.Tests/
+git add src/Graphiphy.Llm/ tests/Graphiphy.Llm.Tests/
 git commit -m "feat: add KernelFactory and SemanticKernelGraphAgent with multi-provider support"
 ```
 
@@ -565,18 +565,18 @@ git commit -m "feat: add KernelFactory and SemanticKernelGraphAgent with multi-p
 ### Task 4: GraphAgentFactory
 
 **Files:**
-- Create: `src/Ngraphiphy.Llm/GraphAgentFactory.cs`
-- Create: `tests/Ngraphiphy.Llm.Tests/GraphAgentFactoryTests.cs`
+- Create: `src/Graphiphy.Llm/GraphAgentFactory.cs`
+- Create: `tests/Graphiphy.Llm.Tests/GraphAgentFactoryTests.cs`
 
 A simple factory that creates `IGraphAgent` from an `LlmConfig`. Exists so the CLI only needs to pass one config object.
 
 - [ ] **Step 1: Write the failing test**
 
 ```csharp
-// tests/Ngraphiphy.Llm.Tests/GraphAgentFactoryTests.cs
-using Ngraphiphy.Llm;
+// tests/Graphiphy.Llm.Tests/GraphAgentFactoryTests.cs
+using Graphiphy.Llm;
 
-namespace Ngraphiphy.Llm.Tests;
+namespace Graphiphy.Llm.Tests;
 
 public class GraphAgentFactoryTests
 {
@@ -610,15 +610,15 @@ public class GraphAgentFactoryTests
 - [ ] **Step 2: Run to confirm failure**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Llm.Tests/
+dotnet run --project tests/Graphiphy.Llm.Tests/
 ```
 Expected: Build error — GraphAgentFactory not found.
 
 - [ ] **Step 3: Implement GraphAgentFactory**
 
 ```csharp
-// src/Ngraphiphy.Llm/GraphAgentFactory.cs
-namespace Ngraphiphy.Llm;
+// src/Graphiphy.Llm/GraphAgentFactory.cs
+namespace Graphiphy.Llm;
 
 public static class GraphAgentFactory
 {
@@ -630,14 +630,14 @@ public static class GraphAgentFactory
 - [ ] **Step 4: Run tests**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Llm.Tests/
+dotnet run --project tests/Graphiphy.Llm.Tests/
 ```
 Expected: All 10 tests pass.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy.Llm/GraphAgentFactory.cs tests/Ngraphiphy.Llm.Tests/GraphAgentFactoryTests.cs
+git add src/Graphiphy.Llm/GraphAgentFactory.cs tests/Graphiphy.Llm.Tests/GraphAgentFactoryTests.cs
 git commit -m "feat: add GraphAgentFactory"
 ```
 
@@ -645,31 +645,31 @@ git commit -m "feat: add GraphAgentFactory"
 
 ## Phase B: CLI Entry Point
 
-### Task 5: Ngraphiphy.Cli Project Scaffold
+### Task 5: Graphiphy.Cli Project Scaffold
 
 **Files:**
-- Create: `src/Ngraphiphy.Cli/Ngraphiphy.Cli.csproj`
-- Create: `src/Ngraphiphy.Cli/Program.cs`
-- Create: `tests/Ngraphiphy.Cli.Tests/Ngraphiphy.Cli.Tests.csproj`
-- Modify: `Ngraphiphy.sln`
+- Create: `src/Graphiphy.Cli/Graphiphy.Cli.csproj`
+- Create: `src/Graphiphy.Cli/Program.cs`
+- Create: `tests/Graphiphy.Cli.Tests/Graphiphy.Cli.Tests.csproj`
+- Modify: `Graphiphy.sln`
 
 - [ ] **Step 1: Create the CLI csproj**
 
 ```xml
-<!-- src/Ngraphiphy.Cli/Ngraphiphy.Cli.csproj -->
+<!-- src/Graphiphy.Cli/Graphiphy.Cli.csproj -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputType>Exe</OutputType>
-    <AssemblyName>ngraphiphy</AssemblyName>
-    <RootNamespace>Ngraphiphy.Cli</RootNamespace>
+    <AssemblyName>graphiphy</AssemblyName>
+    <RootNamespace>Graphiphy.Cli</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ngraphiphy\Ngraphiphy.csproj" />
-    <ProjectReference Include="..\Ngraphiphy.Llm\Ngraphiphy.Llm.csproj" />
+    <ProjectReference Include="..\Graphiphy\Graphiphy.csproj" />
+    <ProjectReference Include="..\Graphiphy.Llm\Graphiphy.Llm.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -684,14 +684,14 @@ git commit -m "feat: add GraphAgentFactory"
 - [ ] **Step 2: Create Program.cs with all four commands registered**
 
 ```csharp
-// src/Ngraphiphy.Cli/Program.cs
-using Ngraphiphy.Cli.Commands;
+// src/Graphiphy.Cli/Program.cs
+using Graphiphy.Cli.Commands;
 using Spectre.Console.Cli;
 
 var app = new CommandApp();
 app.Configure(config =>
 {
-    config.SetApplicationName("ngraphiphy");
+    config.SetApplicationName("graphiphy");
     config.SetApplicationVersion("2.0.0");
 
     config.AddCommand<AnalyzeCommand>("analyze")
@@ -715,9 +715,9 @@ return app.Run(args);
 Create these four files with minimal stubs. They will be replaced in later tasks.
 
 ```csharp
-// src/Ngraphiphy.Cli/Commands/AnalyzeCommand.cs
+// src/Graphiphy.Cli/Commands/AnalyzeCommand.cs
 using Spectre.Console.Cli;
-namespace Ngraphiphy.Cli.Commands;
+namespace Graphiphy.Cli.Commands;
 public sealed class AnalyzeSettings : CommandSettings { }
 public sealed class AnalyzeCommand : AsyncCommand<AnalyzeSettings>
 {
@@ -727,9 +727,9 @@ public sealed class AnalyzeCommand : AsyncCommand<AnalyzeSettings>
 ```
 
 ```csharp
-// src/Ngraphiphy.Cli/Commands/ReportCommand.cs
+// src/Graphiphy.Cli/Commands/ReportCommand.cs
 using Spectre.Console.Cli;
-namespace Ngraphiphy.Cli.Commands;
+namespace Graphiphy.Cli.Commands;
 public sealed class ReportSettings : CommandSettings { }
 public sealed class ReportCommand : AsyncCommand<ReportSettings>
 {
@@ -739,9 +739,9 @@ public sealed class ReportCommand : AsyncCommand<ReportSettings>
 ```
 
 ```csharp
-// src/Ngraphiphy.Cli/Commands/QueryCommand.cs
+// src/Graphiphy.Cli/Commands/QueryCommand.cs
 using Spectre.Console.Cli;
-namespace Ngraphiphy.Cli.Commands;
+namespace Graphiphy.Cli.Commands;
 public sealed class QuerySettings : CommandSettings { }
 public sealed class QueryCommand : AsyncCommand<QuerySettings>
 {
@@ -751,9 +751,9 @@ public sealed class QueryCommand : AsyncCommand<QuerySettings>
 ```
 
 ```csharp
-// src/Ngraphiphy.Cli/Commands/ServeCommand.cs
+// src/Graphiphy.Cli/Commands/ServeCommand.cs
 using Spectre.Console.Cli;
-namespace Ngraphiphy.Cli.Commands;
+namespace Graphiphy.Cli.Commands;
 public sealed class ServeSettings : CommandSettings { }
 public sealed class ServeCommand : AsyncCommand<ServeSettings>
 {
@@ -765,7 +765,7 @@ public sealed class ServeCommand : AsyncCommand<ServeSettings>
 - [ ] **Step 4: Create the test project csproj**
 
 ```xml
-<!-- tests/Ngraphiphy.Cli.Tests/Ngraphiphy.Cli.Tests.csproj -->
+<!-- tests/Graphiphy.Cli.Tests/Graphiphy.Cli.Tests.csproj -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -780,34 +780,34 @@ public sealed class ServeCommand : AsyncCommand<ServeSettings>
 
   <ItemGroup>
     <!-- Reference the library projects, NOT the CLI exe -->
-    <ProjectReference Include="..\..\src\Ngraphiphy\Ngraphiphy.csproj" />
-    <ProjectReference Include="..\..\src\Ngraphiphy.Llm\Ngraphiphy.Llm.csproj" />
+    <ProjectReference Include="..\..\src\Graphiphy\Graphiphy.csproj" />
+    <ProjectReference Include="..\..\src\Graphiphy.Llm\Graphiphy.Llm.csproj" />
   </ItemGroup>
 </Project>
 ```
 
-> Note: Tests reference `Ngraphiphy` and `Ngraphiphy.Llm` directly. `RepositoryAnalysis` and `GraphTools` will be moved to separate library targets or tested via their public APIs. The CLI exe cannot be referenced as a project. See Task 6 for the workaround.
+> Note: Tests reference `Graphiphy` and `Graphiphy.Llm` directly. `RepositoryAnalysis` and `GraphTools` will be moved to separate library targets or tested via their public APIs. The CLI exe cannot be referenced as a project. See Task 6 for the workaround.
 
 - [ ] **Step 5: Add both projects to the solution**
 
 ```bash
-dotnet sln Ngraphiphy.sln add src/Ngraphiphy.Cli/Ngraphiphy.Cli.csproj
-dotnet sln Ngraphiphy.sln add tests/Ngraphiphy.Cli.Tests/Ngraphiphy.Cli.Tests.csproj
+dotnet sln Graphiphy.sln add src/Graphiphy.Cli/Graphiphy.Cli.csproj
+dotnet sln Graphiphy.sln add tests/Graphiphy.Cli.Tests/Graphiphy.Cli.Tests.csproj
 ```
 
 - [ ] **Step 6: Verify the CLI builds and shows help**
 
 ```bash
-dotnet build src/Ngraphiphy.Cli/
-dotnet run --project src/Ngraphiphy.Cli/ -- --help
+dotnet build src/Graphiphy.Cli/
+dotnet run --project src/Graphiphy.Cli/ -- --help
 ```
 Expected: Help text listing `analyze`, `report`, `query`, `serve`.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/Ngraphiphy.Cli/ tests/Ngraphiphy.Cli.Tests/ Ngraphiphy.sln
-git commit -m "feat: add Ngraphiphy.Cli project scaffold with four stub commands"
+git add src/Graphiphy.Cli/ tests/Graphiphy.Cli.Tests/ Graphiphy.sln
+git commit -m "feat: add Graphiphy.Cli project scaffold with four stub commands"
 ```
 
 ---
@@ -815,34 +815,34 @@ git commit -m "feat: add Ngraphiphy.Cli project scaffold with four stub commands
 ### Task 6: RepositoryAnalysis Pipeline Orchestrator
 
 **Files:**
-- Create: `src/Ngraphiphy.Cli/Pipeline/RepositoryAnalysis.cs`
-- Create: `tests/Ngraphiphy.Cli.Tests/Pipeline/RepositoryAnalysisTests.cs`
+- Create: `src/Graphiphy.Cli/Pipeline/RepositoryAnalysis.cs`
+- Create: `tests/Graphiphy.Cli.Tests/Pipeline/RepositoryAnalysisTests.cs`
 
-> The test project references the Ngraphiphy core library directly, and `RepositoryAnalysis` uses only public APIs from that library. Since the CLI is an exe and can't be referenced, we test `RepositoryAnalysis` by extracting it as a class in the CLI project and verifying its behavior by calling it from the test project **after building the CLI dll** — or more simply, by duplicating the class in a shared location. The cleanest solution: create `src/Ngraphiphy.Pipeline/` as a library containing `RepositoryAnalysis` (see below).
+> The test project references the Graphiphy core library directly, and `RepositoryAnalysis` uses only public APIs from that library. Since the CLI is an exe and can't be referenced, we test `RepositoryAnalysis` by extracting it as a class in the CLI project and verifying its behavior by calling it from the test project **after building the CLI dll** — or more simply, by duplicating the class in a shared location. The cleanest solution: create `src/Graphiphy.Pipeline/` as a library containing `RepositoryAnalysis` (see below).
 
-**Revised approach:** extract `RepositoryAnalysis` into `src/Ngraphiphy.Pipeline/` so both the CLI and tests can reference it.
+**Revised approach:** extract `RepositoryAnalysis` into `src/Graphiphy.Pipeline/` so both the CLI and tests can reference it.
 
 **Additional files:**
-- Create: `src/Ngraphiphy.Pipeline/Ngraphiphy.Pipeline.csproj`
-- Create: `src/Ngraphiphy.Pipeline/RepositoryAnalysis.cs`
-- Modify: `src/Ngraphiphy.Cli/Ngraphiphy.Cli.csproj` — add ProjectReference to Pipeline
-- Modify: `tests/Ngraphiphy.Cli.Tests/Ngraphiphy.Cli.Tests.csproj` — add ProjectReference to Pipeline
-- Modify: `Ngraphiphy.sln` — add Pipeline project
+- Create: `src/Graphiphy.Pipeline/Graphiphy.Pipeline.csproj`
+- Create: `src/Graphiphy.Pipeline/RepositoryAnalysis.cs`
+- Modify: `src/Graphiphy.Cli/Graphiphy.Cli.csproj` — add ProjectReference to Pipeline
+- Modify: `tests/Graphiphy.Cli.Tests/Graphiphy.Cli.Tests.csproj` — add ProjectReference to Pipeline
+- Modify: `Graphiphy.sln` — add Pipeline project
 
-- [ ] **Step 1: Create Ngraphiphy.Pipeline csproj**
+- [ ] **Step 1: Create Graphiphy.Pipeline csproj**
 
 ```xml
-<!-- src/Ngraphiphy.Pipeline/Ngraphiphy.Pipeline.csproj -->
+<!-- src/Graphiphy.Pipeline/Graphiphy.Pipeline.csproj -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Ngraphiphy.Pipeline</RootNamespace>
+    <RootNamespace>Graphiphy.Pipeline</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ngraphiphy\Ngraphiphy.csproj" />
+    <ProjectReference Include="..\Graphiphy\Graphiphy.csproj" />
   </ItemGroup>
 </Project>
 ```
@@ -850,10 +850,10 @@ git commit -m "feat: add Ngraphiphy.Cli project scaffold with four stub commands
 - [ ] **Step 2: Write the failing tests**
 
 ```csharp
-// tests/Ngraphiphy.Cli.Tests/Pipeline/RepositoryAnalysisTests.cs
-using Ngraphiphy.Pipeline;
+// tests/Graphiphy.Cli.Tests/Pipeline/RepositoryAnalysisTests.cs
+using Graphiphy.Pipeline;
 
-namespace Ngraphiphy.Cli.Tests.Pipeline;
+namespace Graphiphy.Cli.Tests.Pipeline;
 
 public class RepositoryAnalysisTests
 {
@@ -902,7 +902,7 @@ public class RepositoryAnalysisTests
     public async Task RunAsync_UsesCache_OnSecondCall()
     {
         var dir = CreateTempDir();
-        var cacheDir = Path.Combine(dir, ".ngraphiphy-cache");
+        var cacheDir = Path.Combine(dir, ".graphiphy-cache");
         File.WriteAllText(Path.Combine(dir, "b.py"), "class B: pass");
 
         var r1 = await RepositoryAnalysis.RunAsync(dir, cacheDir: cacheDir);
@@ -914,7 +914,7 @@ public class RepositoryAnalysisTests
 
     private static string CreateTempDir()
     {
-        var path = Path.Combine(Path.GetTempPath(), "ngraphiphy_test_" + Guid.NewGuid().ToString("N")[..8]);
+        var path = Path.Combine(Path.GetTempPath(), "graphiphy_test_" + Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(path);
         return path;
     }
@@ -923,27 +923,27 @@ public class RepositoryAnalysisTests
 
 - [ ] **Step 3: Run tests to confirm they fail**
 
-Add reference to Ngraphiphy.Pipeline in the test project's csproj, then:
+Add reference to Graphiphy.Pipeline in the test project's csproj, then:
 ```bash
-dotnet run --project tests/Ngraphiphy.Cli.Tests/
+dotnet run --project tests/Graphiphy.Cli.Tests/
 ```
 Expected: Build error — RepositoryAnalysis not found.
 
 - [ ] **Step 4: Implement RepositoryAnalysis**
 
 ```csharp
-// src/Ngraphiphy.Pipeline/RepositoryAnalysis.cs
-using Ngraphiphy.Build;
-using Ngraphiphy.Cache;
-using Ngraphiphy.Cluster;
-using Ngraphiphy.Dedup;
-using Ngraphiphy.Detection;
-using Ngraphiphy.Extraction;
-using Ngraphiphy.Models;
-using Ngraphiphy.Report;
+// src/Graphiphy.Pipeline/RepositoryAnalysis.cs
+using Graphiphy.Build;
+using Graphiphy.Cache;
+using Graphiphy.Cluster;
+using Graphiphy.Dedup;
+using Graphiphy.Detection;
+using Graphiphy.Extraction;
+using Graphiphy.Models;
+using Graphiphy.Report;
 using QuikGraph;
 
-namespace Ngraphiphy.Pipeline;
+namespace Graphiphy.Pipeline;
 
 public sealed class RepositoryAnalysis
 {
@@ -968,7 +968,7 @@ public sealed class RepositoryAnalysis
     /// Run the full pipeline: Detect → Extract (with cache) → Build → Dedup → Cluster → Report.
     /// </summary>
     /// <param name="rootPath">Repository root directory.</param>
-    /// <param name="cacheDir">Directory for extraction cache. Defaults to rootPath/.ngraphiphy-cache.</param>
+    /// <param name="cacheDir">Directory for extraction cache. Defaults to rootPath/.graphiphy-cache.</param>
     /// <param name="onProgress">Optional progress callback called with status messages.</param>
     /// <param name="ct">Cancellation token.</param>
     public static async Task<RepositoryAnalysis> RunAsync(
@@ -977,7 +977,7 @@ public sealed class RepositoryAnalysis
         Action<string>? onProgress = null,
         CancellationToken ct = default)
     {
-        cacheDir ??= Path.Combine(rootPath, ".ngraphiphy-cache");
+        cacheDir ??= Path.Combine(rootPath, ".graphiphy-cache");
         var cache = new ExtractionCache(cacheDir);
         var registry = LanguageRegistry.CreateDefault();
 
@@ -1043,7 +1043,7 @@ public sealed class RepositoryAnalysis
 
         // 6. Generate report
         onProgress?.Invoke("Generating report...");
-        var report = Ngraphiphy.Report.ReportGenerator.Generate(graph);
+        var report = Graphiphy.Report.ReportGenerator.Generate(graph);
 
         return new RepositoryAnalysis(rootPath, files, graph, report);
     }
@@ -1052,32 +1052,32 @@ public sealed class RepositoryAnalysis
 
 - [ ] **Step 5: Add ProjectReference for Pipeline to CLI and test project**
 
-In `src/Ngraphiphy.Cli/Ngraphiphy.Cli.csproj`, add:
+In `src/Graphiphy.Cli/Graphiphy.Cli.csproj`, add:
 ```xml
-<ProjectReference Include="..\Ngraphiphy.Pipeline\Ngraphiphy.Pipeline.csproj" />
+<ProjectReference Include="..\Graphiphy.Pipeline\Graphiphy.Pipeline.csproj" />
 ```
 
-In `tests/Ngraphiphy.Cli.Tests/Ngraphiphy.Cli.Tests.csproj`, add:
+In `tests/Graphiphy.Cli.Tests/Graphiphy.Cli.Tests.csproj`, add:
 ```xml
-<ProjectReference Include="..\..\src\Ngraphiphy.Pipeline\Ngraphiphy.Pipeline.csproj" />
+<ProjectReference Include="..\..\src\Graphiphy.Pipeline\Graphiphy.Pipeline.csproj" />
 ```
 
 Add to solution:
 ```bash
-dotnet sln Ngraphiphy.sln add src/Ngraphiphy.Pipeline/Ngraphiphy.Pipeline.csproj
+dotnet sln Graphiphy.sln add src/Graphiphy.Pipeline/Graphiphy.Pipeline.csproj
 ```
 
 - [ ] **Step 6: Run tests**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Cli.Tests/
+dotnet run --project tests/Graphiphy.Cli.Tests/
 ```
 Expected: 4 tests pass.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/Ngraphiphy.Pipeline/ src/Ngraphiphy.Cli/Ngraphiphy.Cli.csproj tests/Ngraphiphy.Cli.Tests/ Ngraphiphy.sln
+git add src/Graphiphy.Pipeline/ src/Graphiphy.Cli/Graphiphy.Cli.csproj tests/Graphiphy.Cli.Tests/ Graphiphy.sln
 git commit -m "feat: add RepositoryAnalysis pipeline orchestrator"
 ```
 
@@ -1086,23 +1086,23 @@ git commit -m "feat: add RepositoryAnalysis pipeline orchestrator"
 ### Task 7: AnalyzeCommand
 
 **Files:**
-- Modify: `src/Ngraphiphy.Cli/Commands/AnalyzeCommand.cs`
-- Create: `tests/Ngraphiphy.Cli.Tests/Commands/AnalyzeCommandTests.cs`
+- Modify: `src/Graphiphy.Cli/Commands/AnalyzeCommand.cs`
+- Create: `tests/Graphiphy.Cli.Tests/Commands/AnalyzeCommandTests.cs`
 
 The `analyze` command runs the full pipeline and prints a summary table to the console.
 
 ```
-ngraphiphy analyze /path/to/repo [--out report.md] [--cache .cache]
+graphiphy analyze /path/to/repo [--out report.md] [--cache .cache]
 ```
 
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Ngraphiphy.Cli.Tests/Commands/AnalyzeCommandTests.cs
-using Ngraphiphy.Pipeline;
+// tests/Graphiphy.Cli.Tests/Commands/AnalyzeCommandTests.cs
+using Graphiphy.Pipeline;
 using Spectre.Console.Testing;
 
-namespace Ngraphiphy.Cli.Tests.Commands;
+namespace Graphiphy.Cli.Tests.Commands;
 
 /// <summary>
 /// Tests the AnalyzeCommand logic by calling RepositoryAnalysis directly.
@@ -1159,7 +1159,7 @@ public class AnalyzeCommandTests
 
     private static string CreateTempDir()
     {
-        var path = Path.Combine(Path.GetTempPath(), "ngraphiphy_analyze_" + Guid.NewGuid().ToString("N")[..8]);
+        var path = Path.Combine(Path.GetTempPath(), "graphiphy_analyze_" + Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(path);
         return path;
     }
@@ -1169,21 +1169,21 @@ public class AnalyzeCommandTests
 - [ ] **Step 2: Run to confirm tests pass already (they test RepositoryAnalysis, not the command class)**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Cli.Tests/
+dotnet run --project tests/Graphiphy.Cli.Tests/
 ```
 Expected: These tests should pass (they rely on RepositoryAnalysis from Task 6).
 
 - [ ] **Step 3: Implement the full AnalyzeCommand**
 
 ```csharp
-// src/Ngraphiphy.Cli/Commands/AnalyzeCommand.cs
+// src/Graphiphy.Cli/Commands/AnalyzeCommand.cs
 using System.ComponentModel;
-using Ngraphiphy.Analysis;
-using Ngraphiphy.Pipeline;
+using Graphiphy.Analysis;
+using Graphiphy.Pipeline;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-namespace Ngraphiphy.Cli.Commands;
+namespace Graphiphy.Cli.Commands;
 
 public sealed class AnalyzeSettings : CommandSettings
 {
@@ -1196,7 +1196,7 @@ public sealed class AnalyzeSettings : CommandSettings
     public string? OutputFile { get; init; }
 
     [CommandOption("--cache <dir>")]
-    [Description("Cache directory for extraction results. Default: <path>/.ngraphiphy-cache")]
+    [Description("Cache directory for extraction results. Default: <path>/.graphiphy-cache")]
     public string? CacheDir { get; init; }
 }
 
@@ -1248,14 +1248,14 @@ public sealed class AnalyzeCommand : AsyncCommand<AnalyzeSettings>
 - [ ] **Step 4: Verify the analyze command works on a real directory**
 
 ```bash
-dotnet run --project src/Ngraphiphy.Cli/ -- analyze src/Ngraphiphy/
+dotnet run --project src/Graphiphy.Cli/ -- analyze src/Graphiphy/
 ```
-Expected: A table showing file/node/edge counts for the Ngraphiphy source.
+Expected: A table showing file/node/edge counts for the Graphiphy source.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy.Cli/Commands/AnalyzeCommand.cs tests/Ngraphiphy.Cli.Tests/Commands/
+git add src/Graphiphy.Cli/Commands/AnalyzeCommand.cs tests/Graphiphy.Cli.Tests/Commands/
 git commit -m "feat: implement analyze command with progress spinner and summary table"
 ```
 
@@ -1264,19 +1264,19 @@ git commit -m "feat: implement analyze command with progress spinner and summary
 ### Task 8: ReportCommand and QueryCommand
 
 **Files:**
-- Modify: `src/Ngraphiphy.Cli/Commands/ReportCommand.cs`
-- Modify: `src/Ngraphiphy.Cli/Commands/QueryCommand.cs`
+- Modify: `src/Graphiphy.Cli/Commands/ReportCommand.cs`
+- Modify: `src/Graphiphy.Cli/Commands/QueryCommand.cs`
 
 - [ ] **Step 1: Implement ReportCommand**
 
 ```csharp
-// src/Ngraphiphy.Cli/Commands/ReportCommand.cs
+// src/Graphiphy.Cli/Commands/ReportCommand.cs
 using System.ComponentModel;
-using Ngraphiphy.Pipeline;
+using Graphiphy.Pipeline;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-namespace Ngraphiphy.Cli.Commands;
+namespace Graphiphy.Cli.Commands;
 
 public sealed class ReportSettings : CommandSettings
 {
@@ -1328,14 +1328,14 @@ public sealed class ReportCommand : AsyncCommand<ReportSettings>
 - [ ] **Step 2: Implement QueryCommand**
 
 ```csharp
-// src/Ngraphiphy.Cli/Commands/QueryCommand.cs
+// src/Graphiphy.Cli/Commands/QueryCommand.cs
 using System.ComponentModel;
-using Ngraphiphy.Llm;
-using Ngraphiphy.Pipeline;
+using Graphiphy.Llm;
+using Graphiphy.Pipeline;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-namespace Ngraphiphy.Cli.Commands;
+namespace Graphiphy.Cli.Commands;
 
 public sealed class QuerySettings : CommandSettings
 {
@@ -1422,22 +1422,22 @@ public sealed class QueryCommand : AsyncCommand<QuerySettings>
 - [ ] **Step 3: Verify both commands appear in help**
 
 ```bash
-dotnet run --project src/Ngraphiphy.Cli/ -- report --help
-dotnet run --project src/Ngraphiphy.Cli/ -- query --help
+dotnet run --project src/Graphiphy.Cli/ -- report --help
+dotnet run --project src/Graphiphy.Cli/ -- query --help
 ```
 Expected: Usage and options shown for both.
 
 - [ ] **Step 4: Smoke-test report command**
 
 ```bash
-dotnet run --project src/Ngraphiphy.Cli/ -- report src/Ngraphiphy/
+dotnet run --project src/Graphiphy.Cli/ -- report src/Graphiphy/
 ```
 Expected: Markdown report printed to stdout.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy.Cli/Commands/ReportCommand.cs src/Ngraphiphy.Cli/Commands/QueryCommand.cs
+git add src/Graphiphy.Cli/Commands/ReportCommand.cs src/Graphiphy.Cli/Commands/QueryCommand.cs
 git commit -m "feat: implement report and query commands"
 ```
 
@@ -1448,25 +1448,25 @@ git commit -m "feat: implement report and query commands"
 ### Task 9: GraphTools — MCP Tool Definitions
 
 **Files:**
-- Create: `src/Ngraphiphy.Cli/Mcp/GraphTools.cs`
-- Create: `tests/Ngraphiphy.Cli.Tests/Mcp/GraphToolsTests.cs`
+- Create: `src/Graphiphy.Cli/Mcp/GraphTools.cs`
+- Create: `tests/Graphiphy.Cli.Tests/Mcp/GraphToolsTests.cs`
 
 The `ModelContextProtocol` SDK discovers tools via `[McpServerToolType]` on a class and `[McpServerTool]` on its methods. We test the method logic directly — no need to spin up a server.
 
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Ngraphiphy.Cli.Tests/Mcp/GraphToolsTests.cs
-using Ngraphiphy.Build;
-using Ngraphiphy.Models;
+// tests/Graphiphy.Cli.Tests/Mcp/GraphToolsTests.cs
+using Graphiphy.Build;
+using Graphiphy.Models;
 
-namespace Ngraphiphy.Cli.Tests.Mcp;
+namespace Graphiphy.Cli.Tests.Mcp;
 
 // We test GraphTools logic by instantiating it directly with a pre-built graph.
 // The MCP registration is thin infrastructure tested in Task 10.
 public class GraphToolsTests
 {
-    private static Ngraphiphy.Pipeline.RepositoryAnalysis MakeAnalysis()
+    private static Graphiphy.Pipeline.RepositoryAnalysis MakeAnalysis()
     {
         // We can't construct RepositoryAnalysis directly (private ctor), so we
         // expose a static TestCreate helper in it, or we run a real mini pipeline.
@@ -1483,14 +1483,14 @@ public class GraphToolsTests
                 s = Server()
                 s.start()
             """);
-        return Ngraphiphy.Pipeline.RepositoryAnalysis.RunAsync(dir).GetAwaiter().GetResult();
+        return Graphiphy.Pipeline.RepositoryAnalysis.RunAsync(dir).GetAwaiter().GetResult();
     }
 
     [Test]
     public async Task GetGodNodes_ReturnsMostConnected()
     {
         var analysis = MakeAnalysis();
-        var tools = new Ngraphiphy.Cli.Mcp.GraphTools(analysis);
+        var tools = new Graphiphy.Cli.Mcp.GraphTools(analysis);
 
         var result = tools.GetGodNodes(topN: 2);
 
@@ -1502,7 +1502,7 @@ public class GraphToolsTests
     public async Task GetReport_ReturnsMarkdown()
     {
         var analysis = MakeAnalysis();
-        var tools = new Ngraphiphy.Cli.Mcp.GraphTools(analysis);
+        var tools = new Graphiphy.Cli.Mcp.GraphTools(analysis);
 
         var result = tools.GetReport();
 
@@ -1513,7 +1513,7 @@ public class GraphToolsTests
     public async Task GetSummaryStats_ReturnsJson()
     {
         var analysis = MakeAnalysis();
-        var tools = new Ngraphiphy.Cli.Mcp.GraphTools(analysis);
+        var tools = new Graphiphy.Cli.Mcp.GraphTools(analysis);
 
         var result = tools.GetSummaryStats();
 
@@ -1524,7 +1524,7 @@ public class GraphToolsTests
     public async Task SearchNodes_FindsMatchingLabel()
     {
         var analysis = MakeAnalysis();
-        var tools = new Ngraphiphy.Cli.Mcp.GraphTools(analysis);
+        var tools = new Graphiphy.Cli.Mcp.GraphTools(analysis);
 
         var result = tools.SearchNodes("Server");
 
@@ -1536,8 +1536,8 @@ public class GraphToolsTests
     public async Task GetGodNodes_EmptyGraph_ReturnsEmptyArray()
     {
         var dir = CreateTempDir();
-        var analysis = await Ngraphiphy.Pipeline.RepositoryAnalysis.RunAsync(dir);
-        var tools = new Ngraphiphy.Cli.Mcp.GraphTools(analysis);
+        var analysis = await Graphiphy.Pipeline.RepositoryAnalysis.RunAsync(dir);
+        var tools = new Graphiphy.Cli.Mcp.GraphTools(analysis);
 
         var result = tools.GetGodNodes(topN: 5);
 
@@ -1546,7 +1546,7 @@ public class GraphToolsTests
 
     private static string CreateTempDir()
     {
-        var path = Path.Combine(Path.GetTempPath(), "ngraphiphy_mcp_" + Guid.NewGuid().ToString("N")[..8]);
+        var path = Path.Combine(Path.GetTempPath(), "graphiphy_mcp_" + Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(path);
         return path;
     }
@@ -1556,27 +1556,27 @@ public class GraphToolsTests
 - [ ] **Step 2: Run to confirm failure**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Cli.Tests/
+dotnet run --project tests/Graphiphy.Cli.Tests/
 ```
 Expected: Build error — GraphTools not found.
 
 - [ ] **Step 3: Implement GraphTools**
 
-Note: `[McpServerToolType]` and `[McpServerTool]` require `using ModelContextProtocol.Server;`. The test project doesn't need the MCP package — we test the methods directly, which have no MCP runtime dependency. The attributes are metadata-only at call time. Add MCP package only to `Ngraphiphy.Cli.csproj`, not to the test project. The test project references the tool class via the CLI's **library output** — but since CLI is an exe, this needs a workaround.
+Note: `[McpServerToolType]` and `[McpServerTool]` require `using ModelContextProtocol.Server;`. The test project doesn't need the MCP package — we test the methods directly, which have no MCP runtime dependency. The attributes are metadata-only at call time. Add MCP package only to `Graphiphy.Cli.csproj`, not to the test project. The test project references the tool class via the CLI's **library output** — but since CLI is an exe, this needs a workaround.
 
-**Workaround:** Move `GraphTools` to `Ngraphiphy.Pipeline` (which is a library). This keeps the tool logic testable and the MCP attributes can be conditionally excluded via `#if` or simply accepted as no-ops in the test project that doesn't have the MCP package.
+**Workaround:** Move `GraphTools` to `Graphiphy.Pipeline` (which is a library). This keeps the tool logic testable and the MCP attributes can be conditionally excluded via `#if` or simply accepted as no-ops in the test project that doesn't have the MCP package.
 
-**Simpler workaround:** Keep `GraphTools` in `Ngraphiphy.Pipeline` with no MCP attributes. Apply the attributes in a thin wrapper class in `Ngraphiphy.Cli` that delegates to `GraphTools`. Tests test `GraphTools`; the MCP server uses the wrapper.
+**Simpler workaround:** Keep `GraphTools` in `Graphiphy.Pipeline` with no MCP attributes. Apply the attributes in a thin wrapper class in `Graphiphy.Cli` that delegates to `GraphTools`. Tests test `GraphTools`; the MCP server uses the wrapper.
 
 ```csharp
-// src/Ngraphiphy.Pipeline/GraphTools.cs
+// src/Graphiphy.Pipeline/GraphTools.cs
 // Pure logic, no MCP dependency — testable from any project
 using System.Text.Json;
-using Ngraphiphy.Analysis;
-using Ngraphiphy.Models;
+using Graphiphy.Analysis;
+using Graphiphy.Models;
 using QuikGraph;
 
-namespace Ngraphiphy.Pipeline;
+namespace Graphiphy.Pipeline;
 
 /// <summary>
 /// Graph query tools. Used directly by MCP wrappers and tests.
@@ -1655,16 +1655,16 @@ public sealed class GraphTools
 
 - [ ] **Step 4: Run tests**
 
-Update the test file to use `Ngraphiphy.Pipeline.GraphTools` and run:
+Update the test file to use `Graphiphy.Pipeline.GraphTools` and run:
 ```bash
-dotnet run --project tests/Ngraphiphy.Cli.Tests/
+dotnet run --project tests/Graphiphy.Cli.Tests/
 ```
 Expected: All tests pass.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy.Pipeline/GraphTools.cs tests/Ngraphiphy.Cli.Tests/Mcp/
+git add src/Graphiphy.Pipeline/GraphTools.cs tests/Graphiphy.Cli.Tests/Mcp/
 git commit -m "feat: add GraphTools with testable MCP tool logic"
 ```
 
@@ -1673,27 +1673,27 @@ git commit -m "feat: add GraphTools with testable MCP tool logic"
 ### Task 10: GraphMcpServer and ServeCommand
 
 **Files:**
-- Create: `src/Ngraphiphy.Cli/Mcp/McpGraphToolsWrapper.cs`
-- Create: `src/Ngraphiphy.Cli/Mcp/GraphMcpServer.cs`
-- Modify: `src/Ngraphiphy.Cli/Commands/ServeCommand.cs`
+- Create: `src/Graphiphy.Cli/Mcp/McpGraphToolsWrapper.cs`
+- Create: `src/Graphiphy.Cli/Mcp/GraphMcpServer.cs`
+- Modify: `src/Graphiphy.Cli/Commands/ServeCommand.cs`
 
 The MCP server runs in stdio mode. The client (Claude Desktop, etc.) starts the process as:
 ```
-ngraphiphy serve --path /repo/root
+graphiphy serve --path /repo/root
 ```
 Then communicates via stdin/stdout using the MCP protocol.
 
 - [ ] **Step 1: Create the MCP attributes wrapper class**
 
-This class lives in `Ngraphiphy.Cli` and applies `[McpServerToolType]`/`[McpServerTool]` attributes (from the `ModelContextProtocol` package) to thin delegates that call `GraphTools`.
+This class lives in `Graphiphy.Cli` and applies `[McpServerToolType]`/`[McpServerTool]` attributes (from the `ModelContextProtocol` package) to thin delegates that call `GraphTools`.
 
 ```csharp
-// src/Ngraphiphy.Cli/Mcp/McpGraphToolsWrapper.cs
+// src/Graphiphy.Cli/Mcp/McpGraphToolsWrapper.cs
 using System.ComponentModel;
 using ModelContextProtocol.Server;
-using Ngraphiphy.Pipeline;
+using Graphiphy.Pipeline;
 
-namespace Ngraphiphy.Cli.Mcp;
+namespace Graphiphy.Cli.Mcp;
 
 [McpServerToolType]
 internal sealed class McpGraphToolsWrapper(GraphTools tools)
@@ -1732,13 +1732,13 @@ internal sealed class McpGraphToolsWrapper(GraphTools tools)
 - [ ] **Step 2: Create GraphMcpServer**
 
 ```csharp
-// src/Ngraphiphy.Cli/Mcp/GraphMcpServer.cs
+// src/Graphiphy.Cli/Mcp/GraphMcpServer.cs
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ModelContextProtocol.Server;
-using Ngraphiphy.Pipeline;
+using Graphiphy.Pipeline;
 
-namespace Ngraphiphy.Cli.Mcp;
+namespace Graphiphy.Cli.Mcp;
 
 public static class GraphMcpServer
 {
@@ -1765,14 +1765,14 @@ public static class GraphMcpServer
 - [ ] **Step 3: Implement ServeCommand**
 
 ```csharp
-// src/Ngraphiphy.Cli/Commands/ServeCommand.cs
+// src/Graphiphy.Cli/Commands/ServeCommand.cs
 using System.ComponentModel;
-using Ngraphiphy.Cli.Mcp;
-using Ngraphiphy.Pipeline;
+using Graphiphy.Cli.Mcp;
+using Graphiphy.Pipeline;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-namespace Ngraphiphy.Cli.Commands;
+namespace Graphiphy.Cli.Commands;
 
 public sealed class ServeSettings : CommandSettings
 {
@@ -1781,7 +1781,7 @@ public sealed class ServeSettings : CommandSettings
     public string Path { get; init; } = Directory.GetCurrentDirectory();
 
     [CommandOption("--cache <dir>")]
-    [Description("Cache directory. Default: <path>/.ngraphiphy-cache")]
+    [Description("Cache directory. Default: <path>/.graphiphy-cache")]
     public string? CacheDir { get; init; }
 }
 
@@ -1791,7 +1791,7 @@ public sealed class ServeCommand : AsyncCommand<ServeSettings>
     {
         // When running as MCP server, stdout is the MCP protocol channel.
         // We must NOT write anything to stdout before RunAsync — log to stderr only.
-        Console.Error.WriteLine($"[ngraphiphy] Analyzing {settings.Path}...");
+        Console.Error.WriteLine($"[graphiphy] Analyzing {settings.Path}...");
 
         RepositoryAnalysis? analysis = null;
         try
@@ -1799,16 +1799,16 @@ public sealed class ServeCommand : AsyncCommand<ServeSettings>
             analysis = await RepositoryAnalysis.RunAsync(
                 settings.Path,
                 cacheDir: settings.CacheDir,
-                onProgress: msg => Console.Error.WriteLine($"[ngraphiphy] {msg}"));
+                onProgress: msg => Console.Error.WriteLine($"[graphiphy] {msg}"));
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"[ngraphiphy] Analysis failed: {ex.Message}");
+            Console.Error.WriteLine($"[graphiphy] Analysis failed: {ex.Message}");
             return 1;
         }
 
-        Console.Error.WriteLine($"[ngraphiphy] Ready — {analysis.Graph.VertexCount} nodes, {analysis.Graph.EdgeCount} edges.");
-        Console.Error.WriteLine("[ngraphiphy] Starting MCP server on stdio...");
+        Console.Error.WriteLine($"[graphiphy] Ready — {analysis.Graph.VertexCount} nodes, {analysis.Graph.EdgeCount} edges.");
+        Console.Error.WriteLine("[graphiphy] Starting MCP server on stdio...");
 
         await GraphMcpServer.RunAsync(analysis);
         return 0;
@@ -1819,21 +1819,21 @@ public sealed class ServeCommand : AsyncCommand<ServeSettings>
 - [ ] **Step 4: Verify the serve command appears in help**
 
 ```bash
-dotnet run --project src/Ngraphiphy.Cli/ -- serve --help
+dotnet run --project src/Graphiphy.Cli/ -- serve --help
 ```
 Expected: Usage shown with `--path` and `--cache` options.
 
 - [ ] **Step 5: Verify the CLI builds fully**
 
 ```bash
-dotnet build src/Ngraphiphy.Cli/
+dotnet build src/Graphiphy.Cli/
 ```
 Expected: Build succeeded, 0 errors.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/Ngraphiphy.Cli/Mcp/ src/Ngraphiphy.Cli/Commands/ServeCommand.cs
+git add src/Graphiphy.Cli/Mcp/ src/Graphiphy.Cli/Commands/ServeCommand.cs
 git commit -m "feat: implement MCP server and serve command using ModelContextProtocol stdio transport"
 ```
 
@@ -1849,10 +1849,10 @@ This task documents how to wire the CLI as an MCP server in Claude Desktop and v
 - [ ] **Step 1: Write MCP server integration test**
 
 ```csharp
-// tests/Ngraphiphy.Cli.Tests/Mcp/McpToolDescriptionTests.cs
-using Ngraphiphy.Pipeline;
+// tests/Graphiphy.Cli.Tests/Mcp/McpToolDescriptionTests.cs
+using Graphiphy.Pipeline;
 
-namespace Ngraphiphy.Cli.Tests.Mcp;
+namespace Graphiphy.Cli.Tests.Mcp;
 
 public class McpToolDescriptionTests
 {
@@ -1861,7 +1861,7 @@ public class McpToolDescriptionTests
     {
         // Verify the tool names we document are actually defined in McpGraphToolsWrapper.
         // We check via reflection on the method names and their McpServerTool attribute names.
-        var wrapperType = typeof(Ngraphiphy.Cli.Mcp.McpGraphToolsWrapper);
+        var wrapperType = typeof(Graphiphy.Cli.Mcp.McpGraphToolsWrapper);
         var methods = wrapperType.GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
 
         var names = methods.Select(m => m.Name).ToList();
@@ -1875,17 +1875,17 @@ public class McpToolDescriptionTests
 }
 ```
 
-Note: The test project would need to reference `Ngraphiphy.Cli` — which is an exe. For reflection tests, build the CLI dll first and load it, or simply test `McpGraphToolsWrapper` is in the expected namespace by moving it to `Ngraphiphy.Pipeline`. 
+Note: The test project would need to reference `Graphiphy.Cli` — which is an exe. For reflection tests, build the CLI dll first and load it, or simply test `McpGraphToolsWrapper` is in the expected namespace by moving it to `Graphiphy.Pipeline`. 
 
-**Simplest approach:** Move `McpGraphToolsWrapper` attribute names to an enum or constant list in `Ngraphiphy.Pipeline` and verify that list. But this adds complexity for little value. 
+**Simplest approach:** Move `McpGraphToolsWrapper` attribute names to an enum or constant list in `Graphiphy.Pipeline` and verify that list. But this adds complexity for little value. 
 
 **Recommended:** Skip the reflection test. The build itself proves the wrapper compiles. Instead, write an integration smoke test:
 
 ```csharp
-// tests/Ngraphiphy.Cli.Tests/Mcp/McpToolDescriptionTests.cs
-using Ngraphiphy.Pipeline;
+// tests/Graphiphy.Cli.Tests/Mcp/McpToolDescriptionTests.cs
+using Graphiphy.Pipeline;
 
-namespace Ngraphiphy.Cli.Tests.Mcp;
+namespace Graphiphy.Cli.Tests.Mcp;
 
 /// Verifies that GraphTools (the pure logic layer) returns well-formed JSON for all tool methods.
 public class McpToolDescriptionTests
@@ -1915,7 +1915,7 @@ public class McpToolDescriptionTests
 
     private static string CreateTempDir()
     {
-        var path = Path.Combine(Path.GetTempPath(), "ngraphiphy_mcp2_" + Guid.NewGuid().ToString("N")[..8]);
+        var path = Path.Combine(Path.GetTempPath(), "graphiphy_mcp2_" + Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(path);
         return path;
     }
@@ -1925,9 +1925,9 @@ public class McpToolDescriptionTests
 - [ ] **Step 2: Run all tests to confirm everything still passes**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Cli.Tests/
-dotnet run --project tests/Ngraphiphy.Llm.Tests/
-dotnet run --project tests/Ngraphiphy.Tests/
+dotnet run --project tests/Graphiphy.Cli.Tests/
+dotnet run --project tests/Graphiphy.Llm.Tests/
+dotnet run --project tests/Graphiphy.Tests/
 ```
 Expected: All tests pass across all three test projects.
 
@@ -1935,12 +1935,12 @@ Expected: All tests pass across all three test projects.
 
 ```markdown
 <!-- docs/mcp-config.md -->
-# Using Ngraphiphy as an MCP Server with Claude Desktop
+# Using Graphiphy as an MCP Server with Claude Desktop
 
 ## Build the CLI
 
 ```bash
-dotnet publish src/Ngraphiphy.Cli/ -c Release -o ./dist
+dotnet publish src/Graphiphy.Cli/ -c Release -o ./dist
 ```
 
 ## Claude Desktop Configuration
@@ -1950,8 +1950,8 @@ Add this to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "ngraphiphy": {
-      "command": "/absolute/path/to/dist/ngraphiphy",
+    "graphiphy": {
+      "command": "/absolute/path/to/dist/graphiphy",
       "args": ["serve", "--path", "/absolute/path/to/your/repo"]
     }
   }
@@ -1983,7 +1983,7 @@ On Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 - [ ] **Step 4: Commit**
 
 ```bash
-git add tests/Ngraphiphy.Cli.Tests/Mcp/McpToolDescriptionTests.cs docs/mcp-config.md
+git add tests/Graphiphy.Cli.Tests/Mcp/McpToolDescriptionTests.cs docs/mcp-config.md
 git commit -m "docs: add MCP server config docs and smoke test for all tool methods"
 ```
 
@@ -1996,9 +1996,9 @@ git commit -m "docs: add MCP server config docs and smoke test for all tool meth
 - [ ] **Step 1: Run all test suites**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Tests/
-dotnet run --project tests/Ngraphiphy.Llm.Tests/
-dotnet run --project tests/Ngraphiphy.Cli.Tests/
+dotnet run --project tests/Graphiphy.Tests/
+dotnet run --project tests/Graphiphy.Llm.Tests/
+dotnet run --project tests/Graphiphy.Cli.Tests/
 ```
 Expected: All tests pass with zero failures.
 
@@ -2006,19 +2006,19 @@ Expected: All tests pass with zero failures.
 
 ```bash
 # Analyze the source tree
-dotnet run --project src/Ngraphiphy.Cli/ -- analyze src/Ngraphiphy/
+dotnet run --project src/Graphiphy.Cli/ -- analyze src/Graphiphy/
 
 # Generate a report
-dotnet run --project src/Ngraphiphy.Cli/ -- report src/Ngraphiphy/ --out /tmp/ngraphiphy-report.md
-cat /tmp/ngraphiphy-report.md | head -30
+dotnet run --project src/Graphiphy.Cli/ -- report src/Graphiphy/ --out /tmp/graphiphy-report.md
+cat /tmp/graphiphy-report.md | head -30
 ```
 Expected: Table with node/edge counts; report file contains `# Graph Report`.
 
 - [ ] **Step 3: Verify `serve --help` and CLI `--help` are correct**
 
 ```bash
-dotnet run --project src/Ngraphiphy.Cli/ -- --help
-dotnet run --project src/Ngraphiphy.Cli/ -- serve --help
+dotnet run --project src/Graphiphy.Cli/ -- --help
+dotnet run --project src/Graphiphy.Cli/ -- serve --help
 ```
 Expected: All four commands listed; serve shows `--path` and `--cache`.
 
@@ -2039,12 +2039,12 @@ git commit -m "feat: phase 2 complete — CLI, LLM backends, MCP server"
 
 | Phase | Tasks | Delivers |
 |-------|-------|----------|
-| A: LLM Backends | 1–4 | `Ngraphiphy.Llm` library: `IGraphAgent`, `GraphPlugin`, SK-based agent, factory for Anthropic/OpenAI/Ollama |
-| B: CLI | 5–8 | `ngraphiphy analyze`, `report`, `query` commands with Spectre.Console |
-| C: MCP Server | 9–12 | `ngraphiphy serve` starts MCP stdio server; 5 tools; Claude Desktop config |
+| A: LLM Backends | 1–4 | `Graphiphy.Llm` library: `IGraphAgent`, `GraphPlugin`, SK-based agent, factory for Anthropic/OpenAI/Ollama |
+| B: CLI | 5–8 | `graphiphy analyze`, `report`, `query` commands with Spectre.Console |
+| C: MCP Server | 9–12 | `graphiphy serve` starts MCP stdio server; 5 tools; Claude Desktop config |
 
-**New projects:** `Ngraphiphy.Llm`, `Ngraphiphy.Pipeline`, `Ngraphiphy.Cli`  
-**New test projects:** `Ngraphiphy.Llm.Tests`, `Ngraphiphy.Cli.Tests`
+**New projects:** `Graphiphy.Llm`, `Graphiphy.Pipeline`, `Graphiphy.Cli`  
+**New test projects:** `Graphiphy.Llm.Tests`, `Graphiphy.Cli.Tests`
 
 **Key constraints to verify before starting:**
 - `ModelContextProtocol` package name and version on NuGet.org (Anthropic's official C# MCP SDK)

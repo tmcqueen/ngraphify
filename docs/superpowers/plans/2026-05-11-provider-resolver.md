@@ -4,7 +4,7 @@
 
 **Goal:** Replace per-provider typed options classes and duplicate inline switch statements with two resolver classes (`AgentProviderResolver`, `EmbeddingProviderResolver`) that read named provider definitions from `IConfiguration["Providers:*"]`, plus a generic OpenAI-compatible embedding provider.
 
-**Architecture:** `appsettings.json` gains a top-level `Providers` dictionary keyed by arbitrary names; `Llm.Provider` and `Embedding.Provider` point to those names. `AgentProviderResolver` in `Ngraphiphy.Llm` reads `IConfiguration` directly, dispatches on `ApiType`, and exposes `CreateAgentAsync`. `EmbeddingProviderResolver` in `Ngraphiphy.Storage` does the same for embeddings. `QueryCommand` and `PushCommand` inject the resolvers and shed all inline switch logic, `--key`, `--model`, `--agent-url`, and `--cf-*` flags.
+**Architecture:** `appsettings.json` gains a top-level `Providers` dictionary keyed by arbitrary names; `Llm.Provider` and `Embedding.Provider` point to those names. `AgentProviderResolver` in `Graphiphy.Llm` reads `IConfiguration` directly, dispatches on `ApiType`, and exposes `CreateAgentAsync`. `EmbeddingProviderResolver` in `Graphiphy.Storage` does the same for embeddings. `QueryCommand` and `PushCommand` inject the resolvers and shed all inline switch logic, `--key`, `--model`, `--agent-url`, and `--cf-*` flags.
 
 **Tech Stack:** .NET 10, `Microsoft.Extensions.Configuration.Abstractions`, TUnit 1.43.41, OpenAI SDK (embedding), existing MAF + Anthropic/OpenAI/Ollama/A2A packages.
 
@@ -13,29 +13,29 @@
 ## File map
 
 **Created:**
-- `src/Ngraphiphy.Llm/AgentProviderResolver.cs`
-- `src/Ngraphiphy.Storage/Embedding/OpenAiEmbeddingProvider.cs`
-- `src/Ngraphiphy.Storage/Embedding/EmbeddingProviderResolver.cs`
-- `tests/Ngraphiphy.Llm.Tests/AgentProviderResolverTests.cs`
-- `tests/Ngraphiphy.Storage.Tests/EmbeddingProviderResolverTests.cs`
+- `src/Graphiphy.Llm/AgentProviderResolver.cs`
+- `src/Graphiphy.Storage/Embedding/OpenAiEmbeddingProvider.cs`
+- `src/Graphiphy.Storage/Embedding/EmbeddingProviderResolver.cs`
+- `tests/Graphiphy.Llm.Tests/AgentProviderResolverTests.cs`
+- `tests/Graphiphy.Storage.Tests/EmbeddingProviderResolverTests.cs`
 
 **Modified:**
-- `src/Ngraphiphy.Llm/Ngraphiphy.Llm.csproj` — add `Microsoft.Extensions.Configuration.Abstractions`
-- `src/Ngraphiphy.Llm/OpenAiConfig.cs` — add `Endpoint?`, `MaxTokens?`
-- `src/Ngraphiphy.Llm/AnthropicConfig.cs` — add `Endpoint?`
-- `src/Ngraphiphy.Llm/GraphAgentFactory.cs` — use `Endpoint` in OpenAI/Anthropic client construction
-- `src/Ngraphiphy.Cli/Configuration/CliHostExtensions.cs` — register resolvers, remove old options bindings
-- `src/Ngraphiphy.Cli/Commands/QueryCommand.cs` — inject resolver, remove switch + redundant CLI flags
-- `src/Ngraphiphy.Cli/Commands/PushCommand.cs` — inject resolvers, remove switches + CF-specific flags, add `--embed-provider`
-- `src/Ngraphiphy.Cli/appsettings.json` — restructure to `Providers` dict + pointer fields
+- `src/Graphiphy.Llm/Graphiphy.Llm.csproj` — add `Microsoft.Extensions.Configuration.Abstractions`
+- `src/Graphiphy.Llm/OpenAiConfig.cs` — add `Endpoint?`, `MaxTokens?`
+- `src/Graphiphy.Llm/AnthropicConfig.cs` — add `Endpoint?`
+- `src/Graphiphy.Llm/GraphAgentFactory.cs` — use `Endpoint` in OpenAI/Anthropic client construction
+- `src/Graphiphy.Cli/Configuration/CliHostExtensions.cs` — register resolvers, remove old options bindings
+- `src/Graphiphy.Cli/Commands/QueryCommand.cs` — inject resolver, remove switch + redundant CLI flags
+- `src/Graphiphy.Cli/Commands/PushCommand.cs` — inject resolvers, remove switches + CF-specific flags, add `--embed-provider`
+- `src/Graphiphy.Cli/appsettings.json` — restructure to `Providers` dict + pointer fields
 
 **Deleted:**
-- `src/Ngraphiphy.Cli/Configuration/Options/LlmOptions.cs`
-- `src/Ngraphiphy.Cli/Configuration/Options/EmbeddingOptions.cs`
-- `src/Ngraphiphy.Storage/Embedding/CloudflareEmbeddingConfig.cs`
-- `src/Ngraphiphy.Storage/Embedding/CloudflareEmbeddingProvider.cs`
-- `src/Ngraphiphy.Storage/Embedding/IEmbeddingProviderConfig.cs`
-- `src/Ngraphiphy.Storage/Embedding/EmbeddingProviderFactory.cs`
+- `src/Graphiphy.Cli/Configuration/Options/LlmOptions.cs`
+- `src/Graphiphy.Cli/Configuration/Options/EmbeddingOptions.cs`
+- `src/Graphiphy.Storage/Embedding/CloudflareEmbeddingConfig.cs`
+- `src/Graphiphy.Storage/Embedding/CloudflareEmbeddingProvider.cs`
+- `src/Graphiphy.Storage/Embedding/IEmbeddingProviderConfig.cs`
+- `src/Graphiphy.Storage/Embedding/EmbeddingProviderFactory.cs`
 
 **Unchanged:** `GraphDatabaseOptions.cs` (DB config is not being touched).
 
@@ -44,14 +44,14 @@
 ## Task 1: Extend `OpenAiConfig` and `AnthropicConfig` with `Endpoint`; update `GraphAgentFactory`
 
 **Files:**
-- Modify: `src/Ngraphiphy.Llm/OpenAiConfig.cs`
-- Modify: `src/Ngraphiphy.Llm/AnthropicConfig.cs`
-- Modify: `src/Ngraphiphy.Llm/GraphAgentFactory.cs`
-- Test: `tests/Ngraphiphy.Llm.Tests/AgentConfigTests.cs` (extend)
+- Modify: `src/Graphiphy.Llm/OpenAiConfig.cs`
+- Modify: `src/Graphiphy.Llm/AnthropicConfig.cs`
+- Modify: `src/Graphiphy.Llm/GraphAgentFactory.cs`
+- Test: `tests/Graphiphy.Llm.Tests/AgentConfigTests.cs` (extend)
 
 - [ ] **Step 1: Write failing tests**
 
-Read `tests/Ngraphiphy.Llm.Tests/AgentConfigTests.cs` to see what's already there, then append:
+Read `tests/Graphiphy.Llm.Tests/AgentConfigTests.cs` to see what's already there, then append:
 
 ```csharp
 [Test]
@@ -72,7 +72,7 @@ public async Task AnthropicConfig_WithEndpoint_StoresEndpoint()
 - [ ] **Step 2: Run, verify compile failure**
 
 ```bash
-dotnet build tests/Ngraphiphy.Llm.Tests/
+dotnet build tests/Graphiphy.Llm.Tests/
 ```
 Expected: error — `OpenAiConfig` and `AnthropicConfig` have no `Endpoint` parameter.
 
@@ -81,7 +81,7 @@ Expected: error — `OpenAiConfig` and `AnthropicConfig` have no `Endpoint` para
 Replace the file with:
 
 ```csharp
-namespace Ngraphiphy.Llm;
+namespace Graphiphy.Llm;
 
 /// <param name="ApiKey">OpenAI API key (sk-...) or compatible provider key.</param>
 /// <param name="Model">Model name, e.g. "gpt-4o".</param>
@@ -99,7 +99,7 @@ public sealed record OpenAiConfig(
 Replace the file with:
 
 ```csharp
-namespace Ngraphiphy.Llm;
+namespace Graphiphy.Llm;
 
 /// <param name="ApiKey">Anthropic API key (sk-ant-...).</param>
 /// <param name="Model">Model name, e.g. "claude-sonnet-4-6".</param>
@@ -114,7 +114,7 @@ public sealed record AnthropicConfig(
 
 - [ ] **Step 5: Update `GraphAgentFactory.CreateOpenAi`**
 
-Read `src/Ngraphiphy.Llm/GraphAgentFactory.cs`. Replace the `CreateOpenAi` private method:
+Read `src/Graphiphy.Llm/GraphAgentFactory.cs`. Replace the `CreateOpenAi` private method:
 
 ```csharp
 private static ChatClientAgent CreateOpenAi(OpenAiConfig config, IList<AITool> tools)
@@ -150,29 +150,29 @@ private static ChatClientAgent CreateAnthropic(AnthropicConfig config, IList<AIT
 - [ ] **Step 6: Run tests**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Llm.Tests/
+dotnet run --project tests/Graphiphy.Llm.Tests/
 ```
 Expected: new tests PASS, all existing tests still pass.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/Ngraphiphy.Llm/OpenAiConfig.cs src/Ngraphiphy.Llm/AnthropicConfig.cs src/Ngraphiphy.Llm/GraphAgentFactory.cs tests/Ngraphiphy.Llm.Tests/AgentConfigTests.cs
+git add src/Graphiphy.Llm/OpenAiConfig.cs src/Graphiphy.Llm/AnthropicConfig.cs src/Graphiphy.Llm/GraphAgentFactory.cs tests/Graphiphy.Llm.Tests/AgentConfigTests.cs
 git commit -m "feat(llm): add Endpoint and MaxTokens to OpenAiConfig; add Endpoint to AnthropicConfig"
 ```
 
 ---
 
-## Task 2: Add `AgentProviderResolver` to `Ngraphiphy.Llm`
+## Task 2: Add `AgentProviderResolver` to `Graphiphy.Llm`
 
 **Files:**
-- Modify: `src/Ngraphiphy.Llm/Ngraphiphy.Llm.csproj`
-- Create: `src/Ngraphiphy.Llm/AgentProviderResolver.cs`
-- Create: `tests/Ngraphiphy.Llm.Tests/AgentProviderResolverTests.cs`
+- Modify: `src/Graphiphy.Llm/Graphiphy.Llm.csproj`
+- Create: `src/Graphiphy.Llm/AgentProviderResolver.cs`
+- Create: `tests/Graphiphy.Llm.Tests/AgentProviderResolverTests.cs`
 
 - [ ] **Step 1: Add configuration dependency to Llm project**
 
-In `src/Ngraphiphy.Llm/Ngraphiphy.Llm.csproj`, add inside the existing `<ItemGroup>` with packages:
+In `src/Graphiphy.Llm/Graphiphy.Llm.csproj`, add inside the existing `<ItemGroup>` with packages:
 
 ```xml
 <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
@@ -180,13 +180,13 @@ In `src/Ngraphiphy.Llm/Ngraphiphy.Llm.csproj`, add inside the existing `<ItemGro
 
 - [ ] **Step 2: Write failing tests**
 
-Create `tests/Ngraphiphy.Llm.Tests/AgentProviderResolverTests.cs`:
+Create `tests/Graphiphy.Llm.Tests/AgentProviderResolverTests.cs`:
 
 ```csharp
 using Microsoft.Extensions.Configuration;
-using Ngraphiphy.Llm;
+using Graphiphy.Llm;
 
-namespace Ngraphiphy.Llm.Tests;
+namespace Graphiphy.Llm.Tests;
 
 public class AgentProviderResolverTests
 {
@@ -333,7 +333,7 @@ public class AgentProviderResolverTests
 - [ ] **Step 3: Run, verify compile failure**
 
 ```bash
-dotnet build tests/Ngraphiphy.Llm.Tests/
+dotnet build tests/Graphiphy.Llm.Tests/
 ```
 Expected: `AgentProviderResolver` not found.
 
@@ -342,9 +342,9 @@ Expected: `AgentProviderResolver` not found.
 ```csharp
 using Microsoft.Extensions.Configuration;
 using QuikGraph;
-using Ngraphiphy.Models;
+using Graphiphy.Models;
 
-namespace Ngraphiphy.Llm;
+namespace Graphiphy.Llm;
 
 /// <summary>
 /// Reads a named provider entry from IConfiguration["Providers:{name}"] and constructs
@@ -428,44 +428,44 @@ public sealed class AgentProviderResolver
 - [ ] **Step 5: Run tests**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Llm.Tests/ -- --filter "AgentProviderResolverTests"
+dotnet run --project tests/Graphiphy.Llm.Tests/ -- --filter "AgentProviderResolverTests"
 ```
 Expected: all 8 tests PASS.
 
 - [ ] **Step 6: Run full Llm test suite**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Llm.Tests/
+dotnet run --project tests/Graphiphy.Llm.Tests/
 ```
 Expected: all tests pass.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/Ngraphiphy.Llm/ tests/Ngraphiphy.Llm.Tests/AgentProviderResolverTests.cs
+git add src/Graphiphy.Llm/ tests/Graphiphy.Llm.Tests/AgentProviderResolverTests.cs
 git commit -m "feat(llm): add AgentProviderResolver — named provider config via IConfiguration"
 ```
 
 ---
 
-## Task 3: Add `OpenAiEmbeddingProvider` and `EmbeddingProviderResolver` to `Ngraphiphy.Storage`
+## Task 3: Add `OpenAiEmbeddingProvider` and `EmbeddingProviderResolver` to `Graphiphy.Storage`
 
 **Files:**
-- Create: `src/Ngraphiphy.Storage/Embedding/OpenAiEmbeddingProvider.cs`
-- Create: `src/Ngraphiphy.Storage/Embedding/EmbeddingProviderResolver.cs`
-- Create: `tests/Ngraphiphy.Storage.Tests/EmbeddingProviderResolverTests.cs`
+- Create: `src/Graphiphy.Storage/Embedding/OpenAiEmbeddingProvider.cs`
+- Create: `src/Graphiphy.Storage/Embedding/EmbeddingProviderResolver.cs`
+- Create: `tests/Graphiphy.Storage.Tests/EmbeddingProviderResolverTests.cs`
 
 The `OpenAiEmbeddingProvider` is a generic replacement for `CloudflareEmbeddingProvider`. It takes `(Endpoint, ApiKey, Model, DimensionSize)` instead of `(AccountId, ApiToken, Model)`. The caller (resolver) is responsible for supplying the correct `DimensionSize`.
 
 - [ ] **Step 1: Write failing tests**
 
-Create `tests/Ngraphiphy.Storage.Tests/EmbeddingProviderResolverTests.cs`:
+Create `tests/Graphiphy.Storage.Tests/EmbeddingProviderResolverTests.cs`:
 
 ```csharp
 using Microsoft.Extensions.Configuration;
-using Ngraphiphy.Storage.Embedding;
+using Graphiphy.Storage.Embedding;
 
-namespace Ngraphiphy.Storage.Tests;
+namespace Graphiphy.Storage.Tests;
 
 public class EmbeddingProviderResolverTests
 {
@@ -552,7 +552,7 @@ public class EmbeddingProviderResolverTests
 - [ ] **Step 2: Run, verify compile failure**
 
 ```bash
-dotnet build tests/Ngraphiphy.Storage.Tests/
+dotnet build tests/Graphiphy.Storage.Tests/
 ```
 Expected: `EmbeddingProviderResolver` not found.
 
@@ -563,7 +563,7 @@ using OpenAI;
 using OpenAI.Embeddings;
 using System.ClientModel;
 
-namespace Ngraphiphy.Storage.Embedding;
+namespace Graphiphy.Storage.Embedding;
 
 /// <summary>
 /// Embedding provider backed by any OpenAI-compatible embedding endpoint.
@@ -606,7 +606,7 @@ public sealed class OpenAiEmbeddingProvider : IEmbeddingProvider
 ```csharp
 using Microsoft.Extensions.Configuration;
 
-namespace Ngraphiphy.Storage.Embedding;
+namespace Graphiphy.Storage.Embedding;
 
 /// <summary>
 /// Reads a named provider entry from IConfiguration["Providers:{name}"] and constructs
@@ -661,13 +661,13 @@ public sealed class EmbeddingProviderResolver
 
 - [ ] **Step 5: Check that `Microsoft.Extensions.Configuration.Abstractions` is available in Storage**
 
-`Ngraphiphy.Storage` references `Ngraphiphy` which references `Microsoft.Extensions.Configuration.Abstractions` transitively via the pipeline. Verify it compiles:
+`Graphiphy.Storage` references `Graphiphy` which references `Microsoft.Extensions.Configuration.Abstractions` transitively via the pipeline. Verify it compiles:
 
 ```bash
-dotnet build src/Ngraphiphy.Storage/
+dotnet build src/Graphiphy.Storage/
 ```
 
-If not found, add to `src/Ngraphiphy.Storage/Ngraphiphy.Storage.csproj`:
+If not found, add to `src/Graphiphy.Storage/Graphiphy.Storage.csproj`:
 ```xml
 <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
 ```
@@ -675,14 +675,14 @@ If not found, add to `src/Ngraphiphy.Storage/Ngraphiphy.Storage.csproj`:
 - [ ] **Step 6: Run tests**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Storage.Tests/ -- --filter "EmbeddingProviderResolverTests"
+dotnet run --project tests/Graphiphy.Storage.Tests/ -- --filter "EmbeddingProviderResolverTests"
 ```
 Expected: all 5 tests PASS.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/Ngraphiphy.Storage/Embedding/OpenAiEmbeddingProvider.cs src/Ngraphiphy.Storage/Embedding/EmbeddingProviderResolver.cs tests/Ngraphiphy.Storage.Tests/EmbeddingProviderResolverTests.cs
+git add src/Graphiphy.Storage/Embedding/OpenAiEmbeddingProvider.cs src/Graphiphy.Storage/Embedding/EmbeddingProviderResolver.cs tests/Graphiphy.Storage.Tests/EmbeddingProviderResolverTests.cs
 git commit -m "feat(storage): add OpenAiEmbeddingProvider and EmbeddingProviderResolver"
 ```
 
@@ -691,49 +691,49 @@ git commit -m "feat(storage): add OpenAiEmbeddingProvider and EmbeddingProviderR
 ## Task 4: Delete obsolete config classes; update `CliHostExtensions`
 
 **Files:**
-- Delete: `src/Ngraphiphy.Cli/Configuration/Options/LlmOptions.cs`
-- Delete: `src/Ngraphiphy.Cli/Configuration/Options/EmbeddingOptions.cs`
-- Delete: `src/Ngraphiphy.Storage/Embedding/CloudflareEmbeddingConfig.cs`
-- Delete: `src/Ngraphiphy.Storage/Embedding/CloudflareEmbeddingProvider.cs`
-- Delete: `src/Ngraphiphy.Storage/Embedding/IEmbeddingProviderConfig.cs`
-- Delete: `src/Ngraphiphy.Storage/Embedding/EmbeddingProviderFactory.cs`
-- Modify: `src/Ngraphiphy.Cli/Configuration/CliHostExtensions.cs`
+- Delete: `src/Graphiphy.Cli/Configuration/Options/LlmOptions.cs`
+- Delete: `src/Graphiphy.Cli/Configuration/Options/EmbeddingOptions.cs`
+- Delete: `src/Graphiphy.Storage/Embedding/CloudflareEmbeddingConfig.cs`
+- Delete: `src/Graphiphy.Storage/Embedding/CloudflareEmbeddingProvider.cs`
+- Delete: `src/Graphiphy.Storage/Embedding/IEmbeddingProviderConfig.cs`
+- Delete: `src/Graphiphy.Storage/Embedding/EmbeddingProviderFactory.cs`
+- Modify: `src/Graphiphy.Cli/Configuration/CliHostExtensions.cs`
 
-Note: deleting these files will cause compile errors in `QueryCommand.cs` and `PushCommand.cs`. That is expected — those are fixed in Tasks 5 and 6. Do not attempt to build the CLI project until all three tasks (4, 5, 6) are done. You can build `Ngraphiphy.Llm` and `Ngraphiphy.Storage` at any point.
+Note: deleting these files will cause compile errors in `QueryCommand.cs` and `PushCommand.cs`. That is expected — those are fixed in Tasks 5 and 6. Do not attempt to build the CLI project until all three tasks (4, 5, 6) are done. You can build `Graphiphy.Llm` and `Graphiphy.Storage` at any point.
 
 - [ ] **Step 1: Delete the six files**
 
 ```bash
-rm src/Ngraphiphy.Cli/Configuration/Options/LlmOptions.cs
-rm src/Ngraphiphy.Cli/Configuration/Options/EmbeddingOptions.cs
-rm src/Ngraphiphy.Storage/Embedding/CloudflareEmbeddingConfig.cs
-rm src/Ngraphiphy.Storage/Embedding/CloudflareEmbeddingProvider.cs
-rm src/Ngraphiphy.Storage/Embedding/IEmbeddingProviderConfig.cs
-rm src/Ngraphiphy.Storage/Embedding/EmbeddingProviderFactory.cs
+rm src/Graphiphy.Cli/Configuration/Options/LlmOptions.cs
+rm src/Graphiphy.Cli/Configuration/Options/EmbeddingOptions.cs
+rm src/Graphiphy.Storage/Embedding/CloudflareEmbeddingConfig.cs
+rm src/Graphiphy.Storage/Embedding/CloudflareEmbeddingProvider.cs
+rm src/Graphiphy.Storage/Embedding/IEmbeddingProviderConfig.cs
+rm src/Graphiphy.Storage/Embedding/EmbeddingProviderFactory.cs
 ```
 
 - [ ] **Step 2: Build Storage to confirm no broken references**
 
 ```bash
-dotnet build src/Ngraphiphy.Storage/
+dotnet build src/Graphiphy.Storage/
 ```
 Expected: success (no remaining references to the deleted classes inside Storage).
 
 - [ ] **Step 3: Update `CliHostExtensions.cs`**
 
-Read `src/Ngraphiphy.Cli/Configuration/CliHostExtensions.cs`. Replace the entire file with:
+Read `src/Graphiphy.Cli/Configuration/CliHostExtensions.cs`. Replace the entire file with:
 
 ```csharp
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Ngraphiphy.Cli.Configuration.Options;
-using Ngraphiphy.Cli.Configuration.Secrets;
-using Ngraphiphy.Llm;
-using Ngraphiphy.Storage.Embedding;
+using Graphiphy.Cli.Configuration.Options;
+using Graphiphy.Cli.Configuration.Secrets;
+using Graphiphy.Llm;
+using Graphiphy.Storage.Embedding;
 using Spectre.Console;
 
-namespace Ngraphiphy.Cli.Configuration;
+namespace Graphiphy.Cli.Configuration;
 
 public static class CliHostExtensions
 {
@@ -743,14 +743,14 @@ public static class CliHostExtensions
         var binaryDir = AppContext.BaseDirectory;
         var userConfigDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            ".ngraphiphy");
+            ".graphiphy");
 
         builder.Configuration
             .AddJsonFile(Path.Combine(binaryDir, "appsettings.json"),
                 optional: true, reloadOnChange: false)
             .AddJsonFile(Path.Combine(userConfigDir, "appsettings.json"),
                 optional: true, reloadOnChange: false)
-            .AddEnvironmentVariables(prefix: "NGRAPHIPHY_");
+            .AddEnvironmentVariables(prefix: "GRAPHIPHY_");
 
         // 2. Secret overlay
         var passProvider = new PassSecretProvider();
@@ -787,7 +787,7 @@ public static class CliHostExtensions
 - [ ] **Step 4: Build Storage and Llm projects**
 
 ```bash
-dotnet build src/Ngraphiphy.Storage/ && dotnet build src/Ngraphiphy.Llm/
+dotnet build src/Graphiphy.Storage/ && dotnet build src/Graphiphy.Llm/
 ```
 Expected: both succeed.
 
@@ -798,18 +798,18 @@ Expected: both succeed.
 ## Task 5: Refactor `QueryCommand`
 
 **Files:**
-- Modify: `src/Ngraphiphy.Cli/Commands/QueryCommand.cs`
+- Modify: `src/Graphiphy.Cli/Commands/QueryCommand.cs`
 
 - [ ] **Step 1: Replace `QueryCommand.cs`**
 
 ```csharp
 using System.ComponentModel;
-using Ngraphiphy.Llm;
-using Ngraphiphy.Pipeline;
+using Graphiphy.Llm;
+using Graphiphy.Pipeline;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-namespace Ngraphiphy.Cli.Commands;
+namespace Graphiphy.Cli.Commands;
 
 public sealed class QuerySettings : CommandSettings
 {
@@ -826,7 +826,7 @@ public sealed class QuerySettings : CommandSettings
     public string? Provider { get; init; }
 
     [CommandOption("--cache <dir>")]
-    [Description("Cache directory. Default: <path>/.ngraphiphy-cache")]
+    [Description("Cache directory. Default: <path>/.graphiphy-cache")]
     public string? CacheDir { get; init; }
 }
 
@@ -897,7 +897,7 @@ public sealed class QueryCommand : AsyncCommand<QuerySettings>
 - [ ] **Step 2: Build CLI**
 
 ```bash
-dotnet build src/Ngraphiphy.Cli/
+dotnet build src/Graphiphy.Cli/
 ```
 Expected: QueryCommand compiles. PushCommand still broken (fixed in Task 6).
 
@@ -906,25 +906,25 @@ Expected: QueryCommand compiles. PushCommand still broken (fixed in Task 6).
 ## Task 6: Refactor `PushCommand`; commit Tasks 4–6 together
 
 **Files:**
-- Modify: `src/Ngraphiphy.Cli/Commands/PushCommand.cs`
+- Modify: `src/Graphiphy.Cli/Commands/PushCommand.cs`
 
 - [ ] **Step 1: Replace `PushCommand.cs`**
 
 ```csharp
 using System.ComponentModel;
 using Microsoft.Extensions.Options;
-using Ngraphiphy.Cli.Configuration.Options;
-using Ngraphiphy.Llm;
-using Ngraphiphy.Pipeline;
-using Ngraphiphy.Storage;
-using Ngraphiphy.Storage.Embedding;
-using Ngraphiphy.Storage.Models;
-using Ngraphiphy.Storage.Providers.Memgraph;
-using Ngraphiphy.Storage.Providers.Neo4j;
+using Graphiphy.Cli.Configuration.Options;
+using Graphiphy.Llm;
+using Graphiphy.Pipeline;
+using Graphiphy.Storage;
+using Graphiphy.Storage.Embedding;
+using Graphiphy.Storage.Models;
+using Graphiphy.Storage.Providers.Memgraph;
+using Graphiphy.Storage.Providers.Neo4j;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-namespace Ngraphiphy.Cli.Commands;
+namespace Graphiphy.Cli.Commands;
 
 public sealed class PushSettings : CommandSettings
 {
@@ -977,7 +977,7 @@ public sealed class PushSettings : CommandSettings
     public bool Force { get; init; }
 
     [CommandOption("--cache <dir>")]
-    [Description("Cache directory. Default: <path>/.ngraphiphy-cache")]
+    [Description("Cache directory. Default: <path>/.graphiphy-cache")]
     public string? CacheDir { get; init; }
 }
 
@@ -1001,9 +1001,9 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
         CommandContext context, PushSettings settings, CancellationToken cancellationToken)
     {
         // 1. Resolve snapshot ID
-        Console.Error.WriteLine("[ngraphiphy] Resolving snapshot ID...");
+        Console.Error.WriteLine("[graphiphy] Resolving snapshot ID...");
         var snapshotId = SnapshotId.Resolve(settings.Path);
-        Console.Error.WriteLine($"[ngraphiphy] Snapshot: {snapshotId.Id}");
+        Console.Error.WriteLine($"[graphiphy] Snapshot: {snapshotId.Id}");
 
         // 2. Create graph store config
         var backend = (settings.Backend ?? _dbOpts.Backend).ToLowerInvariant();
@@ -1031,7 +1031,7 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
         var exists = await store.SnapshotExistsAsync(snapshotId, cancellationToken);
         if (exists && !settings.Force)
         {
-            AnsiConsole.MarkupLine("[yellow][ngraphiphy] Snapshot already exists, skipping.[/]");
+            AnsiConsole.MarkupLine("[yellow][graphiphy] Snapshot already exists, skipping.[/]");
             return 0;
         }
 
@@ -1048,10 +1048,10 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
         if (analysis is null) return 1;
 
         // 6. Save snapshot
-        AnsiConsole.MarkupLine("[blue][ngraphiphy] Saving snapshot...[/]");
+        AnsiConsole.MarkupLine("[blue][graphiphy] Saving snapshot...[/]");
         await store.SaveSnapshotAsync(analysis, snapshotId, cancellationToken);
         AnsiConsole.MarkupLineInterpolated(
-            $"[green][ngraphiphy] Snapshot saved: {analysis.Graph.VertexCount} nodes, {analysis.Graph.EdgeCount} edges[/]");
+            $"[green][graphiphy] Snapshot saved: {analysis.Graph.VertexCount} nodes, {analysis.Graph.EdgeCount} edges[/]");
 
         // 7. Embed nodes (optional)
         if (settings.Embed)
@@ -1067,13 +1067,13 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
                 return 1;
             }
 
-            AnsiConsole.MarkupLine("[blue][ngraphiphy] Embedding nodes...[/]");
+            AnsiConsole.MarkupLine("[blue][graphiphy] Embedding nodes...[/]");
             await AnsiConsole.Status().Spinner(Spinner.Known.Dots)
                 .StartAsync("Embedding...", async ctx =>
                 {
                     await store.EmbedNodesAsync(snapshotId, embedder, cancellationToken);
                 });
-            AnsiConsole.MarkupLine("[green][ngraphiphy] Nodes embedded[/]");
+            AnsiConsole.MarkupLine("[green][graphiphy] Nodes embedded[/]");
         }
 
         // 8. Community summaries (optional)
@@ -1091,7 +1091,7 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
                 return 1;
             }
 
-            AnsiConsole.MarkupLine("[blue][ngraphiphy] Generating community summaries...[/]");
+            AnsiConsole.MarkupLine("[blue][graphiphy] Generating community summaries...[/]");
             await using (agent)
             await using var session = await agent.CreateSessionAsync(cancellationToken);
 
@@ -1120,10 +1120,10 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
 
             await store.SaveCommunitySummariesAsync(snapshotId, summaries, cancellationToken);
             AnsiConsole.MarkupLineInterpolated(
-                $"[green][ngraphiphy] Saved {summaries.Count} community summaries[/]");
+                $"[green][graphiphy] Saved {summaries.Count} community summaries[/]");
         }
 
-        AnsiConsole.MarkupLine("[green][ngraphiphy] Push complete[/]");
+        AnsiConsole.MarkupLine("[green][graphiphy] Push complete[/]");
         return 0;
     }
 }
@@ -1139,16 +1139,16 @@ Expected: 0 errors.
 - [ ] **Step 3: Run all tests**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Cli.Tests/
-dotnet run --project tests/Ngraphiphy.Storage.Tests/
-dotnet run --project tests/Ngraphiphy.Llm.Tests/
+dotnet run --project tests/Graphiphy.Cli.Tests/
+dotnet run --project tests/Graphiphy.Storage.Tests/
+dotnet run --project tests/Graphiphy.Llm.Tests/
 ```
 Expected: all pass (some storage tests skip due to requiring live Neo4j/Memgraph).
 
 - [ ] **Step 4: Commit Tasks 4–6 together**
 
 ```bash
-git add src/Ngraphiphy.Cli/ src/Ngraphiphy.Storage/Embedding/
+git add src/Graphiphy.Cli/ src/Graphiphy.Storage/Embedding/
 git commit -m "refactor(cli): replace LlmOptions/EmbeddingOptions with AgentProviderResolver/EmbeddingProviderResolver"
 ```
 
@@ -1157,7 +1157,7 @@ git commit -m "refactor(cli): replace LlmOptions/EmbeddingOptions with AgentProv
 ## Task 7: Restructure `appsettings.json`; update `docs/`
 
 **Files:**
-- Modify: `src/Ngraphiphy.Cli/appsettings.json`
+- Modify: `src/Graphiphy.Cli/appsettings.json`
 - Modify: `docs/Usage.md` (update config examples)
 
 - [ ] **Step 1: Replace `appsettings.json`**
@@ -1241,17 +1241,17 @@ Expected: 0 errors.
 - [ ] **Step 4: Run all tests**
 
 ```bash
-dotnet run --project tests/Ngraphiphy.Cli.Tests/
-dotnet run --project tests/Ngraphiphy.Storage.Tests/
-dotnet run --project tests/Ngraphiphy.Llm.Tests/
-dotnet run --project tests/Ngraphiphy.Tests/
+dotnet run --project tests/Graphiphy.Cli.Tests/
+dotnet run --project tests/Graphiphy.Storage.Tests/
+dotnet run --project tests/Graphiphy.Llm.Tests/
+dotnet run --project tests/Graphiphy.Tests/
 ```
 Expected: all pass (Leiden native failures are pre-existing and unrelated).
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy.Cli/appsettings.json docs/Usage.md
+git add src/Graphiphy.Cli/appsettings.json docs/Usage.md
 git commit -m "feat: restructure appsettings.json to Providers dictionary with Llm/Embedding provider pointers"
 ```
 

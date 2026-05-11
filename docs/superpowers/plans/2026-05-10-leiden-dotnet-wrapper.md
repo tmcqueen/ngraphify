@@ -1,4 +1,4 @@
-# Ngraphiphy: Graphify C# Reimplementation Plan
+# Graphiphy: Graphify C# Reimplementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -26,8 +26,8 @@ native/
   leiden_interop.cpp
 
 src/
-  Ngraphiphy/
-    Ngraphiphy.csproj
+  Graphiphy/
+    Graphiphy.csproj
     Models/
       Node.cs
       Edge.cs
@@ -72,8 +72,8 @@ src/
       ReportGenerator.cs
 
 tests/
-  Ngraphiphy.Tests/
-    Ngraphiphy.Tests.csproj
+  Graphiphy.Tests/
+    Graphiphy.Tests.csproj
     Validation/
       ExtractionValidatorTests.cs
     Detection/
@@ -114,7 +114,7 @@ tests/
       sample.go
       sample.rs
 
-Ngraphiphy.sln
+Graphiphy.sln
 ```
 
 ---
@@ -124,29 +124,29 @@ Ngraphiphy.sln
 ### Task 1: Create Solution Scaffold
 
 **Files:**
-- Create: `Ngraphiphy.sln`
-- Create: `src/Ngraphiphy/Ngraphiphy.csproj`
-- Create: `tests/Ngraphiphy.Tests/Ngraphiphy.Tests.csproj`
+- Create: `Graphiphy.sln`
+- Create: `src/Graphiphy/Graphiphy.csproj`
+- Create: `tests/Graphiphy.Tests/Graphiphy.Tests.csproj`
 
 - [ ] **Step 1: Create solution and projects**
 
 ```bash
-cd /home/timm/ngraphiphy
-dotnet new sln -n Ngraphiphy
-mkdir -p src/Ngraphiphy
-dotnet new classlib -n Ngraphiphy -o src/Ngraphiphy -f net10.0
-rm src/Ngraphiphy/Class1.cs
-mkdir -p tests/Ngraphiphy.Tests
-dotnet new console -n Ngraphiphy.Tests -o tests/Ngraphiphy.Tests -f net10.0
-rm tests/Ngraphiphy.Tests/Program.cs
-dotnet sln add src/Ngraphiphy/Ngraphiphy.csproj
-dotnet sln add tests/Ngraphiphy.Tests/Ngraphiphy.Tests.csproj
-dotnet add tests/Ngraphiphy.Tests/Ngraphiphy.Tests.csproj reference src/Ngraphiphy/Ngraphiphy.csproj
+cd /home/timm/graphiphy
+dotnet new sln -n Graphiphy
+mkdir -p src/Graphiphy
+dotnet new classlib -n Graphiphy -o src/Graphiphy -f net10.0
+rm src/Graphiphy/Class1.cs
+mkdir -p tests/Graphiphy.Tests
+dotnet new console -n Graphiphy.Tests -o tests/Graphiphy.Tests -f net10.0
+rm tests/Graphiphy.Tests/Program.cs
+dotnet sln add src/Graphiphy/Graphiphy.csproj
+dotnet sln add tests/Graphiphy.Tests/Graphiphy.Tests.csproj
+dotnet add tests/Graphiphy.Tests/Graphiphy.Tests.csproj reference src/Graphiphy/Graphiphy.csproj
 ```
 
 - [ ] **Step 2: Configure the main library csproj**
 
-Write `src/Ngraphiphy/Ngraphiphy.csproj`:
+Write `src/Graphiphy/Graphiphy.csproj`:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -154,7 +154,7 @@ Write `src/Ngraphiphy/Ngraphiphy.csproj`:
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Ngraphiphy</RootNamespace>
+    <RootNamespace>Graphiphy</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -168,7 +168,7 @@ Write `src/Ngraphiphy/Ngraphiphy.csproj`:
 
 - [ ] **Step 3: Configure the test project csproj**
 
-Write `tests/Ngraphiphy.Tests/Ngraphiphy.Tests.csproj`:
+Write `tests/Graphiphy.Tests/Graphiphy.Tests.csproj`:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -184,7 +184,7 @@ Write `tests/Ngraphiphy.Tests/Ngraphiphy.Tests.csproj`:
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Ngraphiphy\Ngraphiphy.csproj" />
+    <ProjectReference Include="..\..\src\Graphiphy\Graphiphy.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -195,14 +195,14 @@ Write `tests/Ngraphiphy.Tests/Ngraphiphy.Tests.csproj`:
 
 - [ ] **Step 4: Verify solution builds**
 
-Run: `dotnet build Ngraphiphy.sln`
+Run: `dotnet build Graphiphy.sln`
 Expected: Build succeeded with 0 errors
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git init
-git add Ngraphiphy.sln src/Ngraphiphy/Ngraphiphy.csproj tests/Ngraphiphy.Tests/Ngraphiphy.Tests.csproj
+git add Graphiphy.sln src/Graphiphy/Graphiphy.csproj tests/Graphiphy.Tests/Graphiphy.Tests.csproj
 git commit -m "feat: scaffold .NET 10 solution with TUnit and dependencies"
 ```
 
@@ -211,18 +211,18 @@ git commit -m "feat: scaffold .NET 10 solution with TUnit and dependencies"
 ### Task 2: Core Domain Models
 
 **Files:**
-- Create: `src/Ngraphiphy/Models/FileType.cs`
-- Create: `src/Ngraphiphy/Models/Confidence.cs`
-- Create: `src/Ngraphiphy/Models/Node.cs`
-- Create: `src/Ngraphiphy/Models/Edge.cs`
-- Create: `src/Ngraphiphy/Models/Extraction.cs`
-- Create: `src/Ngraphiphy/Models/GraphData.cs`
+- Create: `src/Graphiphy/Models/FileType.cs`
+- Create: `src/Graphiphy/Models/Confidence.cs`
+- Create: `src/Graphiphy/Models/Node.cs`
+- Create: `src/Graphiphy/Models/Edge.cs`
+- Create: `src/Graphiphy/Models/Extraction.cs`
+- Create: `src/Graphiphy/Models/GraphData.cs`
 
 - [ ] **Step 1: Write the FileType enum**
 
 ```csharp
-// src/Ngraphiphy/Models/FileType.cs
-namespace Ngraphiphy.Models;
+// src/Graphiphy/Models/FileType.cs
+namespace Graphiphy.Models;
 
 public enum FileType
 {
@@ -266,8 +266,8 @@ public static class FileTypeExtensions
 - [ ] **Step 2: Write the Confidence enum**
 
 ```csharp
-// src/Ngraphiphy/Models/Confidence.cs
-namespace Ngraphiphy.Models;
+// src/Graphiphy/Models/Confidence.cs
+namespace Graphiphy.Models;
 
 public enum Confidence
 {
@@ -299,10 +299,10 @@ public static class ConfidenceExtensions
 - [ ] **Step 3: Write the Node record**
 
 ```csharp
-// src/Ngraphiphy/Models/Node.cs
+// src/Graphiphy/Models/Node.cs
 using System.Text.Json.Serialization;
 
-namespace Ngraphiphy.Models;
+namespace Graphiphy.Models;
 
 public sealed class Node
 {
@@ -339,10 +339,10 @@ public sealed class Node
 - [ ] **Step 4: Write the Edge record**
 
 ```csharp
-// src/Ngraphiphy/Models/Edge.cs
+// src/Graphiphy/Models/Edge.cs
 using System.Text.Json.Serialization;
 
-namespace Ngraphiphy.Models;
+namespace Graphiphy.Models;
 
 public sealed class Edge
 {
@@ -385,10 +385,10 @@ public sealed class Edge
 - [ ] **Step 5: Write the Extraction container**
 
 ```csharp
-// src/Ngraphiphy/Models/Extraction.cs
+// src/Graphiphy/Models/Extraction.cs
 using System.Text.Json.Serialization;
 
-namespace Ngraphiphy.Models;
+namespace Graphiphy.Models;
 
 public sealed class Extraction
 {
@@ -406,10 +406,10 @@ public sealed class Extraction
 - [ ] **Step 6: Write the GraphData container**
 
 ```csharp
-// src/Ngraphiphy/Models/GraphData.cs
+// src/Graphiphy/Models/GraphData.cs
 using System.Text.Json.Serialization;
 
-namespace Ngraphiphy.Models;
+namespace Graphiphy.Models;
 
 public sealed class GraphData
 {
@@ -426,13 +426,13 @@ public sealed class GraphData
 
 - [ ] **Step 7: Verify build**
 
-Run: `dotnet build src/Ngraphiphy/Ngraphiphy.csproj`
+Run: `dotnet build src/Graphiphy/Graphiphy.csproj`
 Expected: Build succeeded
 
 - [ ] **Step 8: Commit**
 
 ```bash
-git add src/Ngraphiphy/Models/
+git add src/Graphiphy/Models/
 git commit -m "feat: add core domain models (Node, Edge, Extraction, FileType, Confidence)"
 ```
 
@@ -441,17 +441,17 @@ git commit -m "feat: add core domain models (Node, Edge, Extraction, FileType, C
 ### Task 3: Extraction Validator (Tests First)
 
 **Files:**
-- Create: `tests/Ngraphiphy.Tests/Validation/ExtractionValidatorTests.cs`
-- Create: `src/Ngraphiphy/Validation/ExtractionValidator.cs`
+- Create: `tests/Graphiphy.Tests/Validation/ExtractionValidatorTests.cs`
+- Create: `src/Graphiphy/Validation/ExtractionValidator.cs`
 
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Ngraphiphy.Tests/Validation/ExtractionValidatorTests.cs
-using Ngraphiphy.Models;
-using Ngraphiphy.Validation;
+// tests/Graphiphy.Tests/Validation/ExtractionValidatorTests.cs
+using Graphiphy.Models;
+using Graphiphy.Validation;
 
-namespace Ngraphiphy.Tests.Validation;
+namespace Graphiphy.Tests.Validation;
 
 public class ExtractionValidatorTests
 {
@@ -596,16 +596,16 @@ public class ExtractionValidatorTests
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "ExtractionValidatorTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "ExtractionValidatorTests"`
 Expected: Compilation error — `ExtractionValidator` does not exist
 
 - [ ] **Step 3: Implement ExtractionValidator**
 
 ```csharp
-// src/Ngraphiphy/Validation/ExtractionValidator.cs
-using Ngraphiphy.Models;
+// src/Graphiphy/Validation/ExtractionValidator.cs
+using Graphiphy.Models;
 
-namespace Ngraphiphy.Validation;
+namespace Graphiphy.Validation;
 
 public static class ExtractionValidator
 {
@@ -680,13 +680,13 @@ public static class ExtractionValidator
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "ExtractionValidatorTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "ExtractionValidatorTests"`
 Expected: All 7 tests pass
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy/Validation/ tests/Ngraphiphy.Tests/Validation/
+git add src/Graphiphy/Validation/ tests/Graphiphy.Tests/Validation/
 git commit -m "feat: add extraction validator with TDD tests"
 ```
 
@@ -697,17 +697,17 @@ git commit -m "feat: add extraction validator with TDD tests"
 ### Task 4: File Classifier (Tests First)
 
 **Files:**
-- Create: `tests/Ngraphiphy.Tests/Detection/FileClassifierTests.cs`
-- Create: `src/Ngraphiphy/Detection/FileClassifier.cs`
+- Create: `tests/Graphiphy.Tests/Detection/FileClassifierTests.cs`
+- Create: `src/Graphiphy/Detection/FileClassifier.cs`
 
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Ngraphiphy.Tests/Detection/FileClassifierTests.cs
-using Ngraphiphy.Detection;
-using Ngraphiphy.Models;
+// tests/Graphiphy.Tests/Detection/FileClassifierTests.cs
+using Graphiphy.Detection;
+using Graphiphy.Models;
 
-namespace Ngraphiphy.Tests.Detection;
+namespace Graphiphy.Tests.Detection;
 
 public class FileClassifierTests
 {
@@ -785,16 +785,16 @@ public class FileClassifierTests
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "FileClassifierTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "FileClassifierTests"`
 Expected: Compilation error — `FileClassifier` does not exist
 
 - [ ] **Step 3: Implement FileClassifier**
 
 ```csharp
-// src/Ngraphiphy/Detection/FileClassifier.cs
-using Ngraphiphy.Models;
+// src/Graphiphy/Detection/FileClassifier.cs
+using Graphiphy.Models;
 
-namespace Ngraphiphy.Detection;
+namespace Graphiphy.Detection;
 
 public static class FileClassifier
 {
@@ -868,13 +868,13 @@ public static class FileClassifier
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "FileClassifierTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "FileClassifierTests"`
 Expected: All tests pass
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy/Detection/FileClassifier.cs tests/Ngraphiphy.Tests/Detection/
+git add src/Graphiphy/Detection/FileClassifier.cs tests/Graphiphy.Tests/Detection/
 git commit -m "feat: add file type classifier with extension mapping"
 ```
 
@@ -883,18 +883,18 @@ git commit -m "feat: add file type classifier with extension mapping"
 ### Task 5: File Detector and Ignore Patterns (Tests First)
 
 **Files:**
-- Create: `tests/Ngraphiphy.Tests/Detection/FileDetectorTests.cs`
-- Create: `src/Ngraphiphy/Detection/IgnorePatterns.cs`
-- Create: `src/Ngraphiphy/Detection/FileDetector.cs`
+- Create: `tests/Graphiphy.Tests/Detection/FileDetectorTests.cs`
+- Create: `src/Graphiphy/Detection/IgnorePatterns.cs`
+- Create: `src/Graphiphy/Detection/FileDetector.cs`
 
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Ngraphiphy.Tests/Detection/FileDetectorTests.cs
-using Ngraphiphy.Detection;
-using Ngraphiphy.Models;
+// tests/Graphiphy.Tests/Detection/FileDetectorTests.cs
+using Graphiphy.Detection;
+using Graphiphy.Models;
 
-namespace Ngraphiphy.Tests.Detection;
+namespace Graphiphy.Tests.Detection;
 
 public class FileDetectorTests
 {
@@ -982,7 +982,7 @@ public class FileDetectorTests
 
     private static string CreateTempDir()
     {
-        var path = Path.Combine(Path.GetTempPath(), "ngraphiphy_test_" + Guid.NewGuid().ToString("N")[..8]);
+        var path = Path.Combine(Path.GetTempPath(), "graphiphy_test_" + Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(path);
         return path;
     }
@@ -991,16 +991,16 @@ public class FileDetectorTests
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "FileDetectorTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "FileDetectorTests"`
 Expected: Compilation error
 
 - [ ] **Step 3: Implement IgnorePatterns**
 
 ```csharp
-// src/Ngraphiphy/Detection/IgnorePatterns.cs
+// src/Graphiphy/Detection/IgnorePatterns.cs
 using System.Text.RegularExpressions;
 
-namespace Ngraphiphy.Detection;
+namespace Graphiphy.Detection;
 
 public sealed class IgnorePatterns
 {
@@ -1085,10 +1085,10 @@ public sealed class IgnorePatterns
 - [ ] **Step 4: Implement FileDetector**
 
 ```csharp
-// src/Ngraphiphy/Detection/FileDetector.cs
-using Ngraphiphy.Models;
+// src/Graphiphy/Detection/FileDetector.cs
+using Graphiphy.Models;
 
-namespace Ngraphiphy.Detection;
+namespace Graphiphy.Detection;
 
 public sealed record DetectedFile(string RelativePath, string AbsolutePath, FileType FileType);
 
@@ -1120,13 +1120,13 @@ public static class FileDetector
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "FileDetectorTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "FileDetectorTests"`
 Expected: All 6 tests pass
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/Ngraphiphy/Detection/ tests/Ngraphiphy.Tests/Detection/
+git add src/Graphiphy/Detection/ tests/Graphiphy.Tests/Detection/
 git commit -m "feat: add file detection with ignore patterns"
 ```
 
@@ -1137,16 +1137,16 @@ git commit -m "feat: add file detection with ignore patterns"
 ### Task 6: ILanguageExtractor Interface and Registry
 
 **Files:**
-- Create: `src/Ngraphiphy/Extraction/ILanguageExtractor.cs`
-- Create: `src/Ngraphiphy/Extraction/LanguageRegistry.cs`
+- Create: `src/Graphiphy/Extraction/ILanguageExtractor.cs`
+- Create: `src/Graphiphy/Extraction/LanguageRegistry.cs`
 
 - [ ] **Step 1: Define the extractor interface**
 
 ```csharp
-// src/Ngraphiphy/Extraction/ILanguageExtractor.cs
-using Ngraphiphy.Models;
+// src/Graphiphy/Extraction/ILanguageExtractor.cs
+using Graphiphy.Models;
 
-namespace Ngraphiphy.Extraction;
+namespace Graphiphy.Extraction;
 
 public interface ILanguageExtractor
 {
@@ -1170,8 +1170,8 @@ public interface ILanguageExtractor
 - [ ] **Step 2: Implement the registry**
 
 ```csharp
-// src/Ngraphiphy/Extraction/LanguageRegistry.cs
-namespace Ngraphiphy.Extraction;
+// src/Graphiphy/Extraction/LanguageRegistry.cs
+namespace Graphiphy.Extraction;
 
 public sealed class LanguageRegistry
 {
@@ -1204,13 +1204,13 @@ public sealed class LanguageRegistry
 
 - [ ] **Step 3: Verify build**
 
-Run: `dotnet build src/Ngraphiphy/Ngraphiphy.csproj`
+Run: `dotnet build src/Graphiphy/Graphiphy.csproj`
 Expected: Build succeeded
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/Ngraphiphy/Extraction/ILanguageExtractor.cs src/Ngraphiphy/Extraction/LanguageRegistry.cs
+git add src/Graphiphy/Extraction/ILanguageExtractor.cs src/Graphiphy/Extraction/LanguageRegistry.cs
 git commit -m "feat: add ILanguageExtractor interface and registry"
 ```
 
@@ -1219,16 +1219,16 @@ git commit -m "feat: add ILanguageExtractor interface and registry"
 ### Task 7: Generic Tree-Sitter Extractor Base
 
 **Files:**
-- Create: `src/Ngraphiphy/Extraction/GenericTreeSitterExtractor.cs`
+- Create: `src/Graphiphy/Extraction/GenericTreeSitterExtractor.cs`
 
 - [ ] **Step 1: Implement the generic extractor base class**
 
 ```csharp
-// src/Ngraphiphy/Extraction/GenericTreeSitterExtractor.cs
-using Ngraphiphy.Models;
+// src/Graphiphy/Extraction/GenericTreeSitterExtractor.cs
+using Graphiphy.Models;
 using TreeSitter;
 
-namespace Ngraphiphy.Extraction;
+namespace Graphiphy.Extraction;
 
 /// <summary>
 /// Base class providing tree-sitter parsing and common AST walking patterns.
@@ -1450,13 +1450,13 @@ public abstract class GenericTreeSitterExtractor : ILanguageExtractor
 
 - [ ] **Step 2: Verify build**
 
-Run: `dotnet build src/Ngraphiphy/Ngraphiphy.csproj`
+Run: `dotnet build src/Graphiphy/Graphiphy.csproj`
 Expected: Build succeeded
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/Ngraphiphy/Extraction/GenericTreeSitterExtractor.cs
+git add src/Graphiphy/Extraction/GenericTreeSitterExtractor.cs
 git commit -m "feat: add generic tree-sitter extractor base class"
 ```
 
@@ -1465,15 +1465,15 @@ git commit -m "feat: add generic tree-sitter extractor base class"
 ### Task 8: Python Extractor (Tests First)
 
 **Files:**
-- Create: `tests/Ngraphiphy.Tests/Fixtures/sample.py`
-- Create: `tests/Ngraphiphy.Tests/Extraction/ExtractorTestBase.cs`
-- Create: `tests/Ngraphiphy.Tests/Extraction/PythonExtractorTests.cs`
-- Create: `src/Ngraphiphy/Extraction/Extractors/PythonExtractor.cs`
+- Create: `tests/Graphiphy.Tests/Fixtures/sample.py`
+- Create: `tests/Graphiphy.Tests/Extraction/ExtractorTestBase.cs`
+- Create: `tests/Graphiphy.Tests/Extraction/PythonExtractorTests.cs`
+- Create: `src/Graphiphy/Extraction/Extractors/PythonExtractor.cs`
 
 - [ ] **Step 1: Create the Python test fixture**
 
 ```python
-# tests/Ngraphiphy.Tests/Fixtures/sample.py
+# tests/Graphiphy.Tests/Fixtures/sample.py
 import os
 from pathlib import Path
 
@@ -1501,11 +1501,11 @@ def helper():
 - [ ] **Step 2: Create the test base class**
 
 ```csharp
-// tests/Ngraphiphy.Tests/Extraction/ExtractorTestBase.cs
-using Ngraphiphy.Extraction;
-using Ngraphiphy.Models;
+// tests/Graphiphy.Tests/Extraction/ExtractorTestBase.cs
+using Graphiphy.Extraction;
+using Graphiphy.Models;
 
-namespace Ngraphiphy.Tests.Extraction;
+namespace Graphiphy.Tests.Extraction;
 
 public abstract class ExtractorTestBase
 {
@@ -1516,19 +1516,19 @@ public abstract class ExtractorTestBase
         return Path.Combine(AppContext.BaseDirectory, "Fixtures", filename);
     }
 
-    protected Ngraphiphy.Models.Extraction ExtractFixture(string filename)
+    protected Graphiphy.Models.Extraction ExtractFixture(string filename)
     {
         var path = FixturePath(filename);
         var source = File.ReadAllText(path);
         return CreateExtractor().Extract(path, source);
     }
 
-    protected static List<string> NodeLabels(Ngraphiphy.Models.Extraction extraction)
+    protected static List<string> NodeLabels(Graphiphy.Models.Extraction extraction)
     {
         return extraction.Nodes.Select(n => n.Label).ToList();
     }
 
-    protected static List<string> EdgeRelations(Ngraphiphy.Models.Extraction extraction, string sourceLabel, string targetLabel)
+    protected static List<string> EdgeRelations(Graphiphy.Models.Extraction extraction, string sourceLabel, string targetLabel)
     {
         return extraction.Edges
             .Where(e =>
@@ -1544,11 +1544,11 @@ public abstract class ExtractorTestBase
 - [ ] **Step 3: Write the Python extractor tests**
 
 ```csharp
-// tests/Ngraphiphy.Tests/Extraction/PythonExtractorTests.cs
-using Ngraphiphy.Extraction;
-using Ngraphiphy.Extraction.Extractors;
+// tests/Graphiphy.Tests/Extraction/PythonExtractorTests.cs
+using Graphiphy.Extraction;
+using Graphiphy.Extraction.Extractors;
 
-namespace Ngraphiphy.Tests.Extraction;
+namespace Graphiphy.Tests.Extraction;
 
 public class PythonExtractorTests : ExtractorTestBase
 {
@@ -1649,16 +1649,16 @@ public class PythonExtractorTests : ExtractorTestBase
 
 - [ ] **Step 4: Run tests to verify they fail**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "PythonExtractorTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "PythonExtractorTests"`
 Expected: Compilation error — `PythonExtractor` does not exist
 
 - [ ] **Step 5: Implement PythonExtractor**
 
 ```csharp
-// src/Ngraphiphy/Extraction/Extractors/PythonExtractor.cs
+// src/Graphiphy/Extraction/Extractors/PythonExtractor.cs
 using TreeSitter;
 
-namespace Ngraphiphy.Extraction.Extractors;
+namespace Graphiphy.Extraction.Extractors;
 
 public sealed class PythonExtractor : GenericTreeSitterExtractor
 {
@@ -1751,13 +1751,13 @@ public sealed class PythonExtractor : GenericTreeSitterExtractor
 
 - [ ] **Step 6: Run tests to verify they pass**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "PythonExtractorTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "PythonExtractorTests"`
 Expected: All 8 tests pass
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/Ngraphiphy/Extraction/Extractors/PythonExtractor.cs tests/Ngraphiphy.Tests/Extraction/ tests/Ngraphiphy.Tests/Fixtures/sample.py
+git add src/Graphiphy/Extraction/Extractors/PythonExtractor.cs tests/Graphiphy.Tests/Extraction/ tests/Graphiphy.Tests/Fixtures/sample.py
 git commit -m "feat: add Python extractor with tree-sitter AST walking"
 ```
 
@@ -1766,14 +1766,14 @@ git commit -m "feat: add Python extractor with tree-sitter AST walking"
 ### Task 9: JavaScript Extractor (Tests First)
 
 **Files:**
-- Create: `tests/Ngraphiphy.Tests/Fixtures/sample.js`
-- Create: `tests/Ngraphiphy.Tests/Extraction/JavaScriptExtractorTests.cs`
-- Create: `src/Ngraphiphy/Extraction/Extractors/JavaScriptExtractor.cs`
+- Create: `tests/Graphiphy.Tests/Fixtures/sample.js`
+- Create: `tests/Graphiphy.Tests/Extraction/JavaScriptExtractorTests.cs`
+- Create: `src/Graphiphy/Extraction/Extractors/JavaScriptExtractor.cs`
 
 - [ ] **Step 1: Create JavaScript fixture**
 
 ```javascript
-// tests/Ngraphiphy.Tests/Fixtures/sample.js
+// tests/Graphiphy.Tests/Fixtures/sample.js
 const fs = require('fs');
 import { Parser } from './parser';
 
@@ -1808,11 +1808,11 @@ module.exports = { EventEmitter, createServer };
 - [ ] **Step 2: Write JavaScript extractor tests**
 
 ```csharp
-// tests/Ngraphiphy.Tests/Extraction/JavaScriptExtractorTests.cs
-using Ngraphiphy.Extraction;
-using Ngraphiphy.Extraction.Extractors;
+// tests/Graphiphy.Tests/Extraction/JavaScriptExtractorTests.cs
+using Graphiphy.Extraction;
+using Graphiphy.Extraction.Extractors;
 
-namespace Ngraphiphy.Tests.Extraction;
+namespace Graphiphy.Tests.Extraction;
 
 public class JavaScriptExtractorTests : ExtractorTestBase
 {
@@ -1878,10 +1878,10 @@ public class JavaScriptExtractorTests : ExtractorTestBase
 - [ ] **Step 3: Implement JavaScriptExtractor**
 
 ```csharp
-// src/Ngraphiphy/Extraction/Extractors/JavaScriptExtractor.cs
+// src/Graphiphy/Extraction/Extractors/JavaScriptExtractor.cs
 using TreeSitter;
 
-namespace Ngraphiphy.Extraction.Extractors;
+namespace Graphiphy.Extraction.Extractors;
 
 public sealed class JavaScriptExtractor : GenericTreeSitterExtractor
 {
@@ -1975,13 +1975,13 @@ public sealed class JavaScriptExtractor : GenericTreeSitterExtractor
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "JavaScriptExtractorTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "JavaScriptExtractorTests"`
 Expected: All 6 tests pass
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy/Extraction/Extractors/JavaScriptExtractor.cs tests/Ngraphiphy.Tests/Extraction/JavaScriptExtractorTests.cs tests/Ngraphiphy.Tests/Fixtures/sample.js
+git add src/Graphiphy/Extraction/Extractors/JavaScriptExtractor.cs tests/Graphiphy.Tests/Extraction/JavaScriptExtractorTests.cs tests/Graphiphy.Tests/Fixtures/sample.js
 git commit -m "feat: add JavaScript extractor"
 ```
 
@@ -1990,14 +1990,14 @@ git commit -m "feat: add JavaScript extractor"
 ### Task 10: TypeScript Extractor (Tests First)
 
 **Files:**
-- Create: `tests/Ngraphiphy.Tests/Fixtures/sample.ts`
-- Create: `tests/Ngraphiphy.Tests/Extraction/TypeScriptExtractorTests.cs`
-- Create: `src/Ngraphiphy/Extraction/Extractors/TypeScriptExtractor.cs`
+- Create: `tests/Graphiphy.Tests/Fixtures/sample.ts`
+- Create: `tests/Graphiphy.Tests/Extraction/TypeScriptExtractorTests.cs`
+- Create: `src/Graphiphy/Extraction/Extractors/TypeScriptExtractor.cs`
 
 - [ ] **Step 1: Create TypeScript fixture**
 
 ```typescript
-// tests/Ngraphiphy.Tests/Fixtures/sample.ts
+// tests/Graphiphy.Tests/Fixtures/sample.ts
 import { EventEmitter } from 'events';
 
 interface Config {
@@ -2036,11 +2036,11 @@ export function createApp(config: Config): HttpServer {
 - [ ] **Step 2: Write TypeScript extractor tests**
 
 ```csharp
-// tests/Ngraphiphy.Tests/Extraction/TypeScriptExtractorTests.cs
-using Ngraphiphy.Extraction;
-using Ngraphiphy.Extraction.Extractors;
+// tests/Graphiphy.Tests/Extraction/TypeScriptExtractorTests.cs
+using Graphiphy.Extraction;
+using Graphiphy.Extraction.Extractors;
 
-namespace Ngraphiphy.Tests.Extraction;
+namespace Graphiphy.Tests.Extraction;
 
 public class TypeScriptExtractorTests : ExtractorTestBase
 {
@@ -2097,10 +2097,10 @@ public class TypeScriptExtractorTests : ExtractorTestBase
 - [ ] **Step 3: Implement TypeScriptExtractor**
 
 ```csharp
-// src/Ngraphiphy/Extraction/Extractors/TypeScriptExtractor.cs
+// src/Graphiphy/Extraction/Extractors/TypeScriptExtractor.cs
 using TreeSitter;
 
-namespace Ngraphiphy.Extraction.Extractors;
+namespace Graphiphy.Extraction.Extractors;
 
 public sealed class TypeScriptExtractor : GenericTreeSitterExtractor
 {
@@ -2165,13 +2165,13 @@ public sealed class TypeScriptExtractor : GenericTreeSitterExtractor
 
 - [ ] **Step 4: Run tests**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "TypeScriptExtractorTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "TypeScriptExtractorTests"`
 Expected: All 5 tests pass
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy/Extraction/Extractors/TypeScriptExtractor.cs tests/Ngraphiphy.Tests/Extraction/TypeScriptExtractorTests.cs tests/Ngraphiphy.Tests/Fixtures/sample.ts
+git add src/Graphiphy/Extraction/Extractors/TypeScriptExtractor.cs tests/Graphiphy.Tests/Extraction/TypeScriptExtractorTests.cs tests/Graphiphy.Tests/Fixtures/sample.ts
 git commit -m "feat: add TypeScript extractor"
 ```
 
@@ -2180,14 +2180,14 @@ git commit -m "feat: add TypeScript extractor"
 ### Task 11: C Extractor (Tests First)
 
 **Files:**
-- Create: `tests/Ngraphiphy.Tests/Fixtures/sample.c`
-- Create: `tests/Ngraphiphy.Tests/Extraction/CExtractorTests.cs`
-- Create: `src/Ngraphiphy/Extraction/Extractors/CExtractor.cs`
+- Create: `tests/Graphiphy.Tests/Fixtures/sample.c`
+- Create: `tests/Graphiphy.Tests/Extraction/CExtractorTests.cs`
+- Create: `src/Graphiphy/Extraction/Extractors/CExtractor.cs`
 
 - [ ] **Step 1: Create C fixture**
 
 ```c
-// tests/Ngraphiphy.Tests/Fixtures/sample.c
+// tests/Graphiphy.Tests/Fixtures/sample.c
 #include <stdio.h>
 #include <stdlib.h>
 #include "utils.h"
@@ -2233,11 +2233,11 @@ int main(int argc, char** argv) {
 - [ ] **Step 2: Write C extractor tests**
 
 ```csharp
-// tests/Ngraphiphy.Tests/Extraction/CExtractorTests.cs
-using Ngraphiphy.Extraction;
-using Ngraphiphy.Extraction.Extractors;
+// tests/Graphiphy.Tests/Extraction/CExtractorTests.cs
+using Graphiphy.Extraction;
+using Graphiphy.Extraction.Extractors;
 
-namespace Ngraphiphy.Tests.Extraction;
+namespace Graphiphy.Tests.Extraction;
 
 public class CExtractorTests : ExtractorTestBase
 {
@@ -2296,10 +2296,10 @@ public class CExtractorTests : ExtractorTestBase
 - [ ] **Step 3: Implement CExtractor**
 
 ```csharp
-// src/Ngraphiphy/Extraction/Extractors/CExtractor.cs
+// src/Graphiphy/Extraction/Extractors/CExtractor.cs
 using TreeSitter;
 
-namespace Ngraphiphy.Extraction.Extractors;
+namespace Graphiphy.Extraction.Extractors;
 
 public sealed class CExtractor : GenericTreeSitterExtractor
 {
@@ -2390,13 +2390,13 @@ public sealed class CExtractor : GenericTreeSitterExtractor
 
 - [ ] **Step 4: Run tests**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "CExtractorTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "CExtractorTests"`
 Expected: All 5 tests pass
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy/Extraction/Extractors/CExtractor.cs tests/Ngraphiphy.Tests/Extraction/CExtractorTests.cs tests/Ngraphiphy.Tests/Fixtures/sample.c
+git add src/Graphiphy/Extraction/Extractors/CExtractor.cs tests/Graphiphy.Tests/Extraction/CExtractorTests.cs tests/Graphiphy.Tests/Fixtures/sample.c
 git commit -m "feat: add C extractor"
 ```
 
@@ -2405,14 +2405,14 @@ git commit -m "feat: add C extractor"
 ### Task 12: C++ Extractor (Tests First)
 
 **Files:**
-- Create: `tests/Ngraphiphy.Tests/Fixtures/sample.cpp`
-- Create: `tests/Ngraphiphy.Tests/Extraction/CppExtractorTests.cs`
-- Create: `src/Ngraphiphy/Extraction/Extractors/CppExtractor.cs`
+- Create: `tests/Graphiphy.Tests/Fixtures/sample.cpp`
+- Create: `tests/Graphiphy.Tests/Extraction/CppExtractorTests.cs`
+- Create: `src/Graphiphy/Extraction/Extractors/CppExtractor.cs`
 
 - [ ] **Step 1: Create C++ fixture**
 
 ```cpp
-// tests/Ngraphiphy.Tests/Fixtures/sample.cpp
+// tests/Graphiphy.Tests/Fixtures/sample.cpp
 #include <iostream>
 #include <vector>
 #include "graph.h"
@@ -2466,11 +2466,11 @@ int main() {
 - [ ] **Step 2: Write C++ extractor tests**
 
 ```csharp
-// tests/Ngraphiphy.Tests/Extraction/CppExtractorTests.cs
-using Ngraphiphy.Extraction;
-using Ngraphiphy.Extraction.Extractors;
+// tests/Graphiphy.Tests/Extraction/CppExtractorTests.cs
+using Graphiphy.Extraction;
+using Graphiphy.Extraction.Extractors;
 
-namespace Ngraphiphy.Tests.Extraction;
+namespace Graphiphy.Tests.Extraction;
 
 public class CppExtractorTests : ExtractorTestBase
 {
@@ -2528,10 +2528,10 @@ public class CppExtractorTests : ExtractorTestBase
 - [ ] **Step 3: Implement CppExtractor**
 
 ```csharp
-// src/Ngraphiphy/Extraction/Extractors/CppExtractor.cs
+// src/Graphiphy/Extraction/Extractors/CppExtractor.cs
 using TreeSitter;
 
-namespace Ngraphiphy.Extraction.Extractors;
+namespace Graphiphy.Extraction.Extractors;
 
 public sealed class CppExtractor : GenericTreeSitterExtractor
 {
@@ -2639,13 +2639,13 @@ public sealed class CppExtractor : GenericTreeSitterExtractor
 
 - [ ] **Step 4: Run tests**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "CppExtractorTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "CppExtractorTests"`
 Expected: All 5 tests pass
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy/Extraction/Extractors/CppExtractor.cs tests/Ngraphiphy.Tests/Extraction/CppExtractorTests.cs tests/Ngraphiphy.Tests/Fixtures/sample.cpp
+git add src/Graphiphy/Extraction/Extractors/CppExtractor.cs tests/Graphiphy.Tests/Extraction/CppExtractorTests.cs tests/Graphiphy.Tests/Fixtures/sample.cpp
 git commit -m "feat: add C++ extractor"
 ```
 
@@ -2654,14 +2654,14 @@ git commit -m "feat: add C++ extractor"
 ### Task 13: C# Extractor (Tests First)
 
 **Files:**
-- Create: `tests/Ngraphiphy.Tests/Fixtures/sample.cs`
-- Create: `tests/Ngraphiphy.Tests/Extraction/CSharpExtractorTests.cs`
-- Create: `src/Ngraphiphy/Extraction/Extractors/CSharpExtractor.cs`
+- Create: `tests/Graphiphy.Tests/Fixtures/sample.cs`
+- Create: `tests/Graphiphy.Tests/Extraction/CSharpExtractorTests.cs`
+- Create: `src/Graphiphy/Extraction/Extractors/CSharpExtractor.cs`
 
 - [ ] **Step 1: Create C# fixture**
 
 ```csharp
-// tests/Ngraphiphy.Tests/Fixtures/sample.cs
+// tests/Graphiphy.Tests/Fixtures/sample.cs
 using System;
 using System.Collections.Generic;
 
@@ -2707,11 +2707,11 @@ namespace SampleApp.Models
 - [ ] **Step 2: Write C# extractor tests**
 
 ```csharp
-// tests/Ngraphiphy.Tests/Extraction/CSharpExtractorTests.cs
-using Ngraphiphy.Extraction;
-using Ngraphiphy.Extraction.Extractors;
+// tests/Graphiphy.Tests/Extraction/CSharpExtractorTests.cs
+using Graphiphy.Extraction;
+using Graphiphy.Extraction.Extractors;
 
-namespace Ngraphiphy.Tests.Extraction;
+namespace Graphiphy.Tests.Extraction;
 
 public class CSharpExtractorTests : ExtractorTestBase
 {
@@ -2776,10 +2776,10 @@ public class CSharpExtractorTests : ExtractorTestBase
 - [ ] **Step 3: Implement CSharpExtractor**
 
 ```csharp
-// src/Ngraphiphy/Extraction/Extractors/CSharpExtractor.cs
+// src/Graphiphy/Extraction/Extractors/CSharpExtractor.cs
 using TreeSitter;
 
-namespace Ngraphiphy.Extraction.Extractors;
+namespace Graphiphy.Extraction.Extractors;
 
 public sealed class CSharpExtractor : GenericTreeSitterExtractor
 {
@@ -2869,13 +2869,13 @@ public sealed class CSharpExtractor : GenericTreeSitterExtractor
 
 - [ ] **Step 4: Run tests**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "CSharpExtractorTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "CSharpExtractorTests"`
 Expected: All 6 tests pass
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy/Extraction/Extractors/CSharpExtractor.cs tests/Ngraphiphy.Tests/Extraction/CSharpExtractorTests.cs tests/Ngraphiphy.Tests/Fixtures/sample.cs
+git add src/Graphiphy/Extraction/Extractors/CSharpExtractor.cs tests/Graphiphy.Tests/Extraction/CSharpExtractorTests.cs tests/Graphiphy.Tests/Fixtures/sample.cs
 git commit -m "feat: add C# extractor"
 ```
 
@@ -2884,14 +2884,14 @@ git commit -m "feat: add C# extractor"
 ### Task 14: Java Extractor (Tests First)
 
 **Files:**
-- Create: `tests/Ngraphiphy.Tests/Fixtures/sample.java`
-- Create: `tests/Ngraphiphy.Tests/Extraction/JavaExtractorTests.cs`
-- Create: `src/Ngraphiphy/Extraction/Extractors/JavaExtractor.cs`
+- Create: `tests/Graphiphy.Tests/Fixtures/sample.java`
+- Create: `tests/Graphiphy.Tests/Extraction/JavaExtractorTests.cs`
+- Create: `src/Graphiphy/Extraction/Extractors/JavaExtractor.cs`
 
 - [ ] **Step 1: Create Java fixture**
 
 ```java
-// tests/Ngraphiphy.Tests/Fixtures/sample.java
+// tests/Graphiphy.Tests/Fixtures/sample.java
 package com.example.service;
 
 import java.util.List;
@@ -2929,11 +2929,11 @@ interface UserRepository {
 - [ ] **Step 2: Write Java extractor tests**
 
 ```csharp
-// tests/Ngraphiphy.Tests/Extraction/JavaExtractorTests.cs
-using Ngraphiphy.Extraction;
-using Ngraphiphy.Extraction.Extractors;
+// tests/Graphiphy.Tests/Extraction/JavaExtractorTests.cs
+using Graphiphy.Extraction;
+using Graphiphy.Extraction.Extractors;
 
-namespace Ngraphiphy.Tests.Extraction;
+namespace Graphiphy.Tests.Extraction;
 
 public class JavaExtractorTests : ExtractorTestBase
 {
@@ -2989,10 +2989,10 @@ public class JavaExtractorTests : ExtractorTestBase
 - [ ] **Step 3: Implement JavaExtractor**
 
 ```csharp
-// src/Ngraphiphy/Extraction/Extractors/JavaExtractor.cs
+// src/Graphiphy/Extraction/Extractors/JavaExtractor.cs
 using TreeSitter;
 
-namespace Ngraphiphy.Extraction.Extractors;
+namespace Graphiphy.Extraction.Extractors;
 
 public sealed class JavaExtractor : GenericTreeSitterExtractor
 {
@@ -3069,13 +3069,13 @@ public sealed class JavaExtractor : GenericTreeSitterExtractor
 
 - [ ] **Step 4: Run tests**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "JavaExtractorTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "JavaExtractorTests"`
 Expected: All 5 tests pass
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy/Extraction/Extractors/JavaExtractor.cs tests/Ngraphiphy.Tests/Extraction/JavaExtractorTests.cs tests/Ngraphiphy.Tests/Fixtures/sample.java
+git add src/Graphiphy/Extraction/Extractors/JavaExtractor.cs tests/Graphiphy.Tests/Extraction/JavaExtractorTests.cs tests/Graphiphy.Tests/Fixtures/sample.java
 git commit -m "feat: add Java extractor"
 ```
 
@@ -3084,14 +3084,14 @@ git commit -m "feat: add Java extractor"
 ### Task 15: Go Extractor (Tests First)
 
 **Files:**
-- Create: `tests/Ngraphiphy.Tests/Fixtures/sample.go`
-- Create: `tests/Ngraphiphy.Tests/Extraction/GoExtractorTests.cs`
-- Create: `src/Ngraphiphy/Extraction/Extractors/GoExtractor.cs`
+- Create: `tests/Graphiphy.Tests/Fixtures/sample.go`
+- Create: `tests/Graphiphy.Tests/Extraction/GoExtractorTests.cs`
+- Create: `src/Graphiphy/Extraction/Extractors/GoExtractor.cs`
 
 - [ ] **Step 1: Create Go fixture**
 
 ```go
-// tests/Ngraphiphy.Tests/Fixtures/sample.go
+// tests/Graphiphy.Tests/Fixtures/sample.go
 package main
 
 import (
@@ -3138,11 +3138,11 @@ func main() {
 - [ ] **Step 2: Write Go extractor tests**
 
 ```csharp
-// tests/Ngraphiphy.Tests/Extraction/GoExtractorTests.cs
-using Ngraphiphy.Extraction;
-using Ngraphiphy.Extraction.Extractors;
+// tests/Graphiphy.Tests/Extraction/GoExtractorTests.cs
+using Graphiphy.Extraction;
+using Graphiphy.Extraction.Extractors;
 
-namespace Ngraphiphy.Tests.Extraction;
+namespace Graphiphy.Tests.Extraction;
 
 public class GoExtractorTests : ExtractorTestBase
 {
@@ -3200,10 +3200,10 @@ public class GoExtractorTests : ExtractorTestBase
 - [ ] **Step 3: Implement GoExtractor**
 
 ```csharp
-// src/Ngraphiphy/Extraction/Extractors/GoExtractor.cs
+// src/Graphiphy/Extraction/Extractors/GoExtractor.cs
 using TreeSitter;
 
-namespace Ngraphiphy.Extraction.Extractors;
+namespace Graphiphy.Extraction.Extractors;
 
 public sealed class GoExtractor : GenericTreeSitterExtractor
 {
@@ -3323,13 +3323,13 @@ public sealed class GoExtractor : GenericTreeSitterExtractor
 
 - [ ] **Step 4: Run tests**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "GoExtractorTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "GoExtractorTests"`
 Expected: All 5 tests pass
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy/Extraction/Extractors/GoExtractor.cs tests/Ngraphiphy.Tests/Extraction/GoExtractorTests.cs tests/Ngraphiphy.Tests/Fixtures/sample.go
+git add src/Graphiphy/Extraction/Extractors/GoExtractor.cs tests/Graphiphy.Tests/Extraction/GoExtractorTests.cs tests/Graphiphy.Tests/Fixtures/sample.go
 git commit -m "feat: add Go extractor"
 ```
 
@@ -3338,14 +3338,14 @@ git commit -m "feat: add Go extractor"
 ### Task 16: Rust Extractor (Tests First)
 
 **Files:**
-- Create: `tests/Ngraphiphy.Tests/Fixtures/sample.rs`
-- Create: `tests/Ngraphiphy.Tests/Extraction/RustExtractorTests.cs`
-- Create: `src/Ngraphiphy/Extraction/Extractors/RustExtractor.cs`
+- Create: `tests/Graphiphy.Tests/Fixtures/sample.rs`
+- Create: `tests/Graphiphy.Tests/Extraction/RustExtractorTests.cs`
+- Create: `src/Graphiphy/Extraction/Extractors/RustExtractor.cs`
 
 - [ ] **Step 1: Create Rust fixture**
 
 ```rust
-// tests/Ngraphiphy.Tests/Fixtures/sample.rs
+// tests/Graphiphy.Tests/Fixtures/sample.rs
 use std::collections::HashMap;
 use std::io::Read;
 
@@ -3389,11 +3389,11 @@ fn main() {
 - [ ] **Step 2: Write Rust extractor tests**
 
 ```csharp
-// tests/Ngraphiphy.Tests/Extraction/RustExtractorTests.cs
-using Ngraphiphy.Extraction;
-using Ngraphiphy.Extraction.Extractors;
+// tests/Graphiphy.Tests/Extraction/RustExtractorTests.cs
+using Graphiphy.Extraction;
+using Graphiphy.Extraction.Extractors;
 
-namespace Ngraphiphy.Tests.Extraction;
+namespace Graphiphy.Tests.Extraction;
 
 public class RustExtractorTests : ExtractorTestBase
 {
@@ -3451,10 +3451,10 @@ public class RustExtractorTests : ExtractorTestBase
 - [ ] **Step 3: Implement RustExtractor**
 
 ```csharp
-// src/Ngraphiphy/Extraction/Extractors/RustExtractor.cs
+// src/Graphiphy/Extraction/Extractors/RustExtractor.cs
 using TreeSitter;
 
-namespace Ngraphiphy.Extraction.Extractors;
+namespace Graphiphy.Extraction.Extractors;
 
 public sealed class RustExtractor : GenericTreeSitterExtractor
 {
@@ -3528,13 +3528,13 @@ public sealed class RustExtractor : GenericTreeSitterExtractor
 
 - [ ] **Step 4: Run tests**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "RustExtractorTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "RustExtractorTests"`
 Expected: All 5 tests pass
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy/Extraction/Extractors/RustExtractor.cs tests/Ngraphiphy.Tests/Extraction/RustExtractorTests.cs tests/Ngraphiphy.Tests/Fixtures/sample.rs
+git add src/Graphiphy/Extraction/Extractors/RustExtractor.cs tests/Graphiphy.Tests/Extraction/RustExtractorTests.cs tests/Graphiphy.Tests/Fixtures/sample.rs
 git commit -m "feat: add Rust extractor"
 ```
 
@@ -3543,7 +3543,7 @@ git commit -m "feat: add Rust extractor"
 ### Task 17: Register All Extractors in LanguageRegistry
 
 **Files:**
-- Modify: `src/Ngraphiphy/Extraction/LanguageRegistry.cs`
+- Modify: `src/Graphiphy/Extraction/LanguageRegistry.cs`
 
 - [ ] **Step 1: Update CreateDefault to register all 9 extractors**
 
@@ -3566,13 +3566,13 @@ git commit -m "feat: add Rust extractor"
 
 - [ ] **Step 2: Run full test suite**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/`
+Run: `dotnet test tests/Graphiphy.Tests/`
 Expected: All extraction tests pass
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/Ngraphiphy/Extraction/LanguageRegistry.cs
+git add src/Graphiphy/Extraction/LanguageRegistry.cs
 git commit -m "feat: register all 9 language extractors in default registry"
 ```
 
@@ -3583,17 +3583,17 @@ git commit -m "feat: register all 9 language extractors in default registry"
 ### Task 18: Graph Builder (Tests First)
 
 **Files:**
-- Create: `tests/Ngraphiphy.Tests/Build/GraphBuilderTests.cs`
-- Create: `src/Ngraphiphy/Build/GraphBuilder.cs`
+- Create: `tests/Graphiphy.Tests/Build/GraphBuilderTests.cs`
+- Create: `src/Graphiphy/Build/GraphBuilder.cs`
 
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Ngraphiphy.Tests/Build/GraphBuilderTests.cs
-using Ngraphiphy.Build;
-using Ngraphiphy.Models;
+// tests/Graphiphy.Tests/Build/GraphBuilderTests.cs
+using Graphiphy.Build;
+using Graphiphy.Models;
 
-namespace Ngraphiphy.Tests.Build;
+namespace Graphiphy.Tests.Build;
 
 public class GraphBuilderTests
 {
@@ -3732,17 +3732,17 @@ public class GraphBuilderTests
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "GraphBuilderTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "GraphBuilderTests"`
 Expected: Compilation error
 
 - [ ] **Step 3: Implement GraphBuilder**
 
 ```csharp
-// src/Ngraphiphy/Build/GraphBuilder.cs
-using Ngraphiphy.Models;
+// src/Graphiphy/Build/GraphBuilder.cs
+using Graphiphy.Models;
 using QuikGraph;
 
-namespace Ngraphiphy.Build;
+namespace Graphiphy.Build;
 
 public static class GraphBuilder
 {
@@ -3806,13 +3806,13 @@ public static class GraphBuilder
 
 - [ ] **Step 4: Run tests**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "GraphBuilderTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "GraphBuilderTests"`
 Expected: All 7 tests pass
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy/Build/ tests/Ngraphiphy.Tests/Build/
+git add src/Graphiphy/Build/ tests/Graphiphy.Tests/Build/
 git commit -m "feat: add graph builder with QuikGraph"
 ```
 
@@ -3823,18 +3823,18 @@ git commit -m "feat: add graph builder with QuikGraph"
 ### Task 19: Entity Deduplicator (Tests First)
 
 **Files:**
-- Create: `tests/Ngraphiphy.Tests/Dedup/EntityDeduplicatorTests.cs`
-- Create: `src/Ngraphiphy/Dedup/UnionFind.cs`
-- Create: `src/Ngraphiphy/Dedup/EntityDeduplicator.cs`
+- Create: `tests/Graphiphy.Tests/Dedup/EntityDeduplicatorTests.cs`
+- Create: `src/Graphiphy/Dedup/UnionFind.cs`
+- Create: `src/Graphiphy/Dedup/EntityDeduplicator.cs`
 
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Ngraphiphy.Tests/Dedup/EntityDeduplicatorTests.cs
-using Ngraphiphy.Dedup;
-using Ngraphiphy.Models;
+// tests/Graphiphy.Tests/Dedup/EntityDeduplicatorTests.cs
+using Graphiphy.Dedup;
+using Graphiphy.Models;
 
-namespace Ngraphiphy.Tests.Dedup;
+namespace Graphiphy.Tests.Dedup;
 
 public class EntityDeduplicatorTests
 {
@@ -3949,8 +3949,8 @@ public class EntityDeduplicatorTests
 - [ ] **Step 2: Implement UnionFind**
 
 ```csharp
-// src/Ngraphiphy/Dedup/UnionFind.cs
-namespace Ngraphiphy.Dedup;
+// src/Graphiphy/Dedup/UnionFind.cs
+namespace Graphiphy.Dedup;
 
 internal sealed class UnionFind
 {
@@ -4010,12 +4010,12 @@ internal sealed class UnionFind
 - [ ] **Step 3: Implement EntityDeduplicator**
 
 ```csharp
-// src/Ngraphiphy/Dedup/EntityDeduplicator.cs
+// src/Graphiphy/Dedup/EntityDeduplicator.cs
 using F23.StringSimilarity;
 using MinHashSharp;
-using Ngraphiphy.Models;
+using Graphiphy.Models;
 
-namespace Ngraphiphy.Dedup;
+namespace Graphiphy.Dedup;
 
 public static class EntityDeduplicator
 {
@@ -4186,13 +4186,13 @@ public static class EntityDeduplicator
 
 - [ ] **Step 4: Run tests**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "EntityDeduplicatorTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "EntityDeduplicatorTests"`
 Expected: All 6 tests pass
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Ngraphiphy/Dedup/ tests/Ngraphiphy.Tests/Dedup/
+git add src/Graphiphy/Dedup/ tests/Graphiphy.Tests/Dedup/
 git commit -m "feat: add entity deduplication with MinHash/LSH and Jaro-Winkler"
 ```
 
@@ -4218,7 +4218,7 @@ This task uses the C shim code from the earlier Leiden wrapper plan. The full im
 - [ ] **Step 4: Build native library**
 
 ```bash
-cd /home/timm/ngraphiphy/native
+cd /home/timm/graphiphy/native
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ```
@@ -4242,18 +4242,18 @@ git commit -m "feat: add native C interop shim for libleidenalg"
 ### Task 21: Leiden .NET Wrapper (Tests First)
 
 **Files:**
-- Create: `tests/Ngraphiphy.Tests/Cluster/LeidenClusteringTests.cs`
-- Create: `src/Ngraphiphy/Cluster/NativeMethods.cs`
-- Create: `src/Ngraphiphy/Cluster/NativeLibraryResolver.cs`
-- Create: `src/Ngraphiphy/Cluster/LeidenClustering.cs`
+- Create: `tests/Graphiphy.Tests/Cluster/LeidenClusteringTests.cs`
+- Create: `src/Graphiphy/Cluster/NativeMethods.cs`
+- Create: `src/Graphiphy/Cluster/NativeLibraryResolver.cs`
+- Create: `src/Graphiphy/Cluster/LeidenClustering.cs`
 
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Ngraphiphy.Tests/Cluster/LeidenClusteringTests.cs
-using Ngraphiphy.Cluster;
+// tests/Graphiphy.Tests/Cluster/LeidenClusteringTests.cs
+using Graphiphy.Cluster;
 
-namespace Ngraphiphy.Tests.Cluster;
+namespace Graphiphy.Tests.Cluster;
 
 public class LeidenClusteringTests
 {
@@ -4304,19 +4304,19 @@ public class LeidenClusteringTests
 
 These follow the same pattern as Phase 1 Leiden plan Tasks 5–6. The `LeidenClustering` class uses the same `FindCommunities` static method pattern with `PartitionType` enum. Key files:
 
-`src/Ngraphiphy/Cluster/NativeMethods.cs` — P/Invoke declarations (same as earlier plan Task 5)
-`src/Ngraphiphy/Cluster/NativeLibraryResolver.cs` — DLL resolver (same as earlier plan Task 8)
-`src/Ngraphiphy/Cluster/LeidenClustering.cs` — High-level API with `PartitionType` enum and `Result` record (same as earlier plan Task 6)
+`src/Graphiphy/Cluster/NativeMethods.cs` — P/Invoke declarations (same as earlier plan Task 5)
+`src/Graphiphy/Cluster/NativeLibraryResolver.cs` — DLL resolver (same as earlier plan Task 8)
+`src/Graphiphy/Cluster/LeidenClustering.cs` — High-level API with `PartitionType` enum and `Result` record (same as earlier plan Task 6)
 
 - [ ] **Step 3: Run tests**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "LeidenClusteringTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "LeidenClusteringTests"`
 Expected: All 3 tests pass
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/Ngraphiphy/Cluster/ tests/Ngraphiphy.Tests/Cluster/
+git add src/Graphiphy/Cluster/ tests/Graphiphy.Tests/Cluster/
 git commit -m "feat: add Leiden clustering .NET wrapper"
 ```
 
@@ -4327,18 +4327,18 @@ git commit -m "feat: add Leiden clustering .NET wrapper"
 ### Task 22: Graph Analyzer (Tests First)
 
 **Files:**
-- Create: `tests/Ngraphiphy.Tests/Analysis/GraphAnalyzerTests.cs`
-- Create: `src/Ngraphiphy/Analysis/GraphAnalyzer.cs`
+- Create: `tests/Graphiphy.Tests/Analysis/GraphAnalyzerTests.cs`
+- Create: `src/Graphiphy/Analysis/GraphAnalyzer.cs`
 
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Ngraphiphy.Tests/Analysis/GraphAnalyzerTests.cs
-using Ngraphiphy.Analysis;
-using Ngraphiphy.Build;
-using Ngraphiphy.Models;
+// tests/Graphiphy.Tests/Analysis/GraphAnalyzerTests.cs
+using Graphiphy.Analysis;
+using Graphiphy.Build;
+using Graphiphy.Models;
 
-namespace Ngraphiphy.Tests.Analysis;
+namespace Graphiphy.Tests.Analysis;
 
 public class GraphAnalyzerTests
 {
@@ -4404,11 +4404,11 @@ public class GraphAnalyzerTests
 - [ ] **Step 2: Implement GraphAnalyzer**
 
 ```csharp
-// src/Ngraphiphy/Analysis/GraphAnalyzer.cs
-using Ngraphiphy.Models;
+// src/Graphiphy/Analysis/GraphAnalyzer.cs
+using Graphiphy.Models;
 using QuikGraph;
 
-namespace Ngraphiphy.Analysis;
+namespace Graphiphy.Analysis;
 
 public static class GraphAnalyzer
 {
@@ -4472,13 +4472,13 @@ public static class GraphAnalyzer
 
 - [ ] **Step 3: Run tests**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "GraphAnalyzerTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "GraphAnalyzerTests"`
 Expected: All 3 tests pass
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/Ngraphiphy/Analysis/ tests/Ngraphiphy.Tests/Analysis/
+git add src/Graphiphy/Analysis/ tests/Graphiphy.Tests/Analysis/
 git commit -m "feat: add graph analyzer (god nodes, surprising connections)"
 ```
 
@@ -4489,17 +4489,17 @@ git commit -m "feat: add graph analyzer (god nodes, surprising connections)"
 ### Task 23: Extraction Cache (Tests First)
 
 **Files:**
-- Create: `tests/Ngraphiphy.Tests/Cache/ExtractionCacheTests.cs`
-- Create: `src/Ngraphiphy/Cache/ExtractionCache.cs`
+- Create: `tests/Graphiphy.Tests/Cache/ExtractionCacheTests.cs`
+- Create: `src/Graphiphy/Cache/ExtractionCache.cs`
 
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Ngraphiphy.Tests/Cache/ExtractionCacheTests.cs
-using Ngraphiphy.Cache;
-using Ngraphiphy.Models;
+// tests/Graphiphy.Tests/Cache/ExtractionCacheTests.cs
+using Graphiphy.Cache;
+using Graphiphy.Models;
 
-namespace Ngraphiphy.Tests.Cache;
+namespace Graphiphy.Tests.Cache;
 
 public class ExtractionCacheTests
 {
@@ -4599,7 +4599,7 @@ public class ExtractionCacheTests
 
     private static string CreateTempDir()
     {
-        var path = Path.Combine(Path.GetTempPath(), "ngraphiphy_cache_" + Guid.NewGuid().ToString("N")[..8]);
+        var path = Path.Combine(Path.GetTempPath(), "graphiphy_cache_" + Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(path);
         return path;
     }
@@ -4609,13 +4609,13 @@ public class ExtractionCacheTests
 - [ ] **Step 2: Implement ExtractionCache**
 
 ```csharp
-// src/Ngraphiphy/Cache/ExtractionCache.cs
+// src/Graphiphy/Cache/ExtractionCache.cs
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Ngraphiphy.Models;
+using Graphiphy.Models;
 
-namespace Ngraphiphy.Cache;
+namespace Graphiphy.Cache;
 
 public sealed class ExtractionCache
 {
@@ -4691,13 +4691,13 @@ public sealed class ExtractionCache
 
 - [ ] **Step 3: Run tests**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "ExtractionCacheTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "ExtractionCacheTests"`
 Expected: All 6 tests pass
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/Ngraphiphy/Cache/ tests/Ngraphiphy.Tests/Cache/
+git add src/Graphiphy/Cache/ tests/Graphiphy.Tests/Cache/
 git commit -m "feat: add extraction cache with SHA256 hashing and frontmatter stripping"
 ```
 
@@ -4708,18 +4708,18 @@ git commit -m "feat: add extraction cache with SHA256 hashing and frontmatter st
 ### Task 24: Report Generator (Tests First)
 
 **Files:**
-- Create: `tests/Ngraphiphy.Tests/Report/ReportGeneratorTests.cs`
-- Create: `src/Ngraphiphy/Report/ReportGenerator.cs`
+- Create: `tests/Graphiphy.Tests/Report/ReportGeneratorTests.cs`
+- Create: `src/Graphiphy/Report/ReportGenerator.cs`
 
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Ngraphiphy.Tests/Report/ReportGeneratorTests.cs
-using Ngraphiphy.Build;
-using Ngraphiphy.Models;
-using Ngraphiphy.Report;
+// tests/Graphiphy.Tests/Report/ReportGeneratorTests.cs
+using Graphiphy.Build;
+using Graphiphy.Models;
+using Graphiphy.Report;
 
-namespace Ngraphiphy.Tests.Report;
+namespace Graphiphy.Tests.Report;
 
 public class ReportGeneratorTests
 {
@@ -4783,13 +4783,13 @@ public class ReportGeneratorTests
 - [ ] **Step 2: Implement ReportGenerator**
 
 ```csharp
-// src/Ngraphiphy/Report/ReportGenerator.cs
+// src/Graphiphy/Report/ReportGenerator.cs
 using System.Text;
-using Ngraphiphy.Analysis;
-using Ngraphiphy.Models;
+using Graphiphy.Analysis;
+using Graphiphy.Models;
 using QuikGraph;
 
-namespace Ngraphiphy.Report;
+namespace Graphiphy.Report;
 
 public static class ReportGenerator
 {
@@ -4864,13 +4864,13 @@ public static class ReportGenerator
 
 - [ ] **Step 3: Run tests**
 
-Run: `dotnet test tests/Ngraphiphy.Tests/ --filter "ReportGeneratorTests"`
+Run: `dotnet test tests/Graphiphy.Tests/ --filter "ReportGeneratorTests"`
 Expected: All 3 tests pass
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/Ngraphiphy/Report/ tests/Ngraphiphy.Tests/Report/
+git add src/Graphiphy/Report/ tests/Graphiphy.Tests/Report/
 git commit -m "feat: add markdown report generator"
 ```
 
@@ -4884,7 +4884,7 @@ git commit -m "feat: add markdown report generator"
 
 - [ ] **Step 1: Run entire test suite**
 
-Run: `dotnet test Ngraphiphy.sln --logger "console;verbosity=detailed"`
+Run: `dotnet test Graphiphy.sln --logger "console;verbosity=detailed"`
 Expected: All tests pass
 
 - [ ] **Step 2: Fix any compilation or runtime issues discovered**
