@@ -1,4 +1,7 @@
 <Project>
+  <PropertyGroup>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="MinVer" Version="6.0.0" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
   </ItemGroup>
