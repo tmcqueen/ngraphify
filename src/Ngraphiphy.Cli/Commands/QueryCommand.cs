@@ -1,5 +1,7 @@
 // src/Ngraphiphy.Cli/Commands/QueryCommand.cs
 using System.ComponentModel;
+using Microsoft.Extensions.Options;
+using Ngraphiphy.Cli.Configuration.Options;
 using Ngraphiphy.Llm;
 using Ngraphiphy.Pipeline;
 using Spectre.Console;
@@ -40,22 +42,42 @@ public sealed class QuerySettings : CommandSettings
 
 public sealed class QueryCommand : AsyncCommand<QuerySettings>
 {
+    private readonly LlmOptions _llmOpts;
+
+    public QueryCommand(IOptions<LlmOptions> llmOptions)
+    {
+        _llmOpts = llmOptions.Value;
+    }
+
     protected override async Task<int> ExecuteAsync(
         CommandContext context, QuerySettings settings, CancellationToken cancellationToken)
     {
         IAgentConfig config = settings.Provider.ToLowerInvariant() switch
         {
-            "openai"  => new OpenAiConfig(
-                ApiKey: settings.ApiKey ?? Env("OPENAI_API_KEY") ?? Error("--key or OPENAI_API_KEY required"),
-                Model: settings.Model ?? "gpt-4o"),
-            "ollama"  => new OllamaConfig(Model: settings.Model ?? "llama3.2"),
+            "openai" => new OpenAiConfig(
+                ApiKey: settings.ApiKey
+                    ?? _llmOpts.OpenAi.ApiKey
+                    ?? Error("--key, Llm:OpenAi:ApiKey in appsettings.json required"),
+                Model: settings.Model ?? _llmOpts.OpenAi.Model),
+
+            "ollama" => new OllamaConfig(
+                Model: settings.Model ?? _llmOpts.Ollama.Model,
+                Endpoint: _llmOpts.Ollama.Endpoint),
+
             "copilot" => new CopilotConfig(),
-            "a2a"     => new A2AConfig(
-                AgentUrl: settings.AgentUrl ?? Error("--agent-url required for a2a"),
-                ApiKey: settings.ApiKey),
-            _         => new AnthropicConfig(
-                ApiKey: settings.ApiKey ?? Env("ANTHROPIC_API_KEY") ?? Error("--key or ANTHROPIC_API_KEY required"),
-                Model: settings.Model ?? "claude-sonnet-4-6"),
+
+            "a2a" => new A2AConfig(
+                AgentUrl: settings.AgentUrl
+                    ?? _llmOpts.A2A.AgentUrl
+                    ?? Error("--agent-url, Llm:A2A:AgentUrl in appsettings.json required"),
+                ApiKey: settings.ApiKey ?? _llmOpts.A2A.ApiKey),
+
+            _ => new AnthropicConfig(
+                ApiKey: settings.ApiKey
+                    ?? _llmOpts.Anthropic.ApiKey
+                    ?? Error("--key, Llm:Anthropic:ApiKey in appsettings.json required"),
+                Model: settings.Model ?? _llmOpts.Anthropic.Model,
+                MaxTokens: _llmOpts.Anthropic.MaxTokens),
         };
 
         RepositoryAnalysis? repo = null;
@@ -96,8 +118,6 @@ public sealed class QueryCommand : AsyncCommand<QuerySettings>
         AnsiConsole.Write(new Panel(answer).Header("Answer").Expand());
         return 0;
     }
-
-    private static string? Env(string name) => Environment.GetEnvironmentVariable(name);
 
     private static string Error(string message)
     {
