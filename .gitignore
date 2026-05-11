@@ -58,3 +58,4 @@ nunit-*.xml
 
 .external/*
 .ngraphiphy-cache/
+*.lscache
