@@ -13,6 +13,7 @@
     <ProjectReference Include="..\Ngraphiphy\Ngraphiphy.csproj" />
     <ProjectReference Include="..\Ngraphiphy.Llm\Ngraphiphy.Llm.csproj" />
     <ProjectReference Include="..\Ngraphiphy.Pipeline\Ngraphiphy.Pipeline.csproj" />
+    <ProjectReference Include="..\Ngraphiphy.Storage\Ngraphiphy.Storage.csproj" />
   </ItemGroup>
 
   <ItemGroup>

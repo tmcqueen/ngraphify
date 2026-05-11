@@ -13,5 +13,7 @@ app.Configure(config =>
           .WithDescription("Ask an LLM a question about the repository graph.");
     config.AddCommand<ServeCommand>("serve")
           .WithDescription("Start an MCP server over stdio for the given repository.");
+    config.AddCommand<PushCommand>("push")
+          .WithDescription("Push repository graph to Neo4j or Memgraph with optional embeddings and summaries.");
 });
 return app.Run(args);
