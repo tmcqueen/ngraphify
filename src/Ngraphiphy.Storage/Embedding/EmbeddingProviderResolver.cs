@@ -30,7 +30,10 @@ public sealed class EmbeddingProviderResolver
             throw new InvalidOperationException(
                 $"Provider '{name}' not found in the Providers configuration section.");
 
-        var apiType = (section["ApiType"] ?? name).ToLowerInvariant();
+        var apiType = (section["ApiType"]
+            ?? throw new InvalidOperationException(
+                $"Provider '{name}': ApiType is required (currently supported: \"openai\")."))
+            .ToLowerInvariant();
 
         int dimensions = 768;
         var dimStr = section["Dimensions"];

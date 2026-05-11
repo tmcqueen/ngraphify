@@ -35,7 +35,10 @@ public sealed class AgentProviderResolver
             throw new InvalidOperationException(
                 $"Provider '{name}' not found in the Providers configuration section.");
 
-        var apiType = (section["ApiType"] ?? name).ToLowerInvariant();
+        var apiType = (section["ApiType"]
+            ?? throw new InvalidOperationException(
+                $"Provider '{name}': ApiType is required (e.g. \"anthropic\", \"openai\", \"ollama\", \"copilot\", \"a2a\")."))
+            .ToLowerInvariant();
 
         return apiType switch
         {
