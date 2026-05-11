@@ -396,6 +396,13 @@ To resolve:
 - On macOS: `brew install tree-sitter`
 - On Windows: Use the pre-built distribution
 
+### "pass binary not installed" or secret resolution warning
+
+If the `pass` password manager is not installed, the CLI will warn at startup but continue normally. Commands that require secrets (e.g., `query` with LLM provider) will fail with a clear error message only if the secret is actually needed. You can:
+
+1. Install `pass` if using secret providers: `sudo apt-get install pass` (Linux) or `brew install pass` (macOS)
+2. Provide secrets via environment variables instead: `export ANTHROPIC_API_KEY=sk-ant-...`
+
 ### "API key required but not provided"
 
 For the `query` command, provide an API key via:
@@ -406,8 +413,8 @@ For the `query` command, provide an API key via:
 
 ### Performance Issues
 
-- **First run** — Full extraction takes time. Subsequent runs use cache.
-- **Large repos** — For repos with 1000+ files, incremental builds are faster.
+- **First run** — Full extraction uses all available CPU cores for parallel processing. Subsequent runs use cache.
+- **Large repos** — For repos with 1000+ files, incremental builds are faster. Parallel file extraction significantly speeds up analysis of large codebases.
 - **Memory** — Disable Leiden clustering if memory is constrained: set `<NgraphiphyEnabled>false</NgraphiphyEnabled>` in MSBuild.
 
 ### Build Integration Not Running

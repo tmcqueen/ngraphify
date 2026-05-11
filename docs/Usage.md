@@ -616,13 +616,13 @@ ngraphiphy-cli query . "Are there any new cross-module dependencies in this chan
 
 ### 1. Use Cache
 
-**First run:** Full extraction and analysis
+**First run:** Full extraction and analysis using parallel processing across CPU cores
 
 ```bash
-ngraphiphy-cli analyze /path/to/repo  # ~30-60s for 100+ files
+ngraphiphy-cli analyze /path/to/repo  # ~30-60s for 100+ files (parallelized)
 ```
 
-**Subsequent runs:** Cache reused, faster
+**Subsequent runs:** Cache reused, much faster
 
 ```bash
 ngraphiphy-cli analyze /path/to/repo  # ~5-10s
@@ -633,6 +633,8 @@ ngraphiphy-cli analyze /path/to/repo  # ~5-10s
 ```bash
 rm -rf .ngraphiphy-cache && ngraphiphy-cli analyze .
 ```
+
+**Note:** Each file is read once during extraction, and large repositories benefit significantly from the parallel file processing improvements.
 
 ### 2. Filter Large Repositories
 
@@ -851,6 +853,20 @@ ngraphiphy-cli query . "your question" --provider openai
 ngraphiphy-cli query . "your question" --key sk-ant-...
 ```
 
+**Secret provider setup (pass):**
+
+The CLI supports both `pass://` and `env://` secret providers configured via environment variables. If `pass` is not installed, the CLI will warn at startup but continue normally. Install it if needed:
+
+```bash
+# Linux
+sudo apt-get install pass
+
+# macOS
+brew install pass
+```
+
+Secret keys with spaces (e.g., `my secrets/anthropic-key`) are now handled correctly.
+
 ### "Analysis failed: DllNotFoundException"
 
 Leiden clustering library missing (non-fatal warning). Analysis continues without clustering:
@@ -859,7 +875,9 @@ Leiden clustering library missing (non-fatal warning). Analysis continues withou
 [warn] Could not load Leiden library; continuing without clustering
 ```
 
-To fix:
+This is expected behavior. Clustering is optional; the pipeline completes successfully and produces results with standard graph analysis.
+
+To enable clustering:
 
 ```bash
 # Linux
