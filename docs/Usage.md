@@ -147,7 +147,7 @@ Ask an LLM a question about the codebase using the knowledge graph.
 **Syntax:**
 
 ```bash
-ngraphiphy-cli query <path> <question> [--provider <name>] [--key <apiKey>] [--model <name>] [--agent-url <url>] [--cache <dir>]
+ngraphiphy-cli query <path> <question> [--provider <name>] [--cache <dir>]
 ```
 
 **Arguments:**
@@ -157,40 +157,28 @@ ngraphiphy-cli query <path> <question> [--provider <name>] [--key <apiKey>] [--m
 
 **Options:**
 
-- `--provider <name>` — LLM provider (default: `anthropic`)
-  - `anthropic` — Claude (Anthropic)
-  - `openai` — GPT (OpenAI)
-  - `ollama` — Local models (Ollama)
-  - `copilot` — GitHub Copilot
-  - `a2a` — Remote agent (Anthropic A2A)
-- `--key <apiKey>` — API key (optional, falls back to env vars)
-- `--model <name>` — Model name (optional, uses provider default if omitted)
-- `--agent-url <url>` — Remote agent URL (required for `a2a` provider)
+- `--provider <name>` — Named provider from `appsettings.json` (default: value of `Llm.Provider`)
+  - Uses the `Providers` dictionary in `appsettings.json`
+  - Example providers: `Anthropic`, `OpenAI`, `Ollama`, `GitHubCopilot`, `A2A`
 - `--cache <dir>` — Cache directory (default: `<path>/.ngraphiphy-cache`)
 
 **Examples:**
 
 ```bash
-# Anthropic (default, requires ANTHROPIC_API_KEY)
-export ANTHROPIC_API_KEY=sk-ant-...
+# Use configured Anthropic provider (default via Llm.Provider)
 ngraphiphy-cli query . "What is the main entry point of this application?"
 
-# OpenAI
-export OPENAI_API_KEY=sk-...
-ngraphiphy-cli query . "List all database operations" --provider openai
+# Switch to OpenAI provider
+ngraphiphy-cli query . "List all database operations" --provider OpenAI
 
-# Ollama (local, no API key needed)
-ngraphiphy-cli query . "Find potential circular dependencies" --provider ollama
+# Use local Ollama
+ngraphiphy-cli query . "Find potential circular dependencies" --provider Ollama
 
-# GitHub Copilot (requires gh auth login)
-gh auth login
-ngraphiphy-cli query . "Identify security issues" --provider copilot
+# GitHub Copilot
+ngraphiphy-cli query . "Identify security issues" --provider GitHubCopilot
 
 # Remote A2A agent
-ngraphiphy-cli query . "Summarize this codebase" --provider a2a --agent-url https://agent.example.com
-
-# Custom model
-ngraphiphy-cli query . "What does UserService do?" --model claude-opus-4
+ngraphiphy-cli query . "Summarize this codebase" --provider A2A
 ```
 
 **Output:**
@@ -212,7 +200,8 @@ Querying LLM...
 
 **Error Handling:**
 
-- API key not provided: Error message with hint about env var or `--key` flag
+- Provider not found: Error message listing available providers from `appsettings.json`
+- API key not configured: Error with secret provider hint
 - LLM request failed: Error with service-specific message
 - Analysis failed: Error with root cause
 
@@ -272,22 +261,79 @@ See [MCP Configuration](mcp-config.md) for Claude Desktop, Cursor, and other cli
 
 ## LLM Providers
 
+### Configuration Overview
+
+All LLM providers are configured in `appsettings.json` under the `Providers` dictionary. Each provider entry has:
+
+- **ApiType** — Provider type (`anthropic`, `openai`, `ollama`, `copilot`, `a2a`)
+- **ApiKey** — Secret provider reference (e.g. `pass://anthropic/api-key` or `env://ENV_VAR`)
+- **Model** — Default model name
+- **MaxTokens** — Response token limit (if applicable)
+- **Endpoint** — Custom API endpoint (for OpenAI-compatible providers)
+
+The `Llm.Provider` field specifies which provider to use by default.
+
+**Example appsettings.json:**
+
+```json
+{
+  "Providers": {
+    "Anthropic": {
+      "ApiType": "anthropic",
+      "ApiKey": "pass://anthropic/api-key",
+      "Model": "claude-sonnet-4-6",
+      "MaxTokens": 4096
+    },
+    "OpenAI": {
+      "ApiType": "openai",
+      "ApiKey": "pass://openai/api-key",
+      "Model": "gpt-4o"
+    }
+  },
+  "Llm": {
+    "Provider": "Anthropic"
+  }
+}
+```
+
+### Custom OpenAI-Compatible Endpoints
+
+To use a custom OpenAI-compatible endpoint (e.g. Groq, Mistral, or self-hosted), add a new entry to `Providers`:
+
+```json
+{
+  "Providers": {
+    "Groq": {
+      "ApiType": "openai",
+      "Endpoint": "https://api.groq.com/openai/v1/",
+      "ApiKey": "pass://groq/api-key",
+      "Model": "mixtral-8x7b-32768"
+    }
+  }
+}
+```
+
+Then use it:
+
+```bash
+ngraphiphy-cli query . "Analyze this code" --provider Groq
+```
+
 ### Anthropic (Claude)
 
 **Setup:**
 
 1. Get API key from [console.anthropic.com](https://console.anthropic.com)
-2. Set environment variable:
-
-   ```bash
-   export ANTHROPIC_API_KEY=sk-ant-...
-   ```
+2. Store using a secret provider (e.g. `pass`, environment variables)
 
 **Usage:**
 
 ```bash
-ngraphiphy-cli query . "What are the main services?" --provider anthropic
-ngraphiphy-cli query . "Summarize the architecture" --model claude-opus-4
+# Uses configured Anthropic provider
+ngraphiphy-cli query . "What are the main services?"
+
+# Or explicitly select the provider
+ngraphiphy-cli query . "Summarize the architecture" --provider Anthropic
 ```
 
 **Available Models:**
@@ -307,17 +353,24 @@ ngraphiphy-cli query . "Summarize the architecture" --model claude-opus-4
 **Setup:**
 
 1. Get API key from [platform.openai.com](https://platform.openai.com/api-keys)
-2. Set environment variable:
+2. Configure in `appsettings.json`:
 
-   ```bash
-   export OPENAI_API_KEY=sk-...
+   ```json
+   {
+     "Providers": {
+       "OpenAI": {
+         "ApiType": "openai",
+         "ApiKey": "pass://openai/api-key",
+         "Model": "gpt-4o"
+       }
+     }
+   }
    ```
 
 **Usage:**
 
 ```bash
-ngraphiphy-cli query . "Explain the data flow" --provider openai
-ngraphiphy-cli query . "List all classes" --provider openai --model gpt-4-turbo
+ngraphiphy-cli query . "Explain the data flow" --provider OpenAI
 ```
 
 **Available Models:**
@@ -348,11 +401,24 @@ ngraphiphy-cli query . "List all classes" --provider openai --model gpt-4-turbo
    ollama serve
    ```
 
+4. Configure in `appsettings.json` (already configured by default):
+
+   ```json
+   {
+     "Providers": {
+       "Ollama": {
+         "ApiType": "ollama",
+         "Endpoint": "http://localhost:11434",
+         "Model": "llama3.2"
+       }
+     }
+   }
+   ```
+
 **Usage:**
 
 ```bash
-ngraphiphy-cli query . "What is the main architecture?" --provider ollama
-ngraphiphy-cli query . "Find potential bugs" --provider ollama --model mistral
+ngraphiphy-cli query . "What is the main architecture?" --provider Ollama
 ```
 
 **Available Models:**
@@ -381,18 +447,22 @@ ngraphiphy-cli query . "Find potential bugs" --provider ollama --model mistral
    gh auth login
    ```
 
-   Or set token:
+2. Configure in `appsettings.json` (no API key needed):
 
-   ```bash
-   export GITHUB_TOKEN=ghp_...
+   ```json
+   {
+     "Providers": {
+       "GitHubCopilot": {
+         "ApiType": "copilot"
+       }
+     }
+   }
    ```
-
-2. Copilot extension installed via GitHub CLI
 
 **Usage:**
 
 ```bash
-ngraphiphy-cli query . "What services are imported here?" --provider copilot
+ngraphiphy-cli query . "What services are imported here?" --provider GitHubCopilot
 ```
 
 **Model:** Managed by GitHub (typically Claude or GPT)
@@ -405,29 +475,32 @@ ngraphiphy-cli query . "What services are imported here?" --provider copilot
 
 **Setup:**
 
-1. Get remote agent URL and optional API token from your organization
-2. Provide agent URL:
+1. Get remote agent URL from your organization
+2. Configure in `appsettings.json`:
 
-   ```bash
-   ngraphiphy-cli query . "Summarize this repo" --provider a2a \
-     --agent-url https://agent.your-org.com
+   ```json
+   {
+     "Providers": {
+       "A2A": {
+         "ApiType": "a2a",
+         "Endpoint": "env://A2A_AGENT_URL",
+         "ApiKey": ""
+       }
+     }
+   }
    ```
 
-3. Optional: Provide API key for authentication:
+3. Set the environment variable:
 
    ```bash
-   ngraphiphy-cli query . "..." --provider a2a \
-     --agent-url https://agent.your-org.com \
-     --key your-bearer-token
+   export A2A_AGENT_URL=https://agent.your-org.com
    ```
 
 **Usage:**
 
 ```bash
-ngraphiphy-cli query . "Analyze this codebase" \
-  --provider a2a \
-  --agent-url https://agent.example.com \
-  --key optional-bearer-token
+export A2A_AGENT_URL=https://agent.example.com
+ngraphiphy-cli query . "Analyze this codebase" --provider A2A
 ```
 
 **Cost:** Managed by your organization/agent provider
@@ -833,29 +906,24 @@ echo $PATH | tr ':' '\n' | grep dotnet
 
 ### "API key required but not provided"
 
-**For Anthropic:**
+**Check your appsettings.json configuration:**
 
-```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-ngraphiphy-cli query . "your question"
-```
-
-**For OpenAI:**
-
-```bash
-export OPENAI_API_KEY=sk-...
-ngraphiphy-cli query . "your question" --provider openai
-```
-
-**Or pass directly:**
-
-```bash
-ngraphiphy-cli query . "your question" --key sk-ant-...
+```json
+{
+  "Providers": {
+    "Anthropic": {
+      "ApiKey": "pass://anthropic/api-key"
+    }
+  },
+  "Llm": {
+    "Provider": "Anthropic"
+  }
+}
 ```
 
 **Secret provider setup (pass):**
 
-The CLI supports both `pass://` and `env://` secret providers configured via environment variables. If `pass` is not installed, the CLI will warn at startup but continue normally. Install it if needed:
+The CLI supports both `pass://` and `env://` secret providers configured in `appsettings.json`. If `pass` is not installed, the CLI will warn at startup but continue normally. Install it if needed:
 
 ```bash
 # Linux
@@ -865,7 +933,14 @@ sudo apt-get install pass
 brew install pass
 ```
 
-Secret keys with spaces (e.g., `my secrets/anthropic-key`) are now handled correctly.
+Then store your secrets:
+
+```bash
+pass insert anthropic/api-key
+# Enter your Anthropic API key when prompted
+```
+
+Secret keys with spaces (e.g., `my secrets/anthropic-key`) are handled correctly.
 
 ### "Analysis failed: DllNotFoundException"
 
