@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Configuration;
+using Spectre.Console;
 
 namespace Ngraphiphy.Cli.Configuration.Secrets;
 
@@ -24,13 +25,24 @@ public static class SecretResolver
             if (!reference.IsReference) continue;
 
             if (!providers.TryGetValue(reference.Scheme, out var provider))
-                throw new InvalidOperationException(
-                    $"No secret provider registered for scheme '{reference.Scheme}' " +
-                    $"(key: {key}).");
+            {
+                AnsiConsole.MarkupLine($"[yellow]Warning: No secret provider registered for scheme '{reference.Scheme}' (key: {key})[/]");
+                continue;
+            }
 
-            var resolved = provider.Resolve(reference.Path);
-            if (resolved is not null)
-                overlay[key] = resolved;
+            try
+            {
+                var resolved = provider.Resolve(reference.Path);
+                if (resolved is not null)
+                    overlay[key] = resolved;
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Secret couldn't be resolved, but don't fail the entire CLI startup.
+                // The command that actually needs this secret will fail with a clear error.
+                AnsiConsole.MarkupLine($"[yellow]Warning: Could not resolve secret reference '{key}': {ex.Message}[/]");
+                // Don't add to overlay — the config value (pass://...) remains
+            }
         }
 
         if (overlay.Count > 0)
