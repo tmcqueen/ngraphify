@@ -39,7 +39,7 @@ public sealed class ReportCommand : AsyncCommand<ReportSettings>
         }
         catch (Exception ex)
         {
-            AnsiConsole.MarkupLine($"[red]Error: {ex.Message}[/]");
+            AnsiConsole.MarkupLineInterpolated($"[red]Error: {ex.Message}[/]");
             return 1;
         }
 
@@ -48,7 +48,7 @@ public sealed class ReportCommand : AsyncCommand<ReportSettings>
         if (settings.OutputFile is not null)
         {
             await File.WriteAllTextAsync(settings.OutputFile, result.Report, cancellationToken);
-            AnsiConsole.MarkupLine($"[green]Report written to {settings.OutputFile}[/]");
+            AnsiConsole.MarkupLineInterpolated($"[green]Report written to {settings.OutputFile}[/]");
         }
         else
         {

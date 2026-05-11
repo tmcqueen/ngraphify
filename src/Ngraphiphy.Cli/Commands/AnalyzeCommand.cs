@@ -53,7 +53,7 @@ public sealed class AnalyzeCommand : AsyncCommand<AnalyzeSettings>
         if (settings.OutputFile is not null)
         {
             await File.WriteAllTextAsync(settings.OutputFile, result.Report, cancellationToken);
-            AnsiConsole.MarkupLine($"[green]Report written to {settings.OutputFile}[/]");
+            AnsiConsole.MarkupLineInterpolated($"[green]Report written to {settings.OutputFile}[/]");
         }
 
         return 0;

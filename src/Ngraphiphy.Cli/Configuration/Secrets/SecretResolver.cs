@@ -26,7 +26,7 @@ public static class SecretResolver
 
             if (!providers.TryGetValue(reference.Scheme, out var provider))
             {
-                AnsiConsole.MarkupLine($"[yellow]Warning: No secret provider registered for scheme '{reference.Scheme}' (key: {key})[/]");
+                AnsiConsole.MarkupLineInterpolated($"[yellow]Warning: No secret provider registered for scheme '{reference.Scheme}' (key: {key})[/]");
                 continue;
             }
 

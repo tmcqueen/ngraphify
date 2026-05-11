@@ -93,7 +93,7 @@ public sealed class QueryCommand : AsyncCommand<QuerySettings>
         }
         catch (Exception ex)
         {
-            AnsiConsole.MarkupLine($"[red]Error: {ex.Message}[/]");
+            AnsiConsole.MarkupLineInterpolated($"[red]Error: {ex.Message}[/]");
             return 1;
         }
 
@@ -110,7 +110,7 @@ public sealed class QueryCommand : AsyncCommand<QuerySettings>
         }
         catch (Exception ex)
         {
-            AnsiConsole.MarkupLine($"[red]LLM error: {ex.Message}[/]");
+            AnsiConsole.MarkupLineInterpolated($"[red]LLM error: {ex.Message}[/]");
             return 1;
         }
 
@@ -121,7 +121,7 @@ public sealed class QueryCommand : AsyncCommand<QuerySettings>
 
     private static string Error(string message)
     {
-        AnsiConsole.MarkupLine($"[red]{message}[/]");
+        AnsiConsole.MarkupLineInterpolated($"[red]{message}[/]");
         throw new InvalidOperationException(message);
     }
 }

@@ -135,7 +135,7 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
         var exists = await store.SnapshotExistsAsync(snapshotId, cancellationToken);
         if (exists && !settings.Force)
         {
-            AnsiConsole.MarkupLine($"[yellow][ngraphiphy] Snapshot already exists, skipping.[/]");
+            AnsiConsole.MarkupLine("[yellow][ngraphiphy] Snapshot already exists, skipping.[/]");
             return 0;
         }
 
@@ -155,7 +155,7 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
         // 6. Save snapshot
         AnsiConsole.MarkupLine("[blue][ngraphiphy] Saving snapshot...[/]");
         await store.SaveSnapshotAsync(analysis, snapshotId, cancellationToken);
-        AnsiConsole.MarkupLine($"[green][ngraphiphy] Snapshot saved: {analysis.Graph.VertexCount} nodes, {analysis.Graph.EdgeCount} edges[/]");
+        AnsiConsole.MarkupLineInterpolated($"[green][ngraphiphy] Snapshot saved: {analysis.Graph.VertexCount} nodes, {analysis.Graph.EdgeCount} edges[/]");
 
         // 7. Embed nodes (optional)
         if (settings.Embed)
@@ -232,16 +232,16 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
                 {
                     var summary = await agent.AnswerAsync(prompt, session, cancellationToken);
                     summaries.Add(new(community.Key, summary, community.Count()));
-                    AnsiConsole.MarkupLine($"[dim]  Community {community.Key}: summarized[/]");
+                    AnsiConsole.MarkupLineInterpolated($"[dim]  Community {community.Key}: summarized[/]");
                 }
                 catch (Exception ex)
                 {
-                    AnsiConsole.MarkupLine($"[yellow]  Community {community.Key}: summary failed ({ex.Message})[/]");
+                    AnsiConsole.MarkupLineInterpolated($"[yellow]  Community {community.Key}: summary failed ({ex.Message})[/]");
                 }
             }
 
             await store.SaveCommunitySummariesAsync(snapshotId, summaries, cancellationToken);
-            AnsiConsole.MarkupLine($"[green][ngraphiphy] Saved {summaries.Count} community summaries[/]");
+            AnsiConsole.MarkupLineInterpolated($"[green][ngraphiphy] Saved {summaries.Count} community summaries[/]");
         }
 
         AnsiConsole.MarkupLine("[green][ngraphiphy] Push complete[/]");
@@ -252,7 +252,7 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
 
     private static string Error(string message)
     {
-        AnsiConsole.MarkupLine($"[red]{message}[/]");
+        AnsiConsole.MarkupLineInterpolated($"[red]{message}[/]");
         throw new InvalidOperationException(message);
     }
 }
