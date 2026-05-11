@@ -54,13 +54,14 @@ public class SnapshotIdTests
         var baseDir = Path.Combine(Path.GetTempPath(), "ngraphiphy-snapshot-test-" + Guid.NewGuid());
         var dirA = Path.Combine(baseDir, "проект-a");
         var dirB = Path.Combine(baseDir, "проект-b");
-        Directory.CreateDirectory(dirA);
-        Directory.CreateDirectory(dirB);
-        await File.WriteAllTextAsync(Path.Combine(dirA, "a.cs"), "class A {}");
-        await File.WriteAllTextAsync(Path.Combine(dirB, "a.cs"), "class A {}");
 
         try
         {
+            Directory.CreateDirectory(dirA);
+            Directory.CreateDirectory(dirB);
+            await File.WriteAllTextAsync(Path.Combine(dirA, "a.cs"), "class A {}");
+            await File.WriteAllTextAsync(Path.Combine(dirB, "a.cs"), "class A {}");
+
             var idA = SnapshotId.Resolve(dirA);
             var idB = SnapshotId.Resolve(dirB);
 

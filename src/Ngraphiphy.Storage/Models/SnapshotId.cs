@@ -33,10 +33,10 @@ public sealed record SnapshotId(string RootPath, string CommitHash)
 
         foreach (var file in files)
         {
-            var fileInfo = new FileInfo(file);
             var pathBytes = System.Text.Encoding.UTF8.GetBytes(file);
             hasher.TransformBlock(pathBytes, 0, pathBytes.Length, null, 0);
-            hasher.TransformBlock(File.ReadAllBytes(file), 0, (int)fileInfo.Length, null, 0);
+            var contentBytes = File.ReadAllBytes(file);
+            hasher.TransformBlock(contentBytes, 0, contentBytes.Length, null, 0);
         }
         hasher.TransformFinalBlock([], 0, 0);
 
