@@ -1,16 +1,16 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Ngraphiphy.Cluster;
 
 public static class NativeLibraryResolver
 {
-    private static bool _registered = false;
+    private static int _registered = 0;
 
     public static void Register()
     {
-        if (_registered) return;
-        _registered = true;
+        if (Interlocked.Exchange(ref _registered, 1) == 1) return;
         NativeLibrary.SetDllImportResolver(typeof(NativeMethods).Assembly, Resolver);
     }
 
@@ -27,10 +27,6 @@ public static class NativeLibraryResolver
             Path.Combine(AppContext.BaseDirectory, "native", "libleiden_interop.so"),
             // Absolute path from known build location (worktree)
             Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "..", "native", "build", "lib", "libleiden_interop.so"),
-            // Absolute fallback - main repo build
-            "/home/timm/ngraphiphy/native/build/lib/libleiden_interop.so",
-            // Absolute fallback - task21 worktree build
-            "/home/timm/ngraphiphy-task21/native/build/lib/libleiden_interop.so",
             // Try common system paths
             "/usr/local/lib/libleiden_interop.so",
             "/usr/lib/libleiden_interop.so",
