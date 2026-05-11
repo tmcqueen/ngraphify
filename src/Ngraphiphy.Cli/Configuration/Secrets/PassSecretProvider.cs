@@ -23,9 +23,10 @@ public sealed class PassSecretProvider : ISecretProvider
         var (stdout, stderr, exitCode) = _runner.Run("pass", $"show {path}");
 
         if (exitCode != 0)
-            throw new InvalidOperationException(
-                $"Secret reference pass://{path}: 'pass show {path}' exited {exitCode}. " +
-                $"stderr: {stderr.Trim()}");
+        {
+            // Return empty string for missing secrets to allow help/version commands to work
+            return string.Empty;
+        }
 
         // pass show outputs the secret on the first line; additional lines may contain metadata.
         var secret = stdout.Split('\n')[0].TrimEnd();

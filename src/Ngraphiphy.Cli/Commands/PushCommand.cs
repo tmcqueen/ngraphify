@@ -1,4 +1,6 @@
 using System.ComponentModel;
+using Microsoft.Extensions.Options;
+using Ngraphiphy.Cli.Configuration.Options;
 using Ngraphiphy.Llm;
 using Ngraphiphy.Pipeline;
 using Ngraphiphy.Storage;
@@ -19,7 +21,7 @@ public sealed class PushSettings : CommandSettings
 
     [CommandOption("--backend <backend>")]
     [Description("Graph database: neo4j or memgraph")]
-    public required string Backend { get; init; }
+    public string? Backend { get; init; }
 
     [CommandOption("--uri <uri>")]
     [Description("Neo4j URI. Default: bolt://localhost:7687")]
@@ -27,11 +29,11 @@ public sealed class PushSettings : CommandSettings
 
     [CommandOption("--host <host>")]
     [Description("Memgraph host. Default: localhost")]
-    public string Host { get; init; } = "localhost";
+    public string? Host { get; init; }
 
     [CommandOption("--port <port>")]
     [Description("Memgraph port. Default: 7687")]
-    public int Port { get; init; } = 7687;
+    public int? Port { get; init; }
 
     [CommandOption("--username <username>")]
     [Description("Database username.")]
@@ -55,7 +57,7 @@ public sealed class PushSettings : CommandSettings
 
     [CommandOption("--cf-model <model>")]
     [Description("Cloudflare embedding model. Default: @cf/baai/bge-base-en-v1.5")]
-    public string CloudflareModel { get; init; } = "@cf/baai/bge-base-en-v1.5";
+    public string? CloudflareModel { get; init; }
 
     [CommandOption("--summarize")]
     [Description("Generate community summaries.")]
@@ -63,7 +65,7 @@ public sealed class PushSettings : CommandSettings
 
     [CommandOption("--provider <provider>")]
     [Description("LLM provider for summaries: anthropic (default), openai, ollama, copilot, a2a")]
-    public string LlmProvider { get; init; } = "anthropic";
+    public string? LlmProvider { get; init; }
 
     [CommandOption("--key <key>")]
     [Description("LLM API key (or env var).")]
@@ -84,6 +86,20 @@ public sealed class PushSettings : CommandSettings
 
 public sealed class PushCommand : AsyncCommand<PushSettings>
 {
+    private readonly LlmOptions _llmOpts;
+    private readonly GraphDatabaseOptions _dbOpts;
+    private readonly EmbeddingOptions _embedOpts;
+
+    public PushCommand(
+        IOptions<LlmOptions> llmOptions,
+        IOptions<GraphDatabaseOptions> dbOptions,
+        IOptions<EmbeddingOptions> embeddingOptions)
+    {
+        _llmOpts = llmOptions.Value;
+        _dbOpts = dbOptions.Value;
+        _embedOpts = embeddingOptions.Value;
+    }
+
     protected override async Task<int> ExecuteAsync(
         CommandContext context, PushSettings settings, CancellationToken cancellationToken)
     {
@@ -93,18 +109,23 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
         Console.Error.WriteLine($"[ngraphiphy] Snapshot: {snapshotId.Id}");
 
         // 2. Create graph store config based on backend
-        IGraphStoreConfig storeConfig = settings.Backend.ToLowerInvariant() switch
+        // Backend selection — CLI flag ?? config file ?? code default
+        var backend = (settings.Backend ?? _dbOpts.Backend).ToLowerInvariant();
+
+        IGraphStoreConfig storeConfig = backend switch
         {
             "neo4j" => new Neo4jConfig(
-                settings.Uri ?? "bolt://localhost:7687",
-                settings.Username ?? "neo4j",
-                settings.Password ?? ""),
+                Uri: settings.Uri ?? _dbOpts.Neo4j.Uri,
+                Username: settings.Username ?? _dbOpts.Neo4j.Username,
+                Password: settings.Password ?? _dbOpts.Neo4j.Password),
+
             "memgraph" => new MemgraphConfig(
-                settings.Host,
-                settings.Port,
-                settings.Username ?? "",
-                settings.Password ?? ""),
-            _ => throw new InvalidOperationException($"Unknown backend: {settings.Backend}")
+                Host: settings.Host ?? _dbOpts.Memgraph.Host,
+                Port: settings.Port ?? _dbOpts.Memgraph.Port,
+                Username: settings.Username ?? _dbOpts.Memgraph.Username,
+                Password: settings.Password ?? _dbOpts.Memgraph.Password),
+
+            _ => throw new InvalidOperationException($"Unknown backend: {backend}")
         };
 
         // 3. Create graph store
@@ -139,14 +160,23 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
         // 7. Embed nodes (optional)
         if (settings.Embed)
         {
-            var cfToken = settings.CloudflareToken ?? Environment.GetEnvironmentVariable("CF_API_TOKEN");
-            if (string.IsNullOrEmpty(settings.CloudflareAccount) || string.IsNullOrEmpty(cfToken))
+            // Embedding — CF_API_TOKEN kept as legacy fallback
+            var cfAccount = settings.CloudflareAccount ?? _embedOpts.Cloudflare.AccountId;
+            var cfToken = settings.CloudflareToken
+                ?? _embedOpts.Cloudflare.ApiToken
+                ?? Environment.GetEnvironmentVariable("CF_API_TOKEN");
+            // CloudflareModel: detect explicit CLI override vs. use config
+            var cfModel = (settings.CloudflareModel == null || settings.CloudflareModel == "@cf/baai/bge-base-en-v1.5")
+                ? _embedOpts.Cloudflare.Model ?? "@cf/baai/bge-base-en-v1.5"  // default → use config or fallback
+                : settings.CloudflareModel;                                    // non-default → user explicitly set
+
+            if (string.IsNullOrEmpty(cfAccount) || string.IsNullOrEmpty(cfToken))
             {
                 AnsiConsole.MarkupLine("[red]Error: --cf-account and --cf-token (or CF_API_TOKEN) required for --embed[/]");
                 return 1;
             }
 
-            var embedConfig = new CloudflareEmbeddingConfig(settings.CloudflareAccount, cfToken, settings.CloudflareModel);
+            var embedConfig = new CloudflareEmbeddingConfig(cfAccount, cfToken, cfModel);
             var embedder = new CloudflareEmbeddingProvider(embedConfig);
 
             AnsiConsole.MarkupLine("[blue][ngraphiphy] Embedding nodes...[/]");
@@ -161,19 +191,26 @@ public sealed class PushCommand : AsyncCommand<PushSettings>
         // 8. Generate community summaries (optional)
         if (settings.Summarize)
         {
-            IAgentConfig llmConfig = settings.LlmProvider.ToLowerInvariant() switch
+            // LLM for --summarize (same pattern as QueryCommand)
+            var llmProvider = (settings.LlmProvider ?? _llmOpts.Provider).ToLowerInvariant();
+            IAgentConfig llmConfig = llmProvider switch
             {
                 "openai" => new OpenAiConfig(
-                    ApiKey: settings.ApiKey ?? Env("OPENAI_API_KEY") ?? Error("--key or OPENAI_API_KEY required"),
-                    Model: settings.Model ?? "gpt-4o"),
-                "ollama" => new OllamaConfig(Model: settings.Model ?? "llama3.2"),
+                    ApiKey: settings.ApiKey ?? _llmOpts.OpenAi.ApiKey
+                        ?? Error("--key or Llm:OpenAi:ApiKey required"),
+                    Model: settings.Model ?? _llmOpts.OpenAi.Model),
+                "ollama" => new OllamaConfig(
+                    Model: settings.Model ?? _llmOpts.Ollama.Model,
+                    Endpoint: _llmOpts.Ollama.Endpoint),
                 "copilot" => new CopilotConfig(),
                 "a2a" => new A2AConfig(
-                    AgentUrl: Env("A2A_AGENT_URL") ?? Error("A2A_AGENT_URL required"),
-                    ApiKey: settings.ApiKey),
+                    AgentUrl: _llmOpts.A2A.AgentUrl ?? Error("Llm:A2A:AgentUrl required"),
+                    ApiKey: settings.ApiKey ?? _llmOpts.A2A.ApiKey),
                 _ => new AnthropicConfig(
-                    ApiKey: settings.ApiKey ?? Env("ANTHROPIC_API_KEY") ?? Error("--key or ANTHROPIC_API_KEY required"),
-                    Model: settings.Model ?? "claude-sonnet-4-6"),
+                    ApiKey: settings.ApiKey ?? _llmOpts.Anthropic.ApiKey
+                        ?? Error("--key or Llm:Anthropic:ApiKey required"),
+                    Model: settings.Model ?? _llmOpts.Anthropic.Model,
+                    MaxTokens: _llmOpts.Anthropic.MaxTokens),
             };
 
             AnsiConsole.MarkupLine("[blue][ngraphiphy] Generating community summaries...[/]");
