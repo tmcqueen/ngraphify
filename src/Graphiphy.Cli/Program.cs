@@ -6,28 +6,38 @@ using Graphiphy.Cli.Infrastructure;
 using Spectre.Console.Cli;
 using Serilog;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Verbose()
-    .Enrich.FromLogContext()
-    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext} - {Message:lj}{NewLine}{Exception}")
-    .CreateBootstrapLogger();
+// Log.Logger = new LoggerConfiguration()
+//     .MinimumLevel.Verbose()
+//     .Enrich.FromLogContext()
+//     .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext} - {Message:lj}{NewLine}{Exception}")
+//     .CreateBootstrapLogger();
 
 
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.Services.AddSerilog((services, loggerConfig) =>
+builder.Logging.ClearProviders();
+builder.Logging.SetMinimumLevel(LogLevel.Trace);
+builder.Logging.AddConsole(options =>
 {
+      options.LogToStandardErrorThreshold = LogLevel.Trace; // write all levels to console
+});
+
+// .AddConfiguration(builder.Configuration.GetSection("Logging"))
+// .AddSerilog((services, loggerConfig) =>
+// {
             
-      loggerConfig
-            .ReadFrom.Configuration(builder.Configuration) // allows minimum level and sinks to be configured via config files or env vars
-            .ReadFrom.Services(services) // allows minimum level and sinks to be configured via config files or env vars
-            .Enrich.FromLogContext()
-            .WriteTo.Console(
-                  standardErrorFromLevel: Serilog.Events.LogEventLevel.Verbose, // write all levels to console
-                  outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext} - {Message:lj}{NewLine}{Exception}"
-            );
-}, preserveStaticLogger: false, writeToProviders: true);
+//       loggerConfig
+//             .ReadFrom.Configuration(builder.Configuration) // allows minimum level and sinks to be configured via config files or env vars
+//             .ReadFrom.Services(services) // allows minimum level and sinks to be configured via config files or env vars
+//             .Enrich.FromLogContext()
+//             .WriteTo.Console(
+//                   standardErrorFromLevel: Serilog.Events.LogEventLevel.Verbose, // write all levels to console
+//                   outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext} - {Message:lj}{NewLine}{Exception}"
+//             );
+// }, preserveStaticLogger: false, writeToProviders: true);
+
 
 builder.AddCliConfiguration();
 
