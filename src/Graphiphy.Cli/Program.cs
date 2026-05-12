@@ -24,7 +24,10 @@ builder.Services.AddSerilog((services, loggerConfig) =>
             .ReadFrom.Configuration(builder.Configuration) // allows minimum level and sinks to be configured via config files or env vars
             .ReadFrom.Services(services) // allows minimum level and sinks to be configured via config files or env vars
             .Enrich.FromLogContext()
-            .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext} - {Message:lj}{NewLine}{Exception}");
+            .WriteTo.Console(
+                  standardErrorFromLevel: Serilog.Events.LogEventLevel.Verbose, // write all levels to console
+                  outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext} - {Message:lj}{NewLine}{Exception}"
+            );
 });
 
 
