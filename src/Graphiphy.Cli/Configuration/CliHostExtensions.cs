@@ -31,6 +31,8 @@ public static class CliHostExtensions
                 optional: true, reloadOnChange: false)
             .AddJsonFile(Path.Combine(currentDir, "graphiphy.json"),      // project-specific overrides
                 optional: true, reloadOnChange: false)
+            .AddJsonFile(Path.Combine(currentDir, "serilog.json"),      // logging-specific overrides
+                optional: true, reloadOnChange: false)
             .AddEnvironmentVariables(prefix: "GRAPHIPHY_");               // highest priority
 
         // 2. Secret overlay

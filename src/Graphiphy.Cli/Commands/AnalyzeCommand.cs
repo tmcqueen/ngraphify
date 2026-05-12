@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Graphiphy.Analysis;
 using Graphiphy.Cli.Configuration.Options;
 using Graphiphy.Pipeline;
+using Graphiphy.Validation;
 using Microsoft.Extensions.Options;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -29,7 +30,11 @@ public sealed class AnalyzeCommand : AsyncCommand<AnalyzeSettings>
 
     public AnalyzeCommand(IOptions<AnalysisOptions> analysisOptions)
     {
-        _analysisOpts = analysisOptions.Value;
+        // _analysisOpts = analysisOptions.Value;
+        _analysisOpts = new AnalysisOptions
+        {
+            MalformedEdgeBehavior = MalformedEdgeBehavior.Warn
+        };
     }
 
     protected override async Task<int> ExecuteAsync(

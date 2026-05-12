@@ -91,6 +91,6 @@ public sealed class AgentProviderResolver
         CancellationToken ct = default)
     {
         var config = Resolve(providerOverride);
-        return await GraphAgentFactory.CreateAsync(config, graph, ct);
+        return await GraphAgentFactory.CreateAsync(config, graph, ct: ct);
     }
 }

@@ -5,6 +5,8 @@ using Anthropic.Core;
 using GitHub.Copilot.SDK;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Graphiphy.Models;
 using OllamaSharp;
 using OpenAI;
@@ -24,6 +26,8 @@ public static class GraphAgentFactory
     public static async Task<IGraphAgent> CreateAsync(
         IAgentConfig config,
         BidirectionalGraph<Node, TaggedEdge<Node, Edge>> graph,
+        bool useLoggingAgent = true,
+        ILogger? logger = null,
         CancellationToken ct = default)
     {
         var plugin = new GraphPlugin(graph);
@@ -60,7 +64,11 @@ public static class GraphAgentFactory
                     $"Config type {config.GetType().Name} is not supported");
         }
 
-        return new MafGraphAgent(agent, resource);
+        AIAgent finalAgent = useLoggingAgent
+            ? new LoggingAgent(agent, logger ?? NullLogger.Instance)
+            : agent;
+
+        return new MafGraphAgent(finalAgent, resource);
     }
 
     private static ChatClientAgent CreateOpenAi(OpenAiConfig config, IList<AITool> tools)
