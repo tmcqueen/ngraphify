@@ -27,7 +27,7 @@ public static class GraphAgentFactory
         IAgentConfig config,
         BidirectionalGraph<Node, TaggedEdge<Node, Edge>> graph,
         bool useLoggingAgent = true,
-        ILogger? logger = null,
+        ILoggerFactory? loggerFactory = null,
         CancellationToken ct = default)
     {
         var plugin = new GraphPlugin(graph);
@@ -64,9 +64,10 @@ public static class GraphAgentFactory
                     $"Config type {config.GetType().Name} is not supported");
         }
 
-        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
+        ArgumentNullException.ThrowIfNull(loggerFactory, nameof(loggerFactory));
+        var logger = loggerFactory.CreateLogger<LoggingAgent>();
         AIAgent finalAgent = useLoggingAgent
-            ? new LoggingAgent(agent, logger ?? NullLogger.Instance)
+            ? new LoggingAgent(agent, logger)
             : agent;
 
         return new MafGraphAgent(finalAgent, resource);

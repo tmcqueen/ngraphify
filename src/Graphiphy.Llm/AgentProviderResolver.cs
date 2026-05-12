@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using QuikGraph;
 using Graphiphy.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Graphiphy.Llm;
 
@@ -12,16 +13,20 @@ public sealed class AgentProviderResolver
 {
     private readonly IConfiguration _configuration;
     private readonly Func<string?, string?>? _resolveSecret;
+    private readonly ILoggerFactory _loggerFactory;
 
     /// <param name="resolveSecret">
     /// Optional delegate that resolves pass:// and env:// references to their plain-text values.
     /// When provided, string values read from config are passed through this delegate before use.
     /// When null, values are used as-is (suitable if the startup overlay has already resolved them).
     /// </param>
-    public AgentProviderResolver(IConfiguration configuration, Func<string?, string?>? resolveSecret = null)
+    public AgentProviderResolver(IConfiguration configuration,
+                                 ILoggerFactory loggerFactory,
+                                 Func<string?, string?>? resolveSecret = null)
     {
         _configuration = configuration;
         _resolveSecret = resolveSecret;
+        _loggerFactory = loggerFactory;
     }
 
     // Resolves a config string value through the secret delegate if one is registered.

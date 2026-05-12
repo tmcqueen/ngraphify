@@ -6,6 +6,7 @@ using Graphiphy.Cli.Configuration.Secrets;
 using Graphiphy.Llm;
 using Graphiphy.Storage.Embedding;
 using Spectre.Console;
+using Microsoft.Extensions.Logging;
 
 namespace Graphiphy.Cli.Configuration;
 
@@ -64,7 +65,10 @@ public static class CliHostExtensions
             value => SecretResolver.ResolveValue(value, providers);
 
         builder.Services.AddSingleton(sp =>
-            new AgentProviderResolver(sp.GetRequiredService<IConfiguration>(), resolveSecret));
+            new AgentProviderResolver(
+                sp.GetRequiredService<IConfiguration>(), 
+                sp.GetRequiredService<ILoggerFactory>(),
+                resolveSecret));
         builder.Services.AddSingleton(sp =>
             new EmbeddingProviderResolver(sp.GetRequiredService<IConfiguration>(), resolveSecret));
 
