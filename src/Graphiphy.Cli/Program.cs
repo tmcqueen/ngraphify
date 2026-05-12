@@ -15,7 +15,6 @@ Log.Logger = new LoggerConfiguration()
 
 
 var builder = Host.CreateApplicationBuilder(args);
-builder.AddCliConfiguration();
 
 builder.Services.AddSerilog((services, loggerConfig) =>
 {
@@ -30,6 +29,7 @@ builder.Services.AddSerilog((services, loggerConfig) =>
             );
 });
 
+builder.AddCliConfiguration();
 
 // Commands with constructor injection must be registered so DI can resolve them.
 // AnalyzeCommand, ReportCommand, ServeCommand are parameterless — Spectre instantiates
