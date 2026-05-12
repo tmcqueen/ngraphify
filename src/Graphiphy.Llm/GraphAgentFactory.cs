@@ -64,6 +64,7 @@ public static class GraphAgentFactory
                     $"Config type {config.GetType().Name} is not supported");
         }
 
+        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
         AIAgent finalAgent = useLoggingAgent
             ? new LoggingAgent(agent, logger ?? NullLogger.Instance)
             : agent;
