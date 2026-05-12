@@ -27,7 +27,7 @@ builder.Services.AddSerilog((services, loggerConfig) =>
                   standardErrorFromLevel: Serilog.Events.LogEventLevel.Verbose, // write all levels to console
                   outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext} - {Message:lj}{NewLine}{Exception}"
             );
-});
+}, preserveStaticLogger: false, writeToProviders: true);
 
 builder.AddCliConfiguration();
 
