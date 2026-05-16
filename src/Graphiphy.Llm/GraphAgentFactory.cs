@@ -12,6 +12,7 @@ using OllamaSharp;
 using OpenAI;
 using OpenAI.Chat;
 using QuikGraph;
+using System.ClientModel.Primitives;
 
 namespace Graphiphy.Llm;
 
@@ -145,4 +146,38 @@ public static class GraphAgentFactory
         var agent = await resolver.GetAIAgentAsync(httpClient: httpClient, cancellationToken: ct);
         return (agent, httpClient);
     }
+}
+
+public class LoggingPolicy : PipelinePolicy
+{
+    private readonly ILogger _logger;
+
+    public LoggingPolicy(ILogger<OpenAIClient> logger)
+    {
+        _logger = logger;
+    }
+
+  public override void Process(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
+    {
+        _logger.LogInformation("Processing message: {@Message}", message.Request);
+        pipeline.First().Process(message, pipeline, currentIndex);
+        _logger.LogInformation("Response Status: {@Response}", message.Response);
+    }
+
+  public override async ValueTask ProcessAsync(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
+    {
+        _logger.LogInformation("Processing message: {@Message}", message.Request);
+        await pipeline.First()
+        .ProcessAsync(message, pipeline, currentIndex).ConfigureAwait(false);
+        _logger.LogInformation("Response Status: {@Response}", message.Response);
+    }
+
+//   public override async ValueTask<TResponse> SendAsync<TResponse>(
+//         PipelineRequest request, PipelineHandler<TResponse> next, CancellationToken ct)
+//     {
+//         _logger.LogInformation("Sending request: {Request}", request);
+//         var response = await next(request, ct);
+//         _logger.LogInformation("Received response: {Response}", response);
+//         return response;
+//     }
 }
